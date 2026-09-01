@@ -1055,6 +1055,8 @@ def _check_digest(
 def _check_prediction_state(
     paths: V2BlindRunPaths,
     commitment: V2BlindNonceCommitment,
+    *,
+    root: Path,
 ) -> list[str]:
     findings: list[str] = []
     if not paths.prediction_receipt.is_file():
@@ -1069,7 +1071,7 @@ def _check_prediction_state(
     if receipt.run_id != paths.run_id or receipt.nonce_sha256 != commitment.nonce_sha256:
         findings.append(f"prediction receipt identity mismatch for {paths.run_id}")
     for artifact in (receipt.event_artifact, receipt.prediction_artifact):
-        finding = _check_digest(artifact)
+        finding = _check_digest(artifact, root=root)
         if finding is not None:
             findings.append(finding)
     return findings
@@ -1078,6 +1080,7 @@ def _check_prediction_state(
 def _check_completed_links(
     paths: V2BlindRunPaths,
     *,
+    root: Path,
     commitment: V2BlindNonceCommitment,
     completion: V2BlindCompletionReceipt,
     report: V2BlindReport,
@@ -1089,7 +1092,7 @@ def _check_completed_links(
     findings: list[str] = []
     artifact_paths = {item.path for item in completion.artifacts}
     expected_paths = {
-        _relative(path)
+        _relative(path, root)
         for path in (
             paths.nonce_commitment,
             paths.normalized_events,
@@ -1137,7 +1140,7 @@ def _check_completed_links(
     ):
         findings.append(f"manifest/report artifact mismatch for {paths.run_id}")
     for artifact in completion.artifacts:
-        finding = _check_digest(artifact)
+        finding = _check_digest(artifact, root=root)
         if finding is not None:
             findings.append(finding)
     return findings
@@ -1146,6 +1149,8 @@ def _check_completed_links(
 def _check_completed_state(
     paths: V2BlindRunPaths,
     commitment: V2BlindNonceCommitment,
+    *,
+    root: Path,
 ) -> list[str]:
     try:
         completion = _load_contract(paths.completion_receipt, V2BlindCompletionReceipt)
@@ -1179,6 +1184,7 @@ def _check_completed_state(
     findings.extend(
         _check_completed_links(
             paths,
+            root=root,
             commitment=commitment,
             completion=completion,
             report=report,
@@ -1210,6 +1216,8 @@ def _check_failed_state(
 
 def _check_run_state(
     commitment_path: Path,
+    *,
+    root: Path,
 ) -> tuple[list[str], bool, bool]:
     """Check one historical run and classify it as complete or active."""
 
@@ -1217,7 +1225,7 @@ def _check_run_state(
         commitment = _load_contract(commitment_path, V2BlindNonceCommitment)
     except V2BlindIntegrityError as error:
         return [str(error)], False, False
-    paths = _run_paths(commitment.run_id)
+    paths = _run_paths(commitment.run_id, root)
     findings: list[str] = []
     if paths.scoring_lock.exists():
         findings.append(f"stale scoring lock for {commitment.run_id}")
@@ -1225,12 +1233,12 @@ def _check_run_state(
         return [f"commitment directory mismatch for {commitment.run_id}"], False, False
     if _run_id(commitment.nonce_sha256) != commitment.run_id:
         findings.append(f"nonce/run identity mismatch for {commitment.run_id}")
-    findings.extend(_check_prediction_state(paths, commitment))
+    findings.extend(_check_prediction_state(paths, commitment, root=root))
     if paths.failure_receipt.is_file():
         findings.extend(_check_failed_state(paths, commitment))
         return findings, False, False
     if paths.completion_receipt.is_file():
-        findings.extend(_check_completed_state(paths, commitment))
+        findings.extend(_check_completed_state(paths, commitment, root=root))
         return findings, True, False
     unopened_only = (
         paths.truth_access_receipt,
@@ -1245,17 +1253,24 @@ def _check_run_state(
     return findings, False, True
 
 
-def check_official_blind_artifacts() -> list[str]:
+def check_official_blind_artifacts(
+    root: Path = _REPOSITORY_ROOT,
+    *,
+    include_static: bool = True,
+) -> list[str]:
     """Verify every historical state without opening unopened truth."""
 
-    findings = check_blind_procedure()
-    prediction_lock = _REPOSITORY_ROOT / "evals/blind/detector_v2/.prediction.lock"
+    findings = check_blind_procedure() if include_static else []
+    prediction_lock = root / "evals/blind/detector_v2/.prediction.lock"
     if prediction_lock.exists():
         findings.append("stale official blind prediction lock")
     completed_runs = 0
     active_runs = 0
-    for commitment_path in _commitment_paths():
-        run_findings, completed, active = _check_run_state(commitment_path)
+    for commitment_path in _commitment_paths(root):
+        run_findings, completed, active = _check_run_state(
+            commitment_path,
+            root=root,
+        )
         findings.extend(run_findings)
         completed_runs += completed
         active_runs += active
@@ -1266,15 +1281,16 @@ def check_official_blind_artifacts() -> list[str]:
     return findings
 
 
-def blind_state_summary() -> str:
+def blind_state_summary(root: Path = _REPOSITORY_ROOT) -> str:
     """Describe the append-only state without revealing nonce material."""
 
-    commitments = _commitment_paths()
+    commitments = _commitment_paths(root)
     if not commitments:
         return "procedure frozen; ready for a fresh public non-secret nonce"
     completed = sum(
         _run_paths(
-            V2BlindNonceCommitment.model_validate_json(path.read_bytes()).run_id
+            V2BlindNonceCommitment.model_validate_json(path.read_bytes()).run_id,
+            root,
         ).completion_receipt.is_file()
         for path in commitments
     )

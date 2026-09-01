@@ -6,6 +6,7 @@ import shutil
 from dataclasses import dataclass
 from datetime import UTC, datetime
 from pathlib import Path
+from types import SimpleNamespace
 
 import pytest
 from pydantic import BaseModel
@@ -14,6 +15,9 @@ from retryrail.detection.v2_blind import (
     V2BlindIntegrityError,
     V2BlindStateError,
     blind_runner_bundle_sha256,
+    blind_state_summary,
+    check_official_blind_artifacts,
+    main,
     persist_blind_predictions,
     render_blind_procedure_freeze,
     score_blind_run,
@@ -221,6 +225,14 @@ def test_prediction_stage_is_label_free_durable_and_truth_unopened(
     assert not (evidence / "blind.report.v1.json").exists()
     for path in (*evidence.iterdir(), *generated.iterdir()):
         assert _TEST_NONCE.encode() not in path.read_bytes()
+    assert (
+        check_official_blind_artifacts(
+            predicted_fixture.root,
+            include_static=False,
+        )
+        == []
+    )
+    assert "truth remains unopened" in blind_state_summary(predicted_fixture.root)
 
 
 def test_scoring_opens_truth_after_reproducing_prediction_and_stays_fail_closed(
@@ -283,6 +295,8 @@ def test_scoring_opens_truth_after_reproducing_prediction_and_stays_fail_closed(
     assert reveal.nonce == _TEST_NONCE
     assert reveal.published_after_release_decision is True
     assert all(item.runtime_action_eligible is False for item in report.incidents)
+    assert check_official_blind_artifacts(tmp_path, include_static=False) == []
+    assert "evaluation complete" in blind_state_summary(tmp_path)
 
     with pytest.raises(V2BlindStateError, match="already complete"):
         score_blind_run(
@@ -332,6 +346,8 @@ def test_prediction_tamper_fails_before_truth_and_records_redacted_failure(
     assert failure.raw_exception_persisted is False
     assert _TEST_NONCE.encode() not in (evidence / "failure.receipt.json").read_bytes()
     assert not (evidence / "truth_access.receipt.json").exists()
+    findings = check_official_blind_artifacts(tmp_path, include_static=False)
+    assert any("byte-count mismatch" in item for item in findings)
 
 
 def test_second_active_nonce_and_known_test_nonce_fail_closed(
@@ -398,6 +414,71 @@ def test_stage_locks_reject_concurrent_prediction_and_truth_access(
             clock=lambda: _TEST_NOW,
         )
     assert not tuple(prediction_root.glob("**/nonce.commitment.json"))
+
+
+def test_cli_dispatch_has_no_raw_nonce_argument(
+    monkeypatch: pytest.MonkeyPatch,
+    capsys: pytest.CaptureFixture[str],
+) -> None:
+    monkeypatch.setattr("sys.argv", ["retryrail-v2-blind", "--check"])
+    monkeypatch.setattr(
+        "retryrail.detection.v2_blind.check_official_blind_artifacts",
+        list,
+    )
+    monkeypatch.setattr(
+        "retryrail.detection.v2_blind.blind_state_summary",
+        lambda: "verified test state",
+    )
+    main()
+    assert capsys.readouterr().out == "verified test state\n"
+
+    monkeypatch.setattr("sys.argv", ["retryrail-v2-blind", "--check"])
+    monkeypatch.setattr(
+        "retryrail.detection.v2_blind.check_official_blind_artifacts",
+        lambda: ["tampered test artifact"],
+    )
+    with pytest.raises(SystemExit) as error:
+        main()
+    assert error.value.code == 1
+    assert "tampered test artifact" in capsys.readouterr().err
+
+    def prompt(_message: str) -> str:
+        return _TEST_NONCE
+
+    monkeypatch.setattr("getpass.getpass", prompt)
+    monkeypatch.setattr(
+        "retryrail.detection.v2_blind.persist_blind_predictions",
+        lambda _nonce: SimpleNamespace(run_id="detector_v2_official_blind_test"),
+    )
+    monkeypatch.setattr("sys.argv", ["retryrail-v2-blind", "--predict"])
+    main()
+    assert "truth remains unopened" in capsys.readouterr().out
+
+    monkeypatch.setattr(
+        "retryrail.detection.v2_blind.score_blind_run",
+        lambda _nonce: SimpleNamespace(
+            run_id="detector_v2_official_blind_test",
+            status=V2BlindReleaseStatus.QUALIFIED,
+        ),
+    )
+    monkeypatch.setattr("sys.argv", ["retryrail-v2-blind", "--score"])
+    main()
+    assert "runtime actions remain disabled" in capsys.readouterr().out
+
+    monkeypatch.setattr(
+        "sys.argv",
+        ["retryrail-v2-blind", "--print-procedure-freeze"],
+    )
+    main()
+    printed = json.loads(capsys.readouterr().out)
+    assert printed["status"] == "ready_for_fresh_nonce"
+    assert "nonce_sha256" not in printed
+
+    monkeypatch.setattr("sys.argv", ["retryrail-v2-blind"])
+    with pytest.raises(SystemExit) as error:
+        main()
+    assert error.value.code == 2
+    assert "choose exactly one operation" in capsys.readouterr().err
 
 
 def test_runner_bundle_hash_is_cross_platform_and_freeze_has_no_nonce(

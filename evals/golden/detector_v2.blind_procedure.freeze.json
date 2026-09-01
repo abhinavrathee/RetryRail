@@ -12,7 +12,7 @@
   "protocol_id": "detector_v2_protocol_v1",
   "protocol_sha256": "994c24d2c71c00bb736449795c6e669f6dee6b3f1e1c9166a9eb0832ca6befd7",
   "release_qualified": false,
-  "runner_bundle_sha256": "f895d4adbf7cc17e99ca15dc44fd1232200cbda6d847cb9ef5827f9bf22b0f7c",
+  "runner_bundle_sha256": "1a2b6bffda0bd67d130f59e96d92691255919bcb8a9c953dfee65fefed8f5b82",
   "runner_source_paths": [
     "services/api/app/retryrail/detection/v2_blind.py",
     "services/api/app/retryrail/detection/v2_blind_models.py"
