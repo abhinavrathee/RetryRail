@@ -16,7 +16,8 @@ a payment or customer-facing mutation.
 | PII/card data in fixtures or normalized events | Explicit field allowlist and prohibited-key scan | Sanitization and fixture scanner tests |
 | Evaluation-label leakage into runtime data | Physically separate truth artifacts and schemas | Split-isolation and forbidden-field tests |
 | Detector threshold changed after blind result | Committed config hash and byte-reproducible reports | `retryrail-eval --check` plus exact-result tests |
-| V2 blind output influences candidate tuning | Generator/protocol precommit, source/config/matcher freeze, post-freeze nonce, event-first prediction receipt and separate truth loader | `retryrail-v2-data --check`, `retryrail-v2-candidate --check` and isolation tests |
+| V2 blind output influences candidate tuning | Generator/protocol precommit, source/config/matcher/runner freeze, post-freeze nonce, event-first prediction receipt and separate truth loader | `retryrail-v2-data --check`, `retryrail-v2-candidate --check`, `retryrail-v2-blind --check` and isolation tests |
+| Concurrent or replayed blind stage opens truth twice | Exclusive create-only stage locks, append-only receipts, byte-for-byte prediction replay and terminal completion/failure state | Blind workflow concurrency, tamper and replay-refusal tests |
 | Sparse high failure percentage creates an action incident | Current/baseline sample, excess-failure and GMV gates | Held-out wallet hard-negative test |
 | Incident baseline absorbs incident traffic | Opening reference interval is frozen for every update | Per-observation leakage assertions |
 | No traffic is mistaken for recovery | Resolution requires a sample-eligible window with the rate drop below threshold | No-traffic lifecycle regression test |
@@ -88,7 +89,8 @@ pruned third-party trees.
 - The default detector scans one configured merchant and refreshes from all
   completed facts. Row-level security and high-volume incremental stream
   processing remain production gaps.
-- Detector-v2 R2 is frozen and passes synthetic development targets, but no
-  official blind run exists. Its prediction models force runtime action
-  eligibility to false; it does not change the blocked v1 runtime decision or
-  create a recovery authorization path.
+- Detector-v2 R2 and the R3 blind procedure are frozen and pass development
+  and orchestration tests, but no official nonce or blind result exists. Its
+  prediction, report and release models force runtime action eligibility to
+  false; it does not change the blocked v1 runtime decision or create a
+  recovery authorization path.

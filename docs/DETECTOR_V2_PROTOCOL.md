@@ -2,11 +2,12 @@
 
 ## Current status
 
-R1 and R2 are complete. The development dataset, blind generator, v2 candidate
-configuration, detector source, matcher and evaluator are frozen. No official
-blind nonce or blind result exists yet. Development success is not a release
-qualification: detector v1 remains release-blocked and is still the only
-runtime detector.
+R1 and R2 are complete, and the pre-nonce portion of R3 is complete. The
+development dataset, blind generator, v2 candidate configuration, detector
+source, matcher, evaluator and append-only blind runner are frozen. No
+official blind nonce or blind result exists yet. Development success is not a
+release qualification: detector v1 remains release-blocked and is still the
+only runtime detector.
 
 The protocol identity is `detector_v2_protocol_v1`. Its machine-readable source
 is `evals/protocols/detector_v2.protocol.json`.
@@ -33,7 +34,7 @@ development data.
 | --- | --- | --- |
 | R1 | Freeze protocol, development data and nonce-derived blind generator | Complete |
 | R2 | Implement and tune one v2 candidate using development data only | Complete |
-| R3 | Freeze candidate, obtain fresh nonce, predict, then load blind truth once | Not started |
+| R3 | Freeze runner, obtain fresh nonce, predict, then load blind truth once | In progress — runner frozen; nonce pending |
 | R4 | Integrate v2 only if its generated release decision qualifies it | Not started |
 
 M4 recovery execution remains behind R4. A model, policy rule or merchant
@@ -111,8 +112,15 @@ evidence now; it cannot be represented as blind again.
 
 The official blind batch uses the same volume and precommitted family counts,
 but its family ordering, methods, issuers, outcomes, amounts and background
-traffic are derived from a fresh nonce. The CLI intentionally has no option to
-accept that nonce during R1/R2.
+traffic are derived from a fresh nonce. The R3 CLI accepts no raw nonce command
+line argument; `--predict` and `--score` read it from a hidden interactive
+prompt so it is not exposed through process arguments.
+
+`evals/golden/detector_v2.blind_procedure.freeze.json` binds the runner and its
+evidence contracts to the existing candidate, configuration, matcher,
+generator and protocol hashes before a nonce is supplied. The runner uses
+exclusive stage locks, create-only durable writes and a terminal redacted
+failure receipt. Historical evidence is never overwritten.
 
 R3 must execute in this order:
 
@@ -127,6 +135,19 @@ R3 must execute in this order:
    commitment;
 7. score all incidents and hard negatives and generate a release decision;
 8. commit every result, including a failure.
+
+The two explicit irreversible stages are:
+
+```bash
+uv run retryrail-v2-blind --predict
+uv run retryrail-v2-blind --score
+```
+
+`--predict` stops after a canonical prediction receipt whose models force
+`labels_loaded=false`. `--score` independently reproduces those exact bytes,
+writes a truth-access authorization receipt, and only then invokes the truth
+loader. The nonce is published in a separate reproducibility artifact only
+after the report and release decision have been durably written.
 
 Any threshold, algorithm or matching change after nonce reveal invalidates the
 run and requires a different nonce and run identifier. The previous output
@@ -159,6 +180,9 @@ production performance claim.
 - Candidate, matcher and evaluator sources are independently bound by the R2
   freeze. Drift makes `retryrail-v2-candidate --check` fail before a nonce is
   requested.
+- The blind runner and evidence contracts are independently bound by the R3
+  procedure freeze. Drift, partial state, digest-chain disagreement or a stale
+  stage lock makes `retryrail-v2-blind --check` fail closed.
 - This is a nonce-unpredictable synthetic holdout, not a double-blind external
   benchmark. Scenario families and distributions are intentionally public.
 - No cloud service, Razorpay credential or model provider is used.
@@ -188,3 +212,18 @@ truth membership. Tests cover hierarchy, provider/customer source separation,
 sparse issuer confirmation, low-volume and transient suppression, development
 metrics, evidence reconciliation, fail-closed runtime eligibility and the
 absence of any blind identity from the freeze.
+
+## R3 pre-nonce verification
+
+```bash
+uv run retryrail-v2-blind --check
+uv run pytest services/api/tests/detection/test_v2_blind.py
+make v2-blind-check
+```
+
+The workflow tests use only the already-approved development dataset behind
+mocked blind boundaries; they never evaluate the candidate on a nonce-derived
+test batch. They cover durable prediction-first ordering, label isolation,
+byte-for-byte detector replay before truth access, append-only release
+evidence, tamper rejection, concurrent-stage exclusion, replay refusal,
+test-nonce rejection and the M4 activation boundary.

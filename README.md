@@ -53,9 +53,10 @@ batch. A generated, hash-bound release decision keeps every v1 incident
 action-ineligible. Recovery execution and impact reporting remain behind later
 milestones.
 
-Detector-v2 remediation now has a frozen development candidate and
-byte-reproducible evidence under the precommitted protocol. It passes the
-synthetic development targets but has no official blind result, release
+Detector-v2 remediation now has a frozen development candidate,
+byte-reproducible evidence and a separately frozen append-only blind runner
+under the precommitted protocol. It passes the synthetic development targets,
+but no official nonce or blind result exists and it has no release
 qualification or runtime authority; see [Detector v2
 protocol](docs/DETECTOR_V2_PROTOCOL.md).
 
@@ -98,6 +99,7 @@ make detect     # refresh deterministic aggregates and incidents
 make eval       # verify reports and the generated detector release decision
 make v2-data-check # verify the pre-blind v2 protocol and development identity
 make v2-candidate-check # verify the frozen v2 candidate and development report
+make v2-blind-check # verify the frozen blind runner and append-only run state
 make check      # run every implemented release gate
 ```
 
@@ -125,12 +127,12 @@ locally and against PostgreSQL 16 in the Python CI job.
 
 ## Status
 
-Parts 1–4 / M0–M3 implementation and M3R.1–R.2 remediation are present, but
-detector v1 failed its P0 held-out targets and detector v2 still requires its
-one-time official blind run before it can authorize recovery. The GitHub
-Actions workflow includes a PostgreSQL 16
-integration run but cannot be observed until the repository is pushed; no
-commit or push is performed automatically. See [event pipeline](docs/EVENT_PIPELINE.md),
+Parts 1–4 / M0–M3 implementation, M3R.1–R.2 remediation and the R3 pre-nonce
+runner freeze are present, but detector v1 failed its P0 held-out targets and
+detector v2 still requires its one-time official blind run before it can
+authorize recovery. GitHub Actions includes PostgreSQL 16 integration and all
+three detector evaluation integrity gates. See [event pipeline](docs/EVENT_PIPELINE.md),
 [detector](docs/DETECTOR.md), [architecture](docs/ARCHITECTURE.md),
 [dataset](docs/DATASET.md), [security](docs/SECURITY.md) and the
-[authoritative build plan](docs/BUILD_PLAN.md) before beginning R3 or M4.
+[authoritative build plan](docs/BUILD_PLAN.md) before executing R3 or beginning
+M4.

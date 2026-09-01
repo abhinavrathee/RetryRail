@@ -432,9 +432,10 @@ remediation gate before connecting incidents to M4 recovery execution:
    blind protocol;
 2. **Complete:** implement and tune one hierarchical/actionability-aware
    candidate using only approved development data;
-3. **Complete:** freeze code, configuration, matching and evaluation before
-   receiving the official blind nonce;
-4. **Pending R3:** persist blind predictions before loading blind truth;
+3. **Complete:** freeze code, configuration, matching, evaluation and the
+   append-only blind-run procedure before receiving the official blind nonce;
+4. **Pending user nonce in R3:** execute the frozen prediction stage, persist
+   and re-read its bytes, then authorize and load blind truth exactly once;
 5. **Pending R3/R4:** generate and commit a pass/fail release decision without
    changing the candidate after nonce reveal.
 

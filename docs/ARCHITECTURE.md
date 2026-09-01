@@ -113,8 +113,9 @@ production build and Chromium test are release gates for that adapter.
 Detector-v2 R1 precommits the remediation protocol, development batch and
 nonce-derived blind generator. R2 now provides a frozen hierarchical,
 provider-actionability-aware candidate plus byte-reproducible development
-prediction, report and source/config/matcher freeze. Confirmed candidate
-incidents remain globally action-ineligible. R3 may receive a fresh nonce only
-after this freeze, persist predictions first and then load truth. M4 remains
-behind a qualified release decision and cannot let a model or policy override
-detector eligibility.
+prediction, report and source/config/matcher freeze. R3 now adds a separately
+hash-bound, append-only runner with create-only receipts, exclusive prediction
+and scoring stages, and an explicit prediction-replay boundary before truth
+access. Confirmed candidate incidents remain globally action-ineligible. The
+fresh public nonce is still pending; M4 remains behind a qualified release
+decision and cannot let a model or policy override detector eligibility.

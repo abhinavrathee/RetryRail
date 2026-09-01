@@ -194,7 +194,7 @@ Recommended timing:
 
 | Claim | Evidence location |
 | --- | --- |
-| Detector precision/recall | `evals/reports/heldout.detector_report.v1.json` remains the failed v1 release evidence; `evals/reports/detector_v2.development.report.json` is development-only and awaits the official blind run |
+| Detector precision/recall | `evals/reports/heldout.detector_report.v1.json` remains the failed v1 evidence; `evals/reports/detector_v2.development.report.json` is development-only, and `evals/golden/detector_v2.blind_procedure.freeze.json` proves the official blind runner was frozen before its still-pending nonce |
 | Root-cause accuracy | v1 held-out remains unscorable after the miss; v2 development top-1 is perfect but is not a blind claim |
 | Agent grounding/safety | `evals/reports/agent-golden.json` |
 | No duplicate action | Integration test plus demo audit receipt |
