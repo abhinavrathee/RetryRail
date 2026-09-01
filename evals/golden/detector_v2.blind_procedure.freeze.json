@@ -1,0 +1,24 @@
+{
+  "candidate_bundle_sha256": "e85b8803208539c3e77679b5194f0b278b225ad6b39e5998570d156332e8477d",
+  "candidate_freeze_id": "detector_v2_candidate_freeze_v1",
+  "candidate_freeze_sha256": "18b2960739fdb377ed387ddcc5978f36952ef4f90fb556abc273cc473a437979",
+  "detector_config_sha256": "75c751853bf173be2adb4b7b9ebebf862cd15b8ffdbcdeb85c403003617a2bd6",
+  "detector_version": "detector_v2_0_0",
+  "freeze_id": "detector_v2_blind_procedure_freeze_v1",
+  "generator_bundle_sha256": "a91e12e9945dd9cab9252dbd6f345e99fd52229505baf10a9aafc5dae511a9b9",
+  "matcher_version": "detector_v2_matcher_v1_0_0",
+  "nonce_committed": false,
+  "official_blind_evaluated": false,
+  "protocol_id": "detector_v2_protocol_v1",
+  "protocol_sha256": "994c24d2c71c00bb736449795c6e669f6dee6b3f1e1c9166a9eb0832ca6befd7",
+  "release_qualified": false,
+  "runner_bundle_sha256": "f895d4adbf7cc17e99ca15dc44fd1232200cbda6d847cb9ef5827f9bf22b0f7c",
+  "runner_source_paths": [
+    "services/api/app/retryrail/detection/v2_blind.py",
+    "services/api/app/retryrail/detection/v2_blind_models.py"
+  ],
+  "runtime_action_eligible": false,
+  "schema_version": "1.0.0",
+  "status": "ready_for_fresh_nonce",
+  "synthetic": true
+}
