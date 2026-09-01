@@ -6,7 +6,7 @@ from pathlib import Path
 
 import pytest
 from fastapi.testclient import TestClient
-from sqlalchemy import func, select, text
+from sqlalchemy import func, inspect, select, text
 from sqlalchemy.exc import SQLAlchemyError
 
 from retryrail.config import Environment, Settings
@@ -35,13 +35,10 @@ def test_migration_round_trip_and_immutable_event_trigger(settings: Settings) ->
         try:
             async with database.engine.connect() as connection:
                 if expected is None:
-                    tables = await connection.scalar(
-                        text(
-                            "SELECT count(*) FROM sqlite_master "
-                            "WHERE type='table' AND name='payment_events'"
-                        )
+                    table_names = await connection.run_sync(
+                        lambda sync_connection: inspect(sync_connection).get_table_names()
                     )
-                    assert tables == 0
+                    assert "payment_events" not in table_names
                 else:
                     revision = await connection.scalar(
                         text("SELECT version_num FROM alembic_version")
