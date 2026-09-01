@@ -16,7 +16,10 @@ jobs:
   python-quality:
     name: Python quality and contracts
     runs-on: ubuntu-latest
-    timeout-minutes: 15
+    # The complete deterministic suite takes roughly 26 minutes on the
+    # reference Windows workstation. Keep every release gate enabled and allow
+    # enough headroom for slower hosted runners and dependency-cache misses.
+    timeout-minutes: 40
     env:
       RETRYRAIL_TEST_DATABASE_URL: postgresql+psycopg://retryrail:ci-only-password@localhost:5432/retryrail_test
     services:
