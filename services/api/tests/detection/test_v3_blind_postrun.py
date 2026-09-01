@@ -72,9 +72,15 @@ def test_current_postrun_evidence_is_preserved_blocked_and_invalid() -> None:
     assert summary.derived_artifacts_verified == 2
     assert summary.existing_derived_artifacts_verified == expected_existing
     assert summary.known_schema_defects == 1
-    assert check_official_blind_artifacts(include_static=False) == [
+    expected_legacy_findings = []
+    if not (generated / "blind.normalized_events.v1.jsonl").is_file():
+        expected_legacy_findings.append(
+            f"missing {(_GENERATED_DIRECTORY / 'blind.normalized_events.v1.jsonl').as_posix()}"
+        )
+    expected_legacy_findings.append(
         f"invalid {_RUN_DIRECTORY.as_posix()}/blind.report.v1.json"
-    ]
+    )
+    assert check_official_blind_artifacts(include_static=False) == expected_legacy_findings
 
 
 def test_clean_checkout_reproduces_ignored_inputs_in_memory(tmp_path: Path) -> None:
@@ -85,6 +91,10 @@ def test_clean_checkout_reproduces_ignored_inputs_in_memory(tmp_path: Path) -> N
     assert summary.derived_artifacts_verified == 2
     assert summary.existing_derived_artifacts_verified == 0
     assert not (tmp_path / "evals/generated").exists()
+    assert check_official_blind_artifacts(tmp_path, include_static=False) == [
+        f"missing {(_GENERATED_DIRECTORY / 'blind.normalized_events.v1.jsonl').as_posix()}",
+        f"invalid {(tmp_path / _RUN_DIRECTORY / 'blind.report.v1.json').as_posix()}",
+    ]
 
 
 def test_existing_derived_artifact_must_match_exact_reproduction(tmp_path: Path) -> None:
