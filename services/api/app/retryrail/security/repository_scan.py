@@ -1,8 +1,11 @@
 """Fail-fast local scan for credential patterns and prohibited fixture keys."""
 
+import hashlib
 import json
+import math
 import re
 import sys
+from collections import Counter
 from dataclasses import dataclass
 from pathlib import Path
 from typing import Any
@@ -40,6 +43,9 @@ _TEXT_SUFFIXES = frozenset(
         ".yml",
     }
 )
+_STRUCTURED_ASSIGNMENT_SUFFIXES = frozenset(
+    {".env", ".example", ".json", ".jsonl", ".toml", ".yaml", ".yml"}
+)
 _SECRET_PATTERNS = (
     ("RAZORPAY_KEY", re.compile("rzp_" + r"(?:live|test)_[A-Za-z0-9]{8,}")),
     ("AWS_ACCESS_KEY", re.compile("AK" + r"IA[0-9A-Z]{16}")),
@@ -49,6 +55,33 @@ _SECRET_PATTERNS = (
     ),
     ("GITHUB_TOKEN", re.compile("gh" + r"[oprs]_[A-Za-z0-9_]{30,}")),
 )
+_SENSITIVE_ASSIGNMENT_PATTERN = re.compile(
+    r"""
+    (?P<key>
+        ["']?[A-Za-z0-9_-]*
+        (?:authorization|api[_-]?key|secret|token|password|private[_-]?key)
+        [A-Za-z0-9_-]*["']?
+    )
+    \s*(?:=|:)\s*
+    (?P<quote>["'])
+    (?P<value>[A-Za-z0-9_./+=-]{20,})
+    (?P=quote)
+    """,
+    re.IGNORECASE | re.VERBOSE,
+)
+_MINIMUM_GENERIC_ENTROPY_BITS = 3.5
+_KNOWN_NON_SECRET_ASSIGNMENT_DIGESTS = {
+    (
+        "evals/blind/detector_v2/runs/"
+        "detector_v2_official_blind_ef49a16703b1612ef774/"
+        "truth_access.receipt.json"
+    ): frozenset(
+        {
+            # Immutable synthetic receipt identifier from official blind run ef49a167.
+            "a2723b705638e53c95abaa54c8d21d9ce876377a720975a80b0cebca18876d07",
+        }
+    ),
+}
 _PROHIBITED_FIXTURE_KEYS = frozenset(
     {
         "account_id",
@@ -87,9 +120,7 @@ class Finding:
 def _iter_text_files(root: Path) -> list[Path]:
     paths: list[Path] = []
     for directory, directory_names, file_names in root.walk():
-        directory_names[:] = [
-            name for name in directory_names if name not in _EXCLUDED_DIRECTORIES
-        ]
+        directory_names[:] = [name for name in directory_names if name not in _EXCLUDED_DIRECTORIES]
         paths.extend(
             path
             for name in file_names
@@ -99,7 +130,23 @@ def _iter_text_files(root: Path) -> list[Path]:
     return sorted(paths)
 
 
-def _scan_text(path: Path) -> list[Finding]:
+def _entropy_bits_per_character(value: str) -> float:
+    counts = Counter(value)
+    length = len(value)
+    return -sum((count / length) * math.log2(count / length) for count in counts.values())
+
+
+def _is_known_non_secret_assignment(path: Path, root: Path, value: str) -> bool:
+    relative_path = path.relative_to(root).as_posix()
+    allowed_digests = _KNOWN_NON_SECRET_ASSIGNMENT_DIGESTS.get(
+        relative_path,
+        frozenset(),
+    )
+    value_digest = hashlib.sha256(value.encode()).hexdigest()
+    return value_digest in allowed_digests
+
+
+def _scan_text(path: Path, root: Path) -> list[Finding]:
     if path.name == "repository_scan.py":
         return []
     try:
@@ -117,6 +164,21 @@ def _scan_text(path: Path) -> list[Finding]:
             )
             for match in pattern.finditer(text)
         )
+    if path.suffix.lower() in _STRUCTURED_ASSIGNMENT_SUFFIXES:
+        for match in _SENSITIVE_ASSIGNMENT_PATTERN.finditer(text):
+            value = match.group("value")
+            if _entropy_bits_per_character(
+                value
+            ) >= _MINIMUM_GENERIC_ENTROPY_BITS and not _is_known_non_secret_assignment(
+                path, root, value
+            ):
+                findings.append(
+                    Finding(
+                        path=path,
+                        code="GENERIC_HIGH_ENTROPY_SENSITIVE_ASSIGNMENT",
+                        line=text.count("\n", 0, match.start()) + 1,
+                    )
+                )
     return findings
 
 
@@ -159,8 +221,9 @@ def scan_repository(root: Path) -> list[Finding]:
     """Scan first-party text and fixture structure without printing secret values."""
 
     findings: list[Finding] = []
-    for path in _iter_text_files(root.resolve()):
-        findings.extend(_scan_text(path))
+    resolved_root = root.resolve()
+    for path in _iter_text_files(resolved_root):
+        findings.extend(_scan_text(path, resolved_root))
         findings.extend(_scan_fixture(path))
     return findings
 

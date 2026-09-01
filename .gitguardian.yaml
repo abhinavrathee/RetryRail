@@ -1,0 +1,9 @@
+version: 2
+exit_zero: false
+verbose: false
+instance: https://dashboard.gitguardian.com
+max_commits_for_hook: 50
+secret:
+  show_secrets: false
+  ignore_known_secrets: false
+  fail_on_server_error: true

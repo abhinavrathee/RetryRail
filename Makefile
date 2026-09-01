@@ -1,10 +1,11 @@
 .DEFAULT_GOAL := help
 
-.PHONY: help bootstrap dev migrate seed v2-data-check v2-candidate-check v2-blind-check replay detect demo lint typecheck test test-contract test-e2e build eval security-check check
+.PHONY: help bootstrap install-security-hook dev migrate seed v2-data-check v2-candidate-check v2-blind-check replay detect demo lint typecheck test test-contract test-e2e build eval security-check check
 
 help:
 	@echo "RetryRail commands"
 	@echo "  bootstrap       Install locked Python and web dependencies"
+	@echo "  install-security-hook Activate the fail-closed GitGuardian pre-push hook"
 	@echo "  dev             Start the local Docker Compose stack"
 	@echo "  migrate         Upgrade the configured database to the current schema"
 	@echo "  seed            Regenerate deterministic synthetic truth data"
@@ -21,6 +22,14 @@ bootstrap:
 	uv sync --all-groups --frozen
 	pnpm install --frozen-lockfile
 	pnpm --filter @retryrail/web exec playwright install chromium
+
+install-security-hook:
+	uv run --frozen ggshield --version
+	uv run --frozen ggshield api-status
+	uv run --frozen ggshield --config-path .gitguardian.yaml config list
+	uv run --frozen retryrail-security-scan
+	uv run --frozen ggshield --config-path .gitguardian.yaml secret scan repo .
+	git config --local core.hooksPath infra/git-hooks
 
 dev:
 	docker compose up --build
