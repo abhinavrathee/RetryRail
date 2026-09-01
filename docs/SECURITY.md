@@ -12,7 +12,7 @@ a payment or customer-facing mutation.
 | --- | --- | --- |
 | Forged or modified webhook | Bounded exact-byte read, HMAC-SHA256 before parsing and constant-time comparison | Missing, malformed, wrong and modified-after-signing tests |
 | Parser ambiguity or memory exhaustion | Duplicate JSON keys rejected; content length and streamed bytes capped | Duplicate-key and oversized-body integration tests |
-| Secret committed to Git | Environment-only configuration plus pattern scan | `retryrail-security-scan` |
+| Secret or secret-shaped identifier committed to Git | Environment-only configuration, provider patterns, sensitive-key entropy scan and fail-closed GitGuardian pre-push hook | `retryrail-security-scan` plus `retryrail-pre-push` |
 | PII/card data in fixtures or normalized events | Explicit field allowlist and prohibited-key scan | Sanitization and fixture scanner tests |
 | Evaluation-label leakage into runtime data | Physically separate truth artifacts and schemas | Split-isolation and forbidden-field tests |
 | Detector threshold changed after blind result | Committed config hash and byte-reproducible reports | `retryrail-eval --check` plus exact-result tests |
@@ -69,6 +69,38 @@ environments, dependency stores and build output, then scans source/config text
 and parses JSON/JSONL fixtures structurally. CI dependency audits cover the
 pruned third-party trees.
 
+## Protected pushes
+
+`infra/git-hooks/pre-push` runs the offline repository scanner, a complete
+Git-history scan and then GitGuardian's official outgoing-commit scan. All
+stages are fail-closed, secret values stay hidden, repository `.env` files are
+not loaded by ggshield, and the committed `.gitguardian.yaml` does not disable
+detectors, paths or known incidents. The wrapper pins the public GitGuardian
+instance, rejects environment-based scan bypasses and still covers every ref
+and commit when the upstream pre-push optimization limits its incremental
+scan. Activate it after authenticating ggshield:
+
+```bash
+uv run ggshield auth login
+make install-security-hook
+```
+
+On Windows without GNU Make, run the commands from the
+`install-security-hook` target directly. The hook is repository-local and is
+not activated automatically by cloning because Git intentionally does not trust
+committed hooks. Like every client-side hook, it can be bypassed explicitly
+with Git's `--no-verify`; the CI security job therefore reruns the offline scan,
+and remote GitGuardian monitoring remains the backstop for the shared
+repository. Required branch protection should include that CI job.
+
+GitGuardian incident `#36779282` classified the official blind truth-access
+receipt identifier as a generic high-entropy secret. It is a synthetic internal
+identifier derived from the already-public nonce commitment and grants no
+access. The append-only evidence is not rewritten. The offline scanner permits
+only that exact historical path/value digest; any different high-entropy value
+assigned to a sensitive-looking key fails before future pushes. The dashboard
+incident is classified as a false positive, not as a revoked credential.
+
 ## Known M0–M3 limits
 
 - The P0 API currently serves one configured merchant. Full merchant
@@ -89,8 +121,11 @@ pruned third-party trees.
 - The default detector scans one configured merchant and refreshes from all
   completed facts. Row-level security and high-volume incremental stream
   processing remain production gaps.
-- Detector-v2 R2 and the R3 blind procedure are frozen and pass development
-  and orchestration tests, but no official nonce or blind result exists. Its
-  prediction, report and release models force runtime action eligibility to
-  false; it does not change the blocked v1 runtime decision or create a
-  recovery authorization path.
+- Detector-v2 R3 completed one append-only official synthetic blind run after
+  the candidate and runner freezes. Prediction bytes were persisted and
+  reproduced before truth access, and the public nonce was revealed only after
+  the release decision. The candidate passed precision, recall, attribution,
+  hard-negative and reconciliation targets but failed median detection delay
+  and baseline leakage. Its generated release decision is blocked, forces
+  runtime action eligibility to false and creates no recovery authorization
+  path. The public nonce is reproducibility material, not a credential.

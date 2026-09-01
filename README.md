@@ -53,12 +53,14 @@ batch. A generated, hash-bound release decision keeps every v1 incident
 action-ineligible. Recovery execution and impact reporting remain behind later
 milestones.
 
-Detector-v2 remediation now has a frozen development candidate,
-byte-reproducible evidence and a separately frozen append-only blind runner
-under the precommitted protocol. It passes the synthetic development targets,
-but no official nonce or blind result exists and it has no release
-qualification or runtime authority; see [Detector v2
-protocol](docs/DETECTOR_V2_PROTOCOL.md).
+Detector-v2 remediation completed its one-time, nonce-derived synthetic blind
+run with byte-reproducible, append-only evidence. The frozen candidate found
+all six incidents with zero false positives or false negatives and perfect
+top-1 attribution, but the generated release decision is still blocked: its
+900-second median first-signal delay missed the 600-second target, and two
+incident baselines crossed their scenario start when the target was zero.
+Detector v2 therefore has no runtime authority and M4 remains blocked; see the
+[protocol and complete result](docs/DETECTOR_V2_PROTOCOL.md).
 
 ## Run through Part 4 locally
 
@@ -92,6 +94,7 @@ The completed repository should support:
 
 ```bash
 make bootstrap  # install locked dependencies and the test browser
+make install-security-hook # activate authenticated offline + GitGuardian pre-push checks
 make dev        # start the complete local stack
 make migrate    # upgrade the configured database explicitly
 make replay     # replay the M2 reliability cases when locally enabled
@@ -127,12 +130,13 @@ locally and against PostgreSQL 16 in the Python CI job.
 
 ## Status
 
-Parts 1–4 / M0–M3 implementation, M3R.1–R.2 remediation and the R3 pre-nonce
-runner freeze are present, but detector v1 failed its P0 held-out targets and
-detector v2 still requires its one-time official blind run before it can
-authorize recovery. GitHub Actions includes PostgreSQL 16 integration and all
-three detector evaluation integrity gates. See [event pipeline](docs/EVENT_PIPELINE.md),
+Parts 1–4 / M0–M3 and M3R.1–R.3 are implemented. Detector v1 failed its P0
+held-out targets, and detector v2's official synthetic blind release decision
+is also blocked by detection delay and baseline leakage despite perfect blind
+precision, recall and attribution. GitHub Actions includes PostgreSQL 16
+integration and all three detector evaluation integrity gates. M4 has not
+started and cannot begin until a newly versioned detector passes a separately
+frozen run with a new nonce. See [event pipeline](docs/EVENT_PIPELINE.md),
 [detector](docs/DETECTOR.md), [architecture](docs/ARCHITECTURE.md),
 [dataset](docs/DATASET.md), [security](docs/SECURITY.md) and the
-[authoritative build plan](docs/BUILD_PLAN.md) before executing R3 or beginning
-M4.
+[authoritative build plan](docs/BUILD_PLAN.md).

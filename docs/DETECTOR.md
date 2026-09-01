@@ -189,9 +189,11 @@ after 20 minutes.
    a principled detector revision and a newly frozen blind dataset; the consumed
    held-out partition cannot honestly validate that revision.
 
-That remediation now has a precommitted protocol and a frozen R2 development
-candidate in `docs/DETECTOR_V2_PROTOCOL.md`. The candidate passes development
-targets but has not been blind-evaluated, release-qualified or integrated.
+That remediation has a precommitted protocol, a frozen R2 development candidate
+and a completed official synthetic blind run in
+`docs/DETECTOR_V2_PROTOCOL.md`. The candidate passed blind precision, recall
+and attribution targets but failed median detection delay and baseline leakage.
+Its release decision is blocked; it is not integrated or runtime-authorized.
 
 Committed evidence:
 
@@ -199,6 +201,8 @@ Committed evidence:
 - `evals/reports/heldout.detector_report.v1.json`
 - `evals/reports/heldout.detector_evaluation.v1.json`
 - `evals/reports/detector_v1.release.json`
+- `evals/blind/detector_v2/runs/detector_v2_official_blind_ef49a16703b1612ef774/blind.report.v1.json`
+- `evals/blind/detector_v2/runs/detector_v2_official_blind_ef49a16703b1612ef774/blind.release.v1.json`
 
 ## Verification
 

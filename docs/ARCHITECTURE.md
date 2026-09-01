@@ -111,11 +111,13 @@ production build and Chromium test are release gates for that adapter.
 ## Next architecture increment
 
 Detector-v2 R1 precommits the remediation protocol, development batch and
-nonce-derived blind generator. R2 now provides a frozen hierarchical,
+nonce-derived blind generator. R2 provides a frozen hierarchical,
 provider-actionability-aware candidate plus byte-reproducible development
-prediction, report and source/config/matcher freeze. R3 now adds a separately
+prediction, report and source/config/matcher freeze. R3 adds a separately
 hash-bound, append-only runner with create-only receipts, exclusive prediction
 and scoring stages, and an explicit prediction-replay boundary before truth
-access. Confirmed candidate incidents remain globally action-ineligible. The
-fresh public nonce is still pending; M4 remains behind a qualified release
-decision and cannot let a model or policy override detector eligibility.
+access. Its official synthetic blind run is complete but release-blocked on
+median detection delay and baseline leakage. Confirmed candidate incidents
+remain globally action-ineligible; M4 remains behind a future qualified
+release decision and cannot let a model or policy override detector
+eligibility.

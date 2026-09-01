@@ -194,8 +194,8 @@ Recommended timing:
 
 | Claim | Evidence location |
 | --- | --- |
-| Detector precision/recall | `evals/reports/heldout.detector_report.v1.json` remains the failed v1 evidence; `evals/reports/detector_v2.development.report.json` is development-only, and `evals/golden/detector_v2.blind_procedure.freeze.json` proves the official blind runner was frozen before its still-pending nonce |
-| Root-cause accuracy | v1 held-out remains unscorable after the miss; v2 development top-1 is perfect but is not a blind claim |
+| Detector precision/recall | `evals/reports/heldout.detector_report.v1.json` remains the failed v1 evidence; the official synthetic v2 blind report is `evals/blind/detector_v2/runs/detector_v2_official_blind_ef49a16703b1612ef774/blind.report.v1.json` and must be presented with its blocked release decision, not as a pass |
+| Root-cause accuracy | v1 held-out remains unscorable after the miss; official synthetic v2 blind top-1 attribution is 1,000,000 ppm, but the overall release is blocked by detection delay and baseline leakage |
 | Agent grounding/safety | `evals/reports/agent-golden.json` |
 | No duplicate action | Integration test plus demo audit receipt |
 | Timeout reconciliation | Integration test and failure-demo recording |
@@ -205,5 +205,6 @@ Recommended timing:
 | Clean release | Public CI run for tagged commit |
 
 Later-milestone paths remain required targets. M3 detector evidence now exists,
-but its failed held-out release result must not be copied into the application
-form as a successful metric.
+but neither v1 nor v2 has a qualifying release. If v2's strong blind accuracy
+metrics are used in the application, the synthetic limitation and blocked
+latency/leakage decision must appear beside them.

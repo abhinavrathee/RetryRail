@@ -434,14 +434,25 @@ remediation gate before connecting incidents to M4 recovery execution:
    candidate using only approved development data;
 3. **Complete:** freeze code, configuration, matching, evaluation and the
    append-only blind-run procedure before receiving the official blind nonce;
-4. **Pending user nonce in R3:** execute the frozen prediction stage, persist
-   and re-read its bytes, then authorize and load blind truth exactly once;
-5. **Pending R3/R4:** generate and commit a pass/fail release decision without
-   changing the candidate after nonce reveal.
+4. **Complete:** run
+   `detector_v2_official_blind_ef49a16703b1612ef774`, persist and re-read the
+   prediction bytes, reproduce them exactly, then authorize and load blind
+   truth exactly once;
+5. **Complete — blocked:** commit the append-only report and release decision
+   without changing the candidate after nonce reveal.
+
+The official synthetic blind run recorded six true positives, zero false
+positives, zero false negatives and perfect top-1 attribution. It did not
+qualify: median first-signal delay was 900 seconds against a 600-second target,
+and two matched incidents used baselines ending after scenario onset against a
+zero-violation target. The release decision keeps runtime action eligibility
+false and does not approve R4 integration.
 
 Any failed candidate remains action-ineligible. A changed candidate requires a
 new nonce and blind run identity; prior evidence is never overwritten. M4 may
 begin only after a detector release decision qualifies the integrated version.
+The revealed R3 batch is now development evidence and must never be represented
+as blind again.
 
 ### M4 — Policy engine and deterministic recovery path
 

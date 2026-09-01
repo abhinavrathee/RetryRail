@@ -2,12 +2,12 @@
 
 ## Current status
 
-R1 and R2 are complete, and the pre-nonce portion of R3 is complete. The
-development dataset, blind generator, v2 candidate configuration, detector
-source, matcher, evaluator and append-only blind runner are frozen. No
-official blind nonce or blind result exists yet. Development success is not a
-release qualification: detector v1 remains release-blocked and is still the
-only runtime detector.
+R1 through R3 are complete. The development dataset, blind generator, v2
+candidate configuration, detector source, matcher, evaluator and append-only
+blind runner were frozen before the official nonce-derived synthetic run. The
+result is immutable and release-blocked: detector v2 is not approved for R4
+integration and every detector output remains runtime action-ineligible.
+Detector v1 remains release-blocked and is still the only runtime detector.
 
 The protocol identity is `detector_v2_protocol_v1`. Its machine-readable source
 is `evals/protocols/detector_v2.protocol.json`.
@@ -34,8 +34,8 @@ development data.
 | --- | --- | --- |
 | R1 | Freeze protocol, development data and nonce-derived blind generator | Complete |
 | R2 | Implement and tune one v2 candidate using development data only | Complete |
-| R3 | Freeze runner, obtain fresh nonce, predict, then load blind truth once | In progress — runner frozen; nonce pending |
-| R4 | Integrate v2 only if its generated release decision qualifies it | Not started |
+| R3 | Freeze runner, obtain fresh nonce, predict, then load blind truth once | Complete — official release decision blocked |
+| R4 | Integrate v2 only if its generated release decision qualifies it | Not eligible for the failed candidate |
 
 M4 recovery execution remains behind R4. A model, policy rule or merchant
 approval cannot override a blocked detector release decision.
@@ -153,6 +153,46 @@ Any threshold, algorithm or matching change after nonce reveal invalidates the
 run and requires a different nonce and run identifier. The previous output
 remains historical evidence; it is never overwritten.
 
+## Official blind result
+
+The official run is
+`detector_v2_official_blind_ef49a16703b1612ef774`. At the user's explicit
+direction, one public, non-secret nonce was generated exactly once with the
+operating system cryptographic random-number generator after every frozen
+preflight check passed. No alternative nonce was generated or selected. The
+runner persisted and read back prediction bytes, reproduced those bytes before
+authorizing truth access, wrote the report and release decision, and revealed
+the nonce only afterward for reproducibility.
+
+This is synthetic blind evidence, not production performance:
+
+| Release target | Required | Observed | Result |
+| --- | ---: | ---: | --- |
+| Precision | >= 900,000 ppm | 1,000,000 ppm | Pass |
+| Recall | >= 850,000 ppm | 1,000,000 ppm | Pass |
+| Top-1 attribution | >= 800,000 ppm | 1,000,000 ppm | Pass |
+| Median first-signal delay | <= 600 seconds | 900 seconds | **Fail** |
+| Hard-negative action-eligible incidents | 0 | 0 | Pass |
+| Baseline leakage violations | 0 | 2 | **Fail** |
+| Evidence reconciliation violations | 0 | 0 | Pass |
+
+All six true incidents were detected; there were no false positives or false
+negatives. The maximum first-signal delay was 3,000 seconds, median confirmation
+delay was 2,850 seconds, and all outputs remained runtime action-ineligible.
+The two baseline violations were in blind scenarios 01 and 02: their matched
+incident observations used a four-hour baseline ending 20 minutes after the
+seeded degradation began. This is a temporal-contamination failure even though
+classification and attribution were correct.
+
+The generated release decision therefore has `status=blocked`,
+`release_qualified=false` and `approved_for_m4_integration=false`. Its complete
+append-only evidence is under
+`evals/blind/detector_v2/runs/detector_v2_official_blind_ef49a16703b1612ef774/`.
+The frozen candidate must not be tuned in place. Any remediation requires a new
+candidate version and freeze, treats this revealed batch only as development
+evidence, and uses a new nonce and run identity. M4 remains blocked until that
+separate release decision qualifies.
+
 ## Release targets
 
 The protocol copies the P0 product requirements without adjustment:
@@ -213,7 +253,7 @@ sparse issuer confirmation, low-volume and transient suppression, development
 metrics, evidence reconciliation, fail-closed runtime eligibility and the
 absence of any blind identity from the freeze.
 
-## R3 pre-nonce verification
+## R3 verification
 
 ```bash
 uv run retryrail-v2-blind --check
@@ -227,3 +267,13 @@ test batch. They cover durable prediction-first ordering, label isolation,
 byte-for-byte detector replay before truth access, append-only release
 evidence, tamper rejection, concurrent-stage exclusion, replay refusal,
 test-nonce rejection and the M4 activation boundary.
+
+For the completed official run, `retryrail-v2-blind --check` verifies the
+terminal receipt and every committed digest without regenerating or rescoring
+the batch. The release JSON is the authoritative M4 gate; strong individual
+metrics cannot override its blocked decision.
+
+`retryrail-v2-candidate --check` deliberately verifies the nonce-free R2 freeze
+and retains its historical pre-blind status message. It must not be changed
+after reveal merely to report R3 state; `retryrail-v2-blind --check` is the
+authoritative completed-run status command.
