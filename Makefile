@@ -16,7 +16,7 @@ help:
 	@echo "  v3-candidate-check Verify both detector-v3 development partitions"
 	@echo "  v3-adversarial-check Verify detector-v3 temporal and lifecycle edge cases"
 	@echo "  v3-freeze-check Verify the nonce-free detector-v3 candidate freeze"
-	@echo "  v3-blind-check Verify the v3 blind procedure and append-only evidence"
+	@echo "  v3-blind-check Verify the consumed v3 blind run and blocked evidence"
 	@echo "  replay          Run the protected M2 reliability-case replay"
 	@echo "  detect          Refresh deterministic aggregates and incidents once"
 	@echo "  eval            Verify frozen detector reports and release decision"
@@ -68,7 +68,7 @@ v3-freeze-check:
 	uv run retryrail-v3-freeze --check
 
 v3-blind-check:
-	uv run retryrail-v3-blind --check
+	uv run retryrail-v3-blind-postrun
 
 replay:
 	uv run retryrail-replay --mode required_cases
@@ -114,7 +114,7 @@ eval:
 	uv run retryrail-v3-candidate --check
 	uv run retryrail-v3-adversarial --check
 	uv run retryrail-v3-freeze --check
-	uv run retryrail-v3-blind --check
+	uv run retryrail-v3-blind-postrun
 
 security-check:
 	uv run bandit -c pyproject.toml -r services/api/app

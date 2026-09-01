@@ -1,0 +1,14 @@
+{
+  "authorization_id": "truth_access_1a1852634945b54e300a",
+  "authorized_at": "2026-09-01T18:45:16.990320Z",
+  "nonce_sha256": "1a1852634945b54e300a6e3d80e21d9746894e08c4103728e61d0f105b86ed1d",
+  "persisted_prediction_reproduced": true,
+  "prediction_artifact_sha256": "6e41057bd526dfa7090085b452172ffc3d2982c5ab1fc61fb293d7899edaa13e",
+  "prediction_receipt_sha256": "772adff5c13e22257b03c8819042292dd222a7950bd39e5b443aa2ea9bd658e9",
+  "procedure_freeze_sha256": "3f95eec40577011adf6cf56a15bb3180225d28a657de79176922d494045a720f",
+  "run_id": "detector_v3_official_blind_1a1852634945b54e300a",
+  "schema_version": "1.0.0",
+  "status": "prediction_verified_truth_access_authorized",
+  "synthetic": true,
+  "truth_loaded_at_authorization": false
+}

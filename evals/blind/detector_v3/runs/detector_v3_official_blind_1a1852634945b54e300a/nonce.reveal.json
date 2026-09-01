@@ -1,0 +1,13 @@
+{
+  "nonce": "RetryRail-v3-public-20260902-9b62cd61-1726-4834-98b8-670e99207097",
+  "nonce_sha256": "1a1852634945b54e300a6e3d80e21d9746894e08c4103728e61d0f105b86ed1d",
+  "public_non_secret_value": true,
+  "published_after_release_decision": true,
+  "release_decision_sha256": "e66430c1fa23cd1de39a4df6a4fa22683b1662531d0f84f0b5b14f49ebeb41b9",
+  "reproducibility_only": true,
+  "reveal_id": "nonce_reveal_1a1852634945b54e300a",
+  "revealed_at": "2026-09-01T18:45:19.744358Z",
+  "run_id": "detector_v3_official_blind_1a1852634945b54e300a",
+  "schema_version": "1.0.0",
+  "synthetic": true
+}

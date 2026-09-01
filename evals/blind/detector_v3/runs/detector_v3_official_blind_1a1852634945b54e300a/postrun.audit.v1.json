@@ -1,0 +1,32 @@
+{
+  "approved_for_m4_integration": false,
+  "audit_id": "detector_v3_official_blind_postrun_audit_v1",
+  "completion_receipt_sha256": "043362eab981312985ac1e42c6f00152676469da99a1cfcdb7eafb99cbd62514",
+  "defect_code": "required_optional_field_omitted_by_canonical_writer",
+  "defect_paths": [
+    "incidents[5].resolved_at"
+  ],
+  "evidence_rewritten": false,
+  "failed_targets": [
+    "precision",
+    "recall"
+  ],
+  "false_negatives": 1,
+  "false_positives": 1,
+  "frozen_report_schema_valid": false,
+  "lossless_optional_field_rehydration_valid": true,
+  "next_attempt_requires_new_candidate_and_nonce": true,
+  "official_run_slot_consumed": true,
+  "precision_ppm": 833333,
+  "recall_ppm": 833333,
+  "release_decision_sha256": "e66430c1fa23cd1de39a4df6a4fa22683b1662531d0f84f0b5b14f49ebeb41b9",
+  "release_qualified": false,
+  "report_sha256": "23ba09c363731cc20ced99a740cf2684f9c0a7b0b82080f7990fce662feb012f",
+  "rerun_permitted": false,
+  "run_id": "detector_v3_official_blind_1a1852634945b54e300a",
+  "runtime_action_eligible": false,
+  "schema_version": "1.0.0",
+  "status": "preserved_blocked_invalid",
+  "synthetic": true,
+  "true_positives": 5
+}

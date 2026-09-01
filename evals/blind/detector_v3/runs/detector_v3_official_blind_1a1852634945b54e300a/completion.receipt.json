@@ -1,0 +1,82 @@
+{
+  "approved_for_m4_integration": false,
+  "artifacts": [
+    {
+      "bytes": 1226,
+      "path": "evals/blind/detector_v3/runs/detector_v3_official_blind_1a1852634945b54e300a/nonce.commitment.json",
+      "records": 1,
+      "sha256": "ce5ef24cde7422a866884e703c93028021a331728e65216de5d61ab128b9a012"
+    },
+    {
+      "bytes": 4367800,
+      "path": "evals/generated/detector_v3/blind/detector_v3_official_blind_1a1852634945b54e300a/blind.normalized_events.v1.jsonl",
+      "records": 10704,
+      "sha256": "0387edb6af06013ab79ca8b4afbbe1770c45c162579ccccb1cfa10d9187944d4"
+    },
+    {
+      "bytes": 604112,
+      "path": "evals/blind/detector_v3/runs/detector_v3_official_blind_1a1852634945b54e300a/blind.predictions.v1.json",
+      "records": 1,
+      "sha256": "6e41057bd526dfa7090085b452172ffc3d2982c5ab1fc61fb293d7899edaa13e"
+    },
+    {
+      "bytes": 1882,
+      "path": "evals/blind/detector_v3/runs/detector_v3_official_blind_1a1852634945b54e300a/prediction.receipt.json",
+      "records": 1,
+      "sha256": "772adff5c13e22257b03c8819042292dd222a7950bd39e5b443aa2ea9bd658e9"
+    },
+    {
+      "bytes": 751,
+      "path": "evals/blind/detector_v3/runs/detector_v3_official_blind_1a1852634945b54e300a/truth_access.receipt.json",
+      "records": 1,
+      "sha256": "f028d121c035d3321207ea06c308016a3ba5b66d447688c2e6a0c55e73018f50"
+    },
+    {
+      "bytes": 2330423,
+      "path": "evals/generated/detector_v3/blind/detector_v3_official_blind_1a1852634945b54e300a/blind.attempt_truth.v1.jsonl",
+      "records": 5760,
+      "sha256": "21290210be80ebf23030704cddd1a682380ef68f32ffc0c583cfdbfdde3aa207"
+    },
+    {
+      "bytes": 10034,
+      "path": "evals/blind/detector_v3/runs/detector_v3_official_blind_1a1852634945b54e300a/blind.dataset_manifest.v1.json",
+      "records": 1,
+      "sha256": "5a1902eed741c44190a6fd185b28e8b76485ac58eb898ee61adec74d52642ec0"
+    },
+    {
+      "bytes": 63528,
+      "path": "evals/blind/detector_v3/runs/detector_v3_official_blind_1a1852634945b54e300a/blind.report.v1.json",
+      "records": 1,
+      "sha256": "23ba09c363731cc20ced99a740cf2684f9c0a7b0b82080f7990fce662feb012f"
+    },
+    {
+      "bytes": 1109,
+      "path": "evals/blind/detector_v3/runs/detector_v3_official_blind_1a1852634945b54e300a/blind.release.v1.json",
+      "records": 1,
+      "sha256": "e66430c1fa23cd1de39a4df6a4fa22683b1662531d0f84f0b5b14f49ebeb41b9"
+    },
+    {
+      "bytes": 590,
+      "path": "evals/blind/detector_v3/runs/detector_v3_official_blind_1a1852634945b54e300a/nonce.reveal.json",
+      "records": 1,
+      "sha256": "6d3c1f66986543e7b8f28d5db1b9c8f504b115dbdca9f14a80998b9f11745dab"
+    }
+  ],
+  "completed_at": "2026-09-01T18:45:19.893025Z",
+  "nonce_reveal_sha256": "6d3c1f66986543e7b8f28d5db1b9c8f504b115dbdca9f14a80998b9f11745dab",
+  "nonce_sha256": "1a1852634945b54e300a6e3d80e21d9746894e08c4103728e61d0f105b86ed1d",
+  "official_blind_evaluated": true,
+  "prediction_receipt_sha256": "772adff5c13e22257b03c8819042292dd222a7950bd39e5b443aa2ea9bd658e9",
+  "predictions_persisted_before_truth": true,
+  "procedure_freeze_sha256": "3f95eec40577011adf6cf56a15bb3180225d28a657de79176922d494045a720f",
+  "receipt_id": "completion_receipt_1a1852634945b54e300a",
+  "release_decision_sha256": "e66430c1fa23cd1de39a4df6a4fa22683b1662531d0f84f0b5b14f49ebeb41b9",
+  "release_qualified": false,
+  "report_sha256": "23ba09c363731cc20ced99a740cf2684f9c0a7b0b82080f7990fce662feb012f",
+  "run_id": "detector_v3_official_blind_1a1852634945b54e300a",
+  "runtime_action_eligible": false,
+  "schema_version": "1.0.0",
+  "status": "official_blind_evaluation_complete",
+  "synthetic": true,
+  "truth_access_receipt_sha256": "f028d121c035d3321207ea06c308016a3ba5b66d447688c2e6a0c55e73018f50"
+}

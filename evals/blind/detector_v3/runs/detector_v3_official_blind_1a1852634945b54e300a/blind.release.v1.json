@@ -1,0 +1,24 @@
+{
+  "activation_requires_m4": true,
+  "approved_for_m4_integration": false,
+  "candidate_bundle_sha256": "81f990e7ee63cf18b8ccdf4dab03affdc4d8de4edeae5a16c24c9f98e8bd91a2",
+  "dataset_manifest_sha256": "5a1902eed741c44190a6fd185b28e8b76485ac58eb898ee61adec74d52642ec0",
+  "decision_id": "detector_v3_official_blind_release_v1",
+  "detector_config_sha256": "0a32ca8a813e34c02472169314f70397b940079603b91cdf3a5e6d4b1f20f14b",
+  "detector_version": "detector_v3_0_0",
+  "evaluated_at": "2026-10-03T00:10:00Z",
+  "failed_targets": [
+    "precision",
+    "recall"
+  ],
+  "nonce_sha256": "1a1852634945b54e300a6e3d80e21d9746894e08c4103728e61d0f105b86ed1d",
+  "prediction_artifact_sha256": "6e41057bd526dfa7090085b452172ffc3d2982c5ab1fc61fb293d7899edaa13e",
+  "release_qualified": false,
+  "run_id": "detector_v3_official_blind_1a1852634945b54e300a",
+  "runtime_action_eligible": false,
+  "schema_version": "1.0.0",
+  "source_report_id": "detector_v3_official_blind_report_v1",
+  "source_report_sha256": "23ba09c363731cc20ced99a740cf2684f9c0a7b0b82080f7990fce662feb012f",
+  "status": "blocked",
+  "synthetic": true
+}
