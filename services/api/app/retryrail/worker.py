@@ -11,11 +11,60 @@ from sqlalchemy.exc import SQLAlchemyError
 
 from retryrail.config import Settings, get_settings
 from retryrail.db.session import Database
+from retryrail.detection.engine import DetectorInputError
+from retryrail.detection.service import DetectionPersistenceError, DetectionService
 from retryrail.events.outbox import OutboxWorker
 from retryrail.observability.logging import configure_logging
 from retryrail.observability.metrics import PipelineMetrics
 
 LOGGER = structlog.get_logger(__name__)
+
+
+async def _refresh_detector(
+    detector: DetectionService,
+    settings: Settings,
+) -> None:
+    try:
+        await detector.refresh(settings.merchant_id)
+    except (DetectionPersistenceError, DetectorInputError) as error:
+        LOGGER.warning(
+            "detector_refresh_rejected",
+            merchant_id=settings.merchant_id,
+            reason_code=error.reason_code,
+        )
+    except SQLAlchemyError:
+        LOGGER.warning(
+            "detector_database_operation_failed",
+            merchant_id=settings.merchant_id,
+            reason_code="DETECTOR_DATABASE_UNAVAILABLE",
+        )
+
+
+async def _run_loop(
+    stop: asyncio.Event,
+    worker: OutboxWorker,
+    detector: DetectionService,
+    settings: Settings,
+) -> None:
+    while not stop.is_set():
+        try:
+            cycle = await worker.run_once()
+        except SQLAlchemyError:
+            LOGGER.warning(
+                "outbox_database_operation_failed",
+                reason_code="OUTBOX_DATABASE_UNAVAILABLE",
+            )
+            cycle_claimed = 0
+        else:
+            cycle_claimed = cycle.claimed
+            if cycle.completed:
+                await _refresh_detector(detector, settings)
+        if cycle_claimed == 0:
+            with contextlib.suppress(TimeoutError):
+                await asyncio.wait_for(
+                    stop.wait(),
+                    timeout=settings.worker_poll_interval_seconds,
+                )
 
 
 async def serve(
@@ -41,6 +90,7 @@ async def serve(
         lease_seconds=resolved_settings.worker_lease_seconds,
         retry_base_seconds=resolved_settings.worker_retry_base_seconds,
     )
+    detector = DetectionService(resolved_database, resolved_metrics)
 
     stop = stop_event or asyncio.Event()
     loop = asyncio.get_running_loop()
@@ -58,23 +108,7 @@ async def serve(
             registry=resolved_metrics.registry,
         )
     try:
-        while not stop.is_set():
-            try:
-                cycle = await worker.run_once()
-            except SQLAlchemyError:
-                LOGGER.warning(
-                    "outbox_database_operation_failed",
-                    reason_code="OUTBOX_DATABASE_UNAVAILABLE",
-                )
-                cycle_claimed = 0
-            else:
-                cycle_claimed = cycle.claimed
-            if cycle_claimed == 0:
-                with contextlib.suppress(TimeoutError):
-                    await asyncio.wait_for(
-                        stop.wait(),
-                        timeout=resolved_settings.worker_poll_interval_seconds,
-                    )
+        await _run_loop(stop, worker, detector, resolved_settings)
     finally:
         if metrics_server is not None and metrics_thread is not None:
             metrics_server.shutdown()

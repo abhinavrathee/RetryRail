@@ -31,6 +31,7 @@ loop:
 - [M1 contract catalog](docs/CONTRACTS.md)
 - [Deterministic truth set](docs/DATASET.md)
 - [Authenticated event pipeline](docs/EVENT_PIPELINE.md)
+- [Deterministic detector and honest evaluation](docs/DETECTOR.md)
 - [Razorpay submission checklist](docs/SUBMISSION_CHECKLIST.md)
 - [Repository instructions](AGENTS.md)
 
@@ -45,14 +46,23 @@ loop:
 - pytest, Playwright, golden-set evaluations and GitHub Actions
 
 The repository/release foundation (M0), deterministic contract/truth-data
-slice (M1) and authenticated event pipeline (M2) are implemented. Detection,
-recovery execution and impact reporting remain behind later milestone gates and
-are not represented as working features.
+slice (M1), authenticated event pipeline (M2), and M3 detector/lifecycle
+machinery are implemented. Detector v1 deliberately remains release-blocked:
+it passed tuning but scored 0 precision and 0 recall on the frozen held-out
+batch. A generated, hash-bound release decision keeps every v1 incident
+action-ineligible. Recovery execution and impact reporting remain behind later
+milestones.
 
-## Run through Part 3 locally
+Detector-v2 remediation now has a frozen development candidate and
+byte-reproducible evidence under the precommitted protocol. It passes the
+synthetic development targets but has no official blind result, release
+qualification or runtime authority; see [Detector v2
+protocol](docs/DETECTOR_V2_PROTOCOL.md).
+
+## Run through Part 4 locally
 
 Required tools are Python 3.12 or 3.13, `uv`, Node.js 22, pnpm 11 and Docker.
-No cloud account or Razorpay credential is needed for M0–M2.
+No cloud account or Razorpay credential is needed for M0–M3.
 
 ```bash
 cp .env.example .env
@@ -84,17 +94,22 @@ make bootstrap  # install locked dependencies and the test browser
 make dev        # start the complete local stack
 make migrate    # upgrade the configured database explicitly
 make replay     # replay the M2 reliability cases when locally enabled
+make detect     # refresh deterministic aggregates and incidents
+make eval       # verify reports and the generated detector release decision
+make v2-data-check # verify the pre-blind v2 protocol and development identity
+make v2-candidate-check # verify the frozen v2 candidate and development report
 make check      # run every implemented release gate
 ```
 
 `make seed` recreates the M1 truth artifacts and their stable manifest. Replay
 requires `RETRYRAIL_REPLAY_ENABLED=true` and the configured local token. `make
-demo` and `make eval` deliberately exit with an explanatory error until M7 and
-M3/M6 respectively. This prevents event processing from being mistaken for a
-working recovery product. On Windows without GNU Make, run the underlying `uv`
+demo` deliberately exits with an explanatory error until M7. `make eval` now
+checks detector artifacts; agent evaluation will be added in M6. This prevents
+event processing from being mistaken for a working recovery product. On
+Windows without GNU Make, run the underlying `uv`
 and `pnpm` commands shown in the Makefile.
 
-M0–M2 verification includes Python and TypeScript lint/typecheck, backend and
+M0–M3 verification includes Python and TypeScript lint/typecheck, backend and
 web unit tests, schema and truth-manifest drift, production web build, a
 Chromium smoke test, Bandit, credential/fixture scanning and Python/web
 dependency audits. Pipeline integration tests run hermetically on SQLite
@@ -110,9 +125,12 @@ locally and against PostgreSQL 16 in the Python CI job.
 
 ## Status
 
-Parts 1–3 / M0–M2 are implemented. The GitHub Actions workflow includes a
-PostgreSQL 16 integration run but cannot be observed until the repository is
-pushed; no commit or push is performed automatically. See
-[event pipeline](docs/EVENT_PIPELINE.md), [architecture](docs/ARCHITECTURE.md),
+Parts 1–4 / M0–M3 implementation and M3R.1–R.2 remediation are present, but
+detector v1 failed its P0 held-out targets and detector v2 still requires its
+one-time official blind run before it can authorize recovery. The GitHub
+Actions workflow includes a PostgreSQL 16
+integration run but cannot be observed until the repository is pushed; no
+commit or push is performed automatically. See [event pipeline](docs/EVENT_PIPELINE.md),
+[detector](docs/DETECTOR.md), [architecture](docs/ARCHITECTURE.md),
 [dataset](docs/DATASET.md), [security](docs/SECURITY.md) and the
-[authoritative build plan](docs/BUILD_PLAN.md) before beginning M3.
+[authoritative build plan](docs/BUILD_PLAN.md) before beginning R3 or M4.

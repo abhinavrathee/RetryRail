@@ -4,8 +4,9 @@
 
 This document describes the implemented M1 synthetic batch. It is evaluation
 data, not merchant traffic, and every runtime event and truth record carries a
-synthetic label. M2 consumes these contracts through the protected replay path;
-detector evaluation remains gated until M3.
+synthetic label. M2 consumes these contracts through the protected replay path.
+M3 has now consumed the held-out partition; its failed blind decision remains
+committed and the split cannot qualify later detector changes.
 
 ## Stable identity
 
@@ -34,6 +35,11 @@ Runtime normalized events do not contain `split`, `scenario_id`, expected
 incident membership, severity or root-cause labels. Those fields exist only in
 physically separate `attempt_truth` artifacts. Tests reject label leakage and
 overlapping payment/event identifiers between partitions.
+
+Detector v1 loads normalized events first, produces incidents, and only then
+loads scenario definitions for matching. Its thresholds were frozen at the
+synthetic event-time boundary `2026-09-02T00:00:00Z`, before the held-out
+partition begins on September 8.
 
 ## Frozen ground truth
 
@@ -88,6 +94,7 @@ make seed
 uv run retryrail-seed --check
 uv run retryrail-contracts --check
 uv run pytest services/api/tests/contracts
+uv run retryrail-eval --check
 ```
 
 On Windows without GNU Make, use `uv run retryrail-seed`. Generation uses
@@ -101,3 +108,30 @@ The fixtures use invented merchant, issuer, payment and event identifiers.
 They contain no customer names, contact details, VPA, notes, tokens, account
 keys or card objects. The repository security scan parses JSON and JSONL
 fixtures structurally and blocks prohibited keys.
+
+## Consumed held-out result
+
+Detector v1 achieved 2/2 true incidents with no false positives on tuning, but
+0 true positives, 2 background false positives and 1 false negative on
+held-out. The wallet hard negative correctly remained blocked by the sample
+gate. This partition is now consumed and may not be used to tune a replacement
+while still being called blind. See `docs/DETECTOR.md` and the committed files
+under `evals/reports/`.
+
+A post-evaluation no-traffic lifecycle correction required regenerating the
+current-code reports. Only synthetic resolution timestamps changed; all
+classification, attribution and release metrics remained identical. This was
+not treated as a second qualification attempt, and v1 remains blocked.
+
+## Detector-v2 pre-blind development data
+
+The separate `retryrail_detector_v2_development_v1` batch contains 5,760
+attempts and ten scenarios over 48 simulated hours. Its normalized events and
+evaluation truth use separate paths, and its committed manifest SHA-256 is
+`09ea61ca4ae08b8bcef7771358478f20896133d4a1e88bde7b06450c5dd9de37`.
+
+R2 consumed this batch as development evidence and committed a label-free
+prediction followed by a separate scored report. It cannot be represented as
+held-out evidence. The v2 official blind batch still does not exist; the
+candidate is now frozen, but a fresh user-provided nonce is intentionally
+deferred to R3. See `DETECTOR_V2_PROTOCOL.md`.

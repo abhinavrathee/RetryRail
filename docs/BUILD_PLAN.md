@@ -423,6 +423,25 @@ Exit gate:
 - The hard-negative scenario does not trigger an action-eligible incident.
 - Incident evidence exactly reconciles with raw data.
 
+#### M3R — Detector release remediation when M3 is blocked
+
+Detector v1 missed its held-out release targets, so RetryRail must complete this
+remediation gate before connecting incidents to M4 recovery execution:
+
+1. **Complete:** precommit a versioned development batch and nonce-derived
+   blind protocol;
+2. **Complete:** implement and tune one hierarchical/actionability-aware
+   candidate using only approved development data;
+3. **Complete:** freeze code, configuration, matching and evaluation before
+   receiving the official blind nonce;
+4. **Pending R3:** persist blind predictions before loading blind truth;
+5. **Pending R3/R4:** generate and commit a pass/fail release decision without
+   changing the candidate after nonce reveal.
+
+Any failed candidate remains action-ineligible. A changed candidate requires a
+new nonce and blind run identity; prior evidence is never overwritten. M4 may
+begin only after a detector release decision qualifies the integrated version.
+
 ### M4 — Policy engine and deterministic recovery path
 
 **Estimate:** 8–10 hours  

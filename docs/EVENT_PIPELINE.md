@@ -3,8 +3,9 @@
 ## Release boundary
 
 M2 turns the frozen synthetic contracts into an authenticated, durable and
-replayable event path. It does not detect incidents, call a model, execute a
-Razorpay action or claim recovered GMV.
+replayable event path. M3 now invokes a deterministic detector after completed
+projection work; the ingestion transaction itself still does not detect, call
+a model, execute a Razorpay action or claim recovered GMV.
 
 ```text
 exact request bytes
@@ -96,8 +97,9 @@ RETRYRAIL_REPLAY_ENABLED=true uv run retryrail-replay --mode required_cases
 
 The protected local API is `POST /v1/demo/replay`; responses are aggregate,
 prominently marked synthetic and contain no incident or held-out truth labels.
-It accepts only the required reliability-case mode, so held-out partitions
-cannot be injected through an HTTP demo call. Repeated replay is safe: an
+After M3 it accepts required reliability cases or the tuning partition, so a
+reviewer can create deterministic incidents. The held-out partition still
+cannot be injected through the HTTP demo route. Repeated replay is safe: an
 earlier accepted event becomes a duplicate, not a mismatch or a second chain.
 
 ## Operations

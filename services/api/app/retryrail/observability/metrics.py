@@ -1,7 +1,13 @@
 """Low-cardinality Prometheus metrics for the M2 event pipeline."""
 
 from fastapi import APIRouter, Request, Response
-from prometheus_client import CollectorRegistry, Counter, Histogram, generate_latest
+from prometheus_client import (
+    CollectorRegistry,
+    Counter,
+    Gauge,
+    Histogram,
+    generate_latest,
+)
 from prometheus_client.exposition import CONTENT_TYPE_LATEST
 
 
@@ -60,6 +66,34 @@ class PipelineMetrics:
             "retryrail_payment_projection_results_total",
             "Payment projection state decisions.",
             ("result",),
+            registry=self.registry,
+        )
+        self.detector_runs = Counter(
+            "retryrail_detector_runs_total",
+            "Deterministic detector refresh outcomes.",
+            ("result",),
+            registry=self.registry,
+        )
+        self.incident_detection_latency = Histogram(
+            "retryrail_incident_detection_latency_seconds",
+            "Wall time for one detector refresh over a persisted source snapshot.",
+            buckets=(0.01, 0.025, 0.05, 0.1, 0.25, 0.5, 1, 2, 5, 10),
+            registry=self.registry,
+        )
+        self.incident_transitions = Counter(
+            "retryrail_incident_transitions_total",
+            "Durable incident lifecycle changes.",
+            ("transition",),
+            registry=self.registry,
+        )
+        self.active_incidents = Gauge(
+            "retryrail_active_incidents",
+            "Current detected open incidents, including review-only incidents.",
+            registry=self.registry,
+        )
+        self.incident_at_risk_gmv = Gauge(
+            "retryrail_incident_at_risk_gmv_subunits",
+            "At-risk GMV for detected open incidents in integer currency subunits.",
             registry=self.registry,
         )
 

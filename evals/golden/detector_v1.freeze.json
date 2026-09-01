@@ -1,0 +1,28 @@
+{
+  "attribution_issuer_share_ppm": 700000,
+  "attribution_minimum_failures": 2,
+  "baseline_lookback_minutes": 240,
+  "baseline_minimum_attempts": 20,
+  "candidate_dimension": "method",
+  "confidence_threshold_ppm": 987500,
+  "current_window_minutes": [
+    30,
+    60,
+    120
+  ],
+  "cusum_allowance_bps": 500,
+  "cusum_threshold_milli": 1500,
+  "detector_version": "detector_v1_0_0",
+  "ewma_alpha_ppm": 300000,
+  "ewma_drop_threshold_bps": 1000,
+  "frozen_at": "2026-09-02T00:00:00Z",
+  "healthy_window_minutes": 90,
+  "minimum_at_risk_gmv_subunits": 250000,
+  "minimum_current_attempts": 12,
+  "minimum_current_failures": 2,
+  "minimum_excess_failures": 4,
+  "minimum_success_rate_drop_bps": 1000,
+  "schema_version": "1.0.0",
+  "step_minutes": 5,
+  "threshold_source_split": "tuning"
+}

@@ -28,6 +28,10 @@ apps/web/test-results/
 fixtures/generated/*.jsonl
 fixtures/generated/*.sha256
 fixtures/generated/.*.tmp
+fixtures/generated/**/*.jsonl
+fixtures/generated/**/.*.tmp
+evals/generated/**/*.jsonl
+evals/generated/**/.*.tmp
 fixtures/manifests/.*.tmp
 
 # Editors and operating systems

@@ -2,9 +2,9 @@
 
 ## Scope
 
-M0–M2 contain no live Razorpay action, customer messaging or model call. M2
-adds an authenticated synthetic/test webhook database and deterministic payment
-projection; it cannot initiate a payment or customer-facing mutation.
+M0–M3 contain no live Razorpay action, customer messaging or model call. M3
+adds deterministic aggregates, diagnosis and incident reads; it cannot initiate
+a payment or customer-facing mutation.
 
 ## Threats and current controls
 
@@ -15,6 +15,13 @@ projection; it cannot initiate a payment or customer-facing mutation.
 | Secret committed to Git | Environment-only configuration plus pattern scan | `retryrail-security-scan` |
 | PII/card data in fixtures or normalized events | Explicit field allowlist and prohibited-key scan | Sanitization and fixture scanner tests |
 | Evaluation-label leakage into runtime data | Physically separate truth artifacts and schemas | Split-isolation and forbidden-field tests |
+| Detector threshold changed after blind result | Committed config hash and byte-reproducible reports | `retryrail-eval --check` plus exact-result tests |
+| V2 blind output influences candidate tuning | Generator/protocol precommit, source/config/matcher freeze, post-freeze nonce, event-first prediction receipt and separate truth loader | `retryrail-v2-data --check`, `retryrail-v2-candidate --check` and isolation tests |
+| Sparse high failure percentage creates an action incident | Current/baseline sample, excess-failure and GMV gates | Held-out wallet hard-negative test |
+| Incident baseline absorbs incident traffic | Opening reference interval is frozen for every update | Per-observation leakage assertions |
+| No traffic is mistaken for recovery | Resolution requires a sample-eligible window with the rate drop below threshold | No-traffic lifecycle regression test |
+| Cross-merchant incident read or evidence link | No caller-controlled merchant scope; record/configured merchant match plus composite incident/merchant FK | API not-found and database rejection tests |
+| Detector evidence rewritten | Observation/run update and delete blocked by database triggers | Integration immutability test |
 | Cherry-picked or mutable synthetic results | Fixed seed, SHA-256-derived draws and committed manifest digest | Byte-determinism and artifact-digest tests |
 | Unsafe production defaults | Startup validation rejects placeholder secret, SQLite and localhost CORS | Configuration refusal tests |
 | Duplicate or reordered delivery | Merchant/event uniqueness, atomic outbox, monotonic state rank | Triple-delivery and captured-before-authorized tests |
@@ -61,7 +68,7 @@ environments, dependency stores and build output, then scans source/config text
 and parses JSON/JSONL fixtures structurally. CI dependency audits cover the
 pruned third-party trees.
 
-## Known M0–M2 limits
+## Known M0–M3 limits
 
 - The P0 API currently serves one configured merchant. Full merchant
   authentication/authorization and database row-level security are not yet
@@ -73,3 +80,15 @@ pruned third-party trees.
   manual database mutation is intentionally not documented as a workflow.
 - Local Compose placeholders are development-only and are rejected by the
   production configuration validator.
+- Detector v1 failed held-out precision and recall. It is not safe to use as a
+  release-qualified recovery trigger; this is a product-quality blocker, not a
+  hidden security exception. Its generated release-decision artifact is bound
+  to the frozen configuration hash, packaged with the service and forces
+  persisted v1 incidents to remain action-ineligible.
+- The default detector scans one configured merchant and refreshes from all
+  completed facts. Row-level security and high-volume incremental stream
+  processing remain production gaps.
+- Detector-v2 R2 is frozen and passes synthetic development targets, but no
+  official blind run exists. Its prediction models force runtime action
+  eligibility to false; it does not change the blocked v1 runtime decision or
+  create a recovery authorization path.

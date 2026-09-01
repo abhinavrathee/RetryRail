@@ -1,0 +1,50 @@
+{
+  "allowed_development_dataset_ids": [
+    "retryrail_default_v1",
+    "retryrail_detector_v2_development_v1"
+  ],
+  "configuration_change_requires_new_nonce": true,
+  "development_dataset_id": "retryrail_detector_v2_development_v1",
+  "development_manifest_sha256": "09ea61ca4ae08b8bcef7771358478f20896133d4a1e88bde7b06450c5dd9de37",
+  "forbidden_test_nonce_sha256": [
+    "b55895da52e3e21bf6c9cc95168ad04570d9848de5565a26ec7b0db422d72689",
+    "b468a1162e2662815787768f0a743b0067f92ff73856e3a1ccb7f5e9ea42c1c1"
+  ],
+  "generator_bundle_sha256": "a91e12e9945dd9cab9252dbd6f345e99fd52229505baf10a9aafc5dae511a9b9",
+  "generator_version": "detector_v2_generator_v1_0_0",
+  "official_blind_hard_negatives": 4,
+  "official_blind_nonce_after_candidate_freeze": true,
+  "official_blind_nonce_minimum_characters": 16,
+  "official_blind_nonce_required": true,
+  "official_blind_true_incidents": 6,
+  "precommitted_at": "2026-09-01T00:00:00Z",
+  "predictions_persisted_before_blind_labels_loaded": true,
+  "protocol_id": "detector_v2_protocol_v1",
+  "release_targets": {
+    "baseline_leakage_violations": 0,
+    "evidence_reconciliation_violations": 0,
+    "hard_negative_action_eligible_incidents": 0,
+    "median_detection_delay_seconds": 600,
+    "precision_ppm": 900000,
+    "recall_ppm": 850000,
+    "top_1_attribution_ppm": 800000
+  },
+  "rules": [
+    "V1 tuning and consumed held-out data may be used only as development evidence.",
+    "The official blind nonce is supplied only after the candidate config is frozen.",
+    "Blind normalized events are loaded and predictions persisted before truth labels.",
+    "No threshold, algorithm, or matching-rule change is allowed after nonce reveal.",
+    "Any code or config change requires a new nonce and a newly identified blind run.",
+    "Every hard negative must remain action-ineligible even if an incident is visible.",
+    "All results, including failures, are committed as synthetic evidence."
+  ],
+  "scenario_family_counts": {
+    "customer_behavior_spike": 2,
+    "issuer_provider_degradation": 3,
+    "low_volume_spike": 1,
+    "method_provider_degradation": 3,
+    "transient_provider_burst": 1
+  },
+  "schema_version": "1.0.0",
+  "status": "precommitted"
+}

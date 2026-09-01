@@ -10,10 +10,12 @@ from sqlalchemy import (
     CheckConstraint,
     DateTime,
     ForeignKey,
+    ForeignKeyConstraint,
     Index,
     Integer,
     String,
     UniqueConstraint,
+    text,
 )
 from sqlalchemy.dialects.postgresql import JSONB
 from sqlalchemy.orm import DeclarativeBase, Mapped, mapped_column
@@ -178,3 +180,192 @@ class PaymentProjectionRecord(Base):
     state_changed_at: Mapped[datetime] = mapped_column(UTCDateTime(), nullable=False)
     last_processed_at: Mapped[datetime] = mapped_column(UTCDateTime(), nullable=False)
     version: Mapped[int] = mapped_column(Integer, nullable=False, default=1)
+
+
+class AggregateWindowRecord(Base):
+    """Materialized, exactly reconcilable detector cohort window."""
+
+    __tablename__ = "aggregate_windows"
+    __table_args__ = (
+        CheckConstraint("attempts > 0", name="ck_aggregate_windows_attempts_positive"),
+        CheckConstraint(
+            "successes >= 0 AND failures >= 0 AND successes + failures = attempts",
+            name="ck_aggregate_windows_outcomes_reconcile",
+        ),
+        CheckConstraint(
+            "gmv_subunits > 0 AND failed_gmv_subunits >= 0 "
+            "AND failed_gmv_subunits <= gmv_subunits",
+            name="ck_aggregate_windows_money_reconcile",
+        ),
+        CheckConstraint(
+            "window_end > window_start",
+            name="ck_aggregate_windows_time_order",
+        ),
+        Index(
+            "ix_aggregate_windows_merchant_time",
+            "merchant_id",
+            "window_start",
+        ),
+    )
+
+    merchant_id: Mapped[str] = mapped_column(String(80), primary_key=True)
+    detector_version: Mapped[str] = mapped_column(String(80), primary_key=True)
+    cohort_key: Mapped[str] = mapped_column(String(200), primary_key=True)
+    window_start: Mapped[datetime] = mapped_column(UTCDateTime(), primary_key=True)
+    window_end: Mapped[datetime] = mapped_column(UTCDateTime(), nullable=False)
+    cohort: Mapped[list[dict[str, Any]]] = mapped_column(JSON_DOCUMENT, nullable=False)
+    attempts: Mapped[int] = mapped_column(Integer, nullable=False)
+    successes: Mapped[int] = mapped_column(Integer, nullable=False)
+    failures: Mapped[int] = mapped_column(Integer, nullable=False)
+    gmv_subunits: Mapped[int] = mapped_column(BigInteger, nullable=False)
+    failed_gmv_subunits: Mapped[int] = mapped_column(BigInteger, nullable=False)
+    currency: Mapped[str] = mapped_column(String(3), nullable=False)
+    synthetic: Mapped[bool] = mapped_column(Boolean, nullable=False)
+    source_watermark: Mapped[datetime] = mapped_column(UTCDateTime(), nullable=False)
+    updated_at: Mapped[datetime] = mapped_column(UTCDateTime(), nullable=False, default=utc_now)
+
+
+class IncidentRecord(Base):
+    """Durable merged degradation episode with its peak evidence snapshot."""
+
+    __tablename__ = "incidents"
+    __table_args__ = (
+        CheckConstraint(
+            "status IN ('open', 'resolved')",
+            name="ck_incidents_status",
+        ),
+        CheckConstraint(
+            "(status = 'open' AND resolved_at IS NULL) OR "
+            "(status = 'resolved' AND resolved_at IS NOT NULL)",
+            name="ck_incidents_resolution_state",
+        ),
+        CheckConstraint(
+            "last_observed_at >= opened_at AND "
+            "(resolved_at IS NULL OR resolved_at >= last_observed_at)",
+            name="ck_incidents_time_order",
+        ),
+        CheckConstraint(
+            "gmv_at_risk_subunits >= 0",
+            name="ck_incidents_at_risk_nonnegative",
+        ),
+        CheckConstraint(
+            "length(detector_config_sha256) = 64",
+            name="ck_incidents_detector_config_sha256",
+        ),
+        Index("ix_incidents_merchant_opened", "merchant_id", "opened_at"),
+        UniqueConstraint(
+            "incident_id",
+            "merchant_id",
+            name="uq_incidents_identity_merchant",
+        ),
+        Index(
+            "uq_incidents_one_active_cohort",
+            "merchant_id",
+            "detector_cohort_key",
+            unique=True,
+            postgresql_where=text("status = 'open'"),
+            sqlite_where=text("status = 'open'"),
+        ),
+    )
+
+    incident_id: Mapped[str] = mapped_column(String(80), primary_key=True)
+    merchant_id: Mapped[str] = mapped_column(String(80), nullable=False)
+    detector_version: Mapped[str] = mapped_column(String(80), nullable=False)
+    detector_config_sha256: Mapped[str] = mapped_column(String(64), nullable=False)
+    detector_cohort_key: Mapped[str] = mapped_column(String(200), nullable=False)
+    detector_cohort: Mapped[list[dict[str, Any]]] = mapped_column(
+        JSON_DOCUMENT,
+        nullable=False,
+    )
+    affected_cohort: Mapped[list[dict[str, Any]]] = mapped_column(
+        JSON_DOCUMENT,
+        nullable=False,
+    )
+    status: Mapped[str] = mapped_column(String(16), nullable=False)
+    opened_at: Mapped[datetime] = mapped_column(UTCDateTime(), nullable=False)
+    last_observed_at: Mapped[datetime] = mapped_column(UTCDateTime(), nullable=False)
+    resolved_at: Mapped[datetime | None] = mapped_column(UTCDateTime(), nullable=True)
+    peak_statistics: Mapped[dict[str, Any]] = mapped_column(JSON_DOCUMENT, nullable=False)
+    diagnosis: Mapped[dict[str, Any]] = mapped_column(JSON_DOCUMENT, nullable=False)
+    evidence_event_ids: Mapped[list[str]] = mapped_column(JSON_DOCUMENT, nullable=False)
+    gmv_at_risk_subunits: Mapped[int] = mapped_column(BigInteger, nullable=False)
+    currency: Mapped[str] = mapped_column(String(3), nullable=False)
+    action_eligible: Mapped[bool] = mapped_column(Boolean, nullable=False, default=False)
+    synthetic: Mapped[bool] = mapped_column(Boolean, nullable=False)
+    created_at: Mapped[datetime] = mapped_column(UTCDateTime(), nullable=False, default=utc_now)
+    updated_at: Mapped[datetime] = mapped_column(UTCDateTime(), nullable=False, default=utc_now)
+
+
+class IncidentObservationRecord(Base):
+    """Append-only passing detector observation linked to one incident."""
+
+    __tablename__ = "incident_observations"
+    __table_args__ = (
+        ForeignKeyConstraint(
+            ("incident_id", "merchant_id"),
+            ("incidents.incident_id", "incidents.merchant_id"),
+            name="fk_incident_observations_incident_merchant",
+            ondelete="RESTRICT",
+        ),
+        UniqueConstraint(
+            "incident_id",
+            "evaluated_at",
+            name="uq_incident_observations_incident_time",
+        ),
+        CheckConstraint(
+            "length(detector_config_sha256) = 64",
+            name="ck_incident_observations_detector_config_sha256",
+        ),
+        Index(
+            "ix_incident_observations_incident_time",
+            "incident_id",
+            "evaluated_at",
+        ),
+    )
+
+    observation_id: Mapped[str] = mapped_column(String(80), primary_key=True)
+    incident_id: Mapped[str] = mapped_column(String(80), nullable=False)
+    merchant_id: Mapped[str] = mapped_column(String(80), nullable=False)
+    detector_version: Mapped[str] = mapped_column(String(80), nullable=False)
+    detector_config_sha256: Mapped[str] = mapped_column(String(64), nullable=False)
+    evaluated_at: Mapped[datetime] = mapped_column(UTCDateTime(), nullable=False)
+    statistics: Mapped[dict[str, Any]] = mapped_column(JSON_DOCUMENT, nullable=False)
+    evidence_event_ids: Mapped[list[str]] = mapped_column(JSON_DOCUMENT, nullable=False)
+    created_at: Mapped[datetime] = mapped_column(UTCDateTime(), nullable=False, default=utc_now)
+
+
+class DetectionRunRecord(Base):
+    """Append-only idempotent receipt for one source-event/config snapshot."""
+
+    __tablename__ = "detection_runs"
+    __table_args__ = (
+        UniqueConstraint(
+            "merchant_id",
+            "detector_config_sha256",
+            "source_events_sha256",
+            name="uq_detection_runs_source_snapshot",
+        ),
+        CheckConstraint(
+            "length(detector_config_sha256) = 64 AND length(source_events_sha256) = 64",
+            name="ck_detection_runs_sha256",
+        ),
+        CheckConstraint(
+            "attempt_count >= 0 AND aggregate_count >= 0 AND incident_count >= 0",
+            name="ck_detection_runs_counts_nonnegative",
+        ),
+        Index("ix_detection_runs_merchant_created", "merchant_id", "created_at"),
+    )
+
+    run_id: Mapped[str] = mapped_column(String(80), primary_key=True)
+    merchant_id: Mapped[str] = mapped_column(String(80), nullable=False)
+    detector_version: Mapped[str] = mapped_column(String(80), nullable=False)
+    detector_config_sha256: Mapped[str] = mapped_column(String(64), nullable=False)
+    source_events_sha256: Mapped[str] = mapped_column(String(64), nullable=False)
+    source_watermark: Mapped[datetime] = mapped_column(UTCDateTime(), nullable=False)
+    partition_started_at: Mapped[datetime] = mapped_column(UTCDateTime(), nullable=False)
+    partition_ended_at: Mapped[datetime] = mapped_column(UTCDateTime(), nullable=False)
+    attempt_count: Mapped[int] = mapped_column(Integer, nullable=False)
+    aggregate_count: Mapped[int] = mapped_column(Integer, nullable=False)
+    incident_count: Mapped[int] = mapped_column(Integer, nullable=False)
+    synthetic: Mapped[bool] = mapped_column(Boolean, nullable=False)
+    created_at: Mapped[datetime] = mapped_column(UTCDateTime(), nullable=False, default=utc_now)

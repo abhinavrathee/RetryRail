@@ -1,0 +1,62 @@
+{
+  "cases": [
+    {
+      "detected_incident": false,
+      "expected_incident": true,
+      "expected_top_causes": [
+        "issuer_unavailable",
+        "bank",
+        "payment_authentication"
+      ],
+      "observed_top_causes": [],
+      "scenario_id": "incident_heldout_netbanking_beta"
+    },
+    {
+      "detected_incident": false,
+      "expected_incident": false,
+      "expected_top_causes": [
+        "payment_timed_out",
+        "wallet",
+        "payment_processing"
+      ],
+      "observed_top_causes": [],
+      "scenario_id": "hard_negative_heldout_wallet_low_volume"
+    },
+    {
+      "detected_incident": true,
+      "expected_incident": false,
+      "expected_top_causes": [],
+      "observed_top_causes": [
+        "payment_cancelled",
+        "customer",
+        "payment_authentication"
+      ],
+      "scenario_id": "background_inc_3d628b9ecc50d34a8d18e7f8"
+    },
+    {
+      "detected_incident": true,
+      "expected_incident": false,
+      "expected_top_causes": [],
+      "observed_top_causes": [
+        "payment_cancelled",
+        "customer",
+        "payment_authentication"
+      ],
+      "scenario_id": "background_inc_4e14bcc93f5c47298dc1f4cc"
+    }
+  ],
+  "dataset_manifest_sha256": "24cc716b0d144fd14ee68ae8cd3dce821fbc7acff3fb38b95bf17c6571ff8934",
+  "dataset_split": "heldout",
+  "detector_version": "detector_v1_0_0",
+  "evaluated_at": "2026-09-09T00:05:00Z",
+  "evaluation_id": "detector_eval_heldout_v1",
+  "false_negatives": 1,
+  "false_positives": 2,
+  "precision_ppm": 0,
+  "recall_ppm": 0,
+  "schema_version": "1.0.0",
+  "synthetic": true,
+  "top_1_attribution_ppm": 0,
+  "top_3_attribution_ppm": 0,
+  "true_positives": 0
+}

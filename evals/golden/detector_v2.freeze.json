@@ -1,0 +1,31 @@
+{
+  "candidate_bundle_sha256": "e85b8803208539c3e77679b5194f0b278b225ad6b39e5998570d156332e8477d",
+  "candidate_source_paths": [
+    "services/api/app/retryrail/contracts/domain.py",
+    "services/api/app/retryrail/detection/engine.py",
+    "services/api/app/retryrail/detection/models.py",
+    "services/api/app/retryrail/detection/v2_config.py",
+    "services/api/app/retryrail/detection/v2_engine.py",
+    "services/api/app/retryrail/detection/v2_evaluation.py",
+    "services/api/app/retryrail/detection/v2_models.py",
+    "services/api/app/retryrail/events/models.py"
+  ],
+  "detector_config_sha256": "75c751853bf173be2adb4b7b9ebebf862cd15b8ffdbcdeb85c403003617a2bd6",
+  "detector_version": "detector_v2_0_0",
+  "development_manifest_sha256": "09ea61ca4ae08b8bcef7771358478f20896133d4a1e88bde7b06450c5dd9de37",
+  "development_prediction_sha256": "8c3607d3e3129a37b43b1be313dbc57d3e8fed3577e169e6e753e74bafe30135",
+  "development_report_sha256": "7029634806c56479389888df38e14801f0cb62a95b29060968ff72bb98c148a9",
+  "development_targets_passed": true,
+  "freeze_id": "detector_v2_candidate_freeze_v1",
+  "frozen_at": "2026-09-18T00:00:00Z",
+  "generator_bundle_sha256": "a91e12e9945dd9cab9252dbd6f345e99fd52229505baf10a9aafc5dae511a9b9",
+  "matcher_version": "detector_v2_matcher_v1_0_0",
+  "official_blind_evaluated": false,
+  "protocol_id": "detector_v2_protocol_v1",
+  "protocol_sha256": "994c24d2c71c00bb736449795c6e669f6dee6b3f1e1c9166a9eb0832ca6befd7",
+  "release_qualified": false,
+  "runtime_action_eligible": false,
+  "schema_version": "1.0.0",
+  "status": "candidate_frozen_for_blind",
+  "synthetic": true
+}

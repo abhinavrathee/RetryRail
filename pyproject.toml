@@ -25,9 +25,13 @@ dependencies = [
 retryrail-api = "retryrail.main:run"
 retryrail-contracts = "retryrail.contracts.export:main"
 retryrail-db = "retryrail.db.migrate:main"
+retryrail-detect = "retryrail.detect:main"
+retryrail-eval = "retryrail.detection.evaluation:main"
 retryrail-replay = "retryrail.replay:main"
 retryrail-security-scan = "retryrail.security.repository_scan:main"
 retryrail-seed = "retryrail.synthetic.generator:main"
+retryrail-v2-data = "retryrail.synthetic.v2_generator:main"
+retryrail-v2-candidate = "retryrail.detection.v2_evaluation:main"
 
 [dependency-groups]
 dev = [
@@ -50,6 +54,8 @@ packages = ["services/api/app/retryrail"]
 [tool.hatch.build.targets.wheel.force-include]
 "services/api/alembic.ini" = "retryrail/db/alembic.ini"
 "services/api/migrations" = "retryrail/db/migrations"
+"evals/golden/detector_v1.freeze.json" = "retryrail/detection/assets/detector_v1.freeze.json"
+"evals/reports/detector_v1.release.json" = "retryrail/detection/assets/detector_v1.release.json"
 
 [tool.pytest.ini_options]
 addopts = "--strict-config --strict-markers -ra"

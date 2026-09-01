@@ -9,10 +9,12 @@ from fastapi.middleware.cors import CORSMiddleware
 
 from retryrail import __version__
 from retryrail.api.health import router as health_router
+from retryrail.api.incidents import router as incidents_router
 from retryrail.api.replay import router as replay_router
 from retryrail.api.webhooks import router as webhook_router
 from retryrail.config import Settings, get_settings
 from retryrail.db.session import Database
+from retryrail.detection.service import DetectionService
 from retryrail.events.ingestion import EventIngestionService
 from retryrail.observability.logging import configure_logging
 from retryrail.observability.metrics import PipelineMetrics
@@ -46,6 +48,10 @@ def create_app(
             resolved_settings.webhook_secret,
             resolved_metrics,
             outbox_max_attempts=resolved_settings.outbox_max_attempts,
+        )
+        application.state.detection_service = DetectionService(
+            resolved_database,
+            resolved_metrics,
         )
         try:
             yield
@@ -86,6 +92,7 @@ def create_app(
         return response
 
     application.include_router(health_router)
+    application.include_router(incidents_router)
     application.include_router(webhook_router)
     application.include_router(replay_router)
     application.include_router(metrics_router)

@@ -1,0 +1,18 @@
+{
+  "action_eligible": false,
+  "dataset_manifest_sha256": "24cc716b0d144fd14ee68ae8cd3dce821fbc7acff3fb38b95bf17c6571ff8934",
+  "detector_config_sha256": "d7182d843cd15adbca972d562b72f6fffe9d31cfcf12fa30a56b1045d6ab77d6",
+  "detector_version": "detector_v1_0_0",
+  "evaluated_at": "2026-09-09T00:05:00Z",
+  "evaluation_split": "heldout",
+  "failed_targets": [
+    "precision",
+    "recall",
+    "top_1_attribution",
+    "median_detection_delay"
+  ],
+  "schema_version": "1.0.0",
+  "source_report_id": "detector_report_heldout_v1",
+  "status": "blocked",
+  "synthetic": true
+}

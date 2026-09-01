@@ -1,0 +1,670 @@
+{
+  "baseline_leakage_violations": 0,
+  "cases": [
+    {
+      "detected_incident": false,
+      "expected_cohort": [
+        {
+          "dimension": "method",
+          "value": "netbanking"
+        },
+        {
+          "dimension": "issuer",
+          "value": "issuer_synthetic_beta"
+        }
+      ],
+      "expected_incident": true,
+      "expected_top_causes": [
+        "issuer_unavailable",
+        "bank",
+        "payment_authentication"
+      ],
+      "gate_reason": "blocked_by_confidence_gate",
+      "observed_cohort": [],
+      "observed_top_causes": [],
+      "scenario_id": "incident_heldout_netbanking_beta",
+      "scenario_kind": "true_incident"
+    },
+    {
+      "detected_incident": false,
+      "expected_cohort": [
+        {
+          "dimension": "method",
+          "value": "wallet"
+        }
+      ],
+      "expected_incident": false,
+      "expected_top_causes": [
+        "payment_timed_out",
+        "wallet",
+        "payment_processing"
+      ],
+      "gate_reason": "blocked_by_minimum_sample_gate",
+      "observed_cohort": [],
+      "observed_top_causes": [],
+      "scenario_id": "hard_negative_heldout_wallet_low_volume",
+      "scenario_kind": "hard_negative"
+    },
+    {
+      "detected_incident": true,
+      "expected_cohort": [],
+      "expected_incident": false,
+      "expected_top_causes": [],
+      "gate_reason": "statistical_and_business_gates_pass",
+      "matched_incident_id": "inc_3d628b9ecc50d34a8d18e7f8",
+      "observed_cohort": [
+        {
+          "dimension": "method",
+          "value": "upi"
+        }
+      ],
+      "observed_top_causes": [
+        "payment_cancelled",
+        "customer",
+        "payment_authentication"
+      ],
+      "scenario_id": "background_inc_3d628b9ecc50d34a8d18e7f8",
+      "scenario_kind": "background"
+    },
+    {
+      "detected_incident": true,
+      "expected_cohort": [],
+      "expected_incident": false,
+      "expected_top_causes": [],
+      "gate_reason": "statistical_and_business_gates_pass",
+      "matched_incident_id": "inc_4e14bcc93f5c47298dc1f4cc",
+      "observed_cohort": [
+        {
+          "dimension": "method",
+          "value": "upi"
+        }
+      ],
+      "observed_top_causes": [
+        "payment_cancelled",
+        "customer",
+        "payment_authentication"
+      ],
+      "scenario_id": "background_inc_4e14bcc93f5c47298dc1f4cc",
+      "scenario_kind": "background"
+    }
+  ],
+  "dataset_id": "retryrail_default_v1",
+  "dataset_manifest_sha256": "24cc716b0d144fd14ee68ae8cd3dce821fbc7acff3fb38b95bf17c6571ff8934",
+  "dataset_split": "heldout",
+  "detector_config_sha256": "d7182d843cd15adbca972d562b72f6fffe9d31cfcf12fa30a56b1045d6ab77d6",
+  "detector_frozen_at": "2026-09-02T00:00:00Z",
+  "detector_version": "detector_v1_0_0",
+  "evaluated_at": "2026-09-09T00:05:00Z",
+  "evidence_reconciliation_violations": 0,
+  "false_negatives": 1,
+  "false_positives": 2,
+  "hard_negative_action_eligible_incidents": 0,
+  "heldout_thresholds_frozen_before_partition": true,
+  "incidents": [
+    {
+      "affected_cohort": [
+        {
+          "dimension": "method",
+          "value": "upi"
+        }
+      ],
+      "diagnosis": {
+        "hypotheses": [
+          {
+            "confidence_ppm": 999952,
+            "evidence_event_ids": [
+              "evt_syn_hold_0422_failed",
+              "evt_syn_hold_0424_failed",
+              "evt_syn_hold_0428_failed",
+              "evt_syn_hold_0443_failed",
+              "evt_syn_hold_0446_failed",
+              "evt_syn_hold_0456_failed",
+              "evt_syn_hold_0460_failed"
+            ],
+            "evidence_kind": "inferred_hypothesis",
+            "statement": "Merchant-local evidence is consistent with elevated payment_cancelled failures from customer during payment_authentication; external provider state is unverified."
+          }
+        ],
+        "likely_causes": [
+          "payment_cancelled",
+          "customer",
+          "payment_authentication"
+        ],
+        "unknowns": [
+          "External provider status is not verified by merchant-local payment events.",
+          "The contribution calculation is observational and does not prove causality."
+        ],
+        "verified_attributions": [
+          {
+            "baseline_attempts": 81,
+            "baseline_failures": 6,
+            "confidence_ppm": 999952,
+            "contribution_ppm": 807303,
+            "current_attempts": 16,
+            "current_failures": 7,
+            "dimension": "method",
+            "evidence_event_ids": [
+              "evt_syn_hold_0422_failed",
+              "evt_syn_hold_0424_failed",
+              "evt_syn_hold_0428_failed",
+              "evt_syn_hold_0443_failed",
+              "evt_syn_hold_0446_failed",
+              "evt_syn_hold_0456_failed",
+              "evt_syn_hold_0460_failed"
+            ],
+            "evidence_kind": "verified_observation",
+            "excess_failures_milli": 5815,
+            "expected_failures_milli": 1185,
+            "rank": 1,
+            "value": "upi"
+          },
+          {
+            "baseline_attempts": 49,
+            "baseline_failures": 6,
+            "confidence_ppm": 951961,
+            "contribution_ppm": 192697,
+            "current_attempts": 5,
+            "current_failures": 2,
+            "dimension": "method",
+            "evidence_event_ids": [
+              "evt_syn_hold_0461_failed",
+              "evt_syn_hold_0463_failed"
+            ],
+            "evidence_kind": "verified_observation",
+            "excess_failures_milli": 1388,
+            "expected_failures_milli": 612,
+            "rank": 2,
+            "value": "netbanking"
+          },
+          {
+            "baseline_attempts": 27,
+            "baseline_failures": 3,
+            "confidence_ppm": 996364,
+            "contribution_ppm": 655678,
+            "current_attempts": 7,
+            "current_failures": 4,
+            "dimension": "issuer",
+            "evidence_event_ids": [
+              "evt_syn_hold_0424_failed",
+              "evt_syn_hold_0428_failed",
+              "evt_syn_hold_0456_failed",
+              "evt_syn_hold_0460_failed"
+            ],
+            "evidence_kind": "verified_observation",
+            "excess_failures_milli": 3222,
+            "expected_failures_milli": 778,
+            "rank": 1,
+            "value": "issuer_synthetic_beta"
+          },
+          {
+            "baseline_attempts": 39,
+            "baseline_failures": 2,
+            "confidence_ppm": 988091,
+            "contribution_ppm": 344322,
+            "current_attempts": 6,
+            "current_failures": 2,
+            "dimension": "issuer",
+            "evidence_event_ids": [
+              "evt_syn_hold_0443_failed",
+              "evt_syn_hold_0446_failed"
+            ],
+            "evidence_kind": "verified_observation",
+            "excess_failures_milli": 1692,
+            "expected_failures_milli": 308,
+            "rank": 2,
+            "value": "issuer_synthetic_alpha"
+          },
+          {
+            "baseline_attempts": 81,
+            "baseline_failures": 6,
+            "confidence_ppm": 999952,
+            "contribution_ppm": 1000000,
+            "current_attempts": 16,
+            "current_failures": 7,
+            "dimension": "error_source",
+            "evidence_event_ids": [
+              "evt_syn_hold_0422_failed",
+              "evt_syn_hold_0424_failed",
+              "evt_syn_hold_0428_failed",
+              "evt_syn_hold_0443_failed",
+              "evt_syn_hold_0446_failed",
+              "evt_syn_hold_0456_failed",
+              "evt_syn_hold_0460_failed"
+            ],
+            "evidence_kind": "verified_observation",
+            "excess_failures_milli": 5815,
+            "expected_failures_milli": 1185,
+            "rank": 1,
+            "value": "customer"
+          },
+          {
+            "baseline_attempts": 81,
+            "baseline_failures": 6,
+            "confidence_ppm": 999952,
+            "contribution_ppm": 1000000,
+            "current_attempts": 16,
+            "current_failures": 7,
+            "dimension": "error_step",
+            "evidence_event_ids": [
+              "evt_syn_hold_0422_failed",
+              "evt_syn_hold_0424_failed",
+              "evt_syn_hold_0428_failed",
+              "evt_syn_hold_0443_failed",
+              "evt_syn_hold_0446_failed",
+              "evt_syn_hold_0456_failed",
+              "evt_syn_hold_0460_failed"
+            ],
+            "evidence_kind": "verified_observation",
+            "excess_failures_milli": 5815,
+            "expected_failures_milli": 1185,
+            "rank": 1,
+            "value": "payment_authentication"
+          },
+          {
+            "baseline_attempts": 81,
+            "baseline_failures": 6,
+            "confidence_ppm": 999952,
+            "contribution_ppm": 1000000,
+            "current_attempts": 16,
+            "current_failures": 7,
+            "dimension": "error_reason",
+            "evidence_event_ids": [
+              "evt_syn_hold_0422_failed",
+              "evt_syn_hold_0424_failed",
+              "evt_syn_hold_0428_failed",
+              "evt_syn_hold_0443_failed",
+              "evt_syn_hold_0446_failed",
+              "evt_syn_hold_0456_failed",
+              "evt_syn_hold_0460_failed"
+            ],
+            "evidence_kind": "verified_observation",
+            "excess_failures_milli": 5815,
+            "expected_failures_milli": 1185,
+            "rank": 1,
+            "value": "payment_cancelled"
+          }
+        ]
+      },
+      "incident_id": "inc_3d628b9ecc50d34a8d18e7f8",
+      "last_observed_at": "2026-09-08T07:45:00Z",
+      "observation_count": 4,
+      "opened_at": "2026-09-08T07:30:00Z",
+      "peak_evidence_event_ids": [
+        "evt_syn_hold_0422_failed",
+        "evt_syn_hold_0424_failed",
+        "evt_syn_hold_0425_authorized",
+        "evt_syn_hold_0425_captured",
+        "evt_syn_hold_0428_failed",
+        "evt_syn_hold_0429_authorized",
+        "evt_syn_hold_0429_captured",
+        "evt_syn_hold_0432_authorized",
+        "evt_syn_hold_0432_captured",
+        "evt_syn_hold_0437_authorized",
+        "evt_syn_hold_0437_captured",
+        "evt_syn_hold_0440_authorized",
+        "evt_syn_hold_0440_captured",
+        "evt_syn_hold_0441_authorized",
+        "evt_syn_hold_0441_captured",
+        "evt_syn_hold_0443_failed",
+        "evt_syn_hold_0446_failed",
+        "evt_syn_hold_0447_authorized",
+        "evt_syn_hold_0447_captured",
+        "evt_syn_hold_0451_authorized",
+        "evt_syn_hold_0451_captured",
+        "evt_syn_hold_0456_failed",
+        "evt_syn_hold_0457_authorized",
+        "evt_syn_hold_0457_captured",
+        "evt_syn_hold_0460_failed"
+      ],
+      "peak_statistics": {
+        "at_risk_gmv_subunits": 679048,
+        "baseline_attempts": 81,
+        "baseline_ended_at": "2026-09-08T07:00:00Z",
+        "baseline_failure_rate_bps": 741,
+        "baseline_failures": 6,
+        "baseline_minimum_attempts": 20,
+        "baseline_started_at": "2026-09-08T03:00:00Z",
+        "baseline_successes": 75,
+        "confidence_ppm": 999952,
+        "confidence_threshold_ppm": 987500,
+        "currency": "INR",
+        "current_attempts": 16,
+        "current_failure_rate_bps": 4375,
+        "current_failures": 7,
+        "current_started_at": "2026-09-08T07:00:00Z",
+        "current_successes": 9,
+        "current_window_minutes": 60,
+        "cusum_milli": 5015,
+        "cusum_threshold_milli": 1500,
+        "evaluated_at": "2026-09-08T07:45:00Z",
+        "ewma_drop_bps": 4665,
+        "ewma_drop_threshold_bps": 1000,
+        "ewma_failure_rate_bps": 5406,
+        "excess_failures": 6,
+        "gate_reason": "statistical_and_business_gates_pass",
+        "minimum_at_risk_gmv_subunits": 250000,
+        "minimum_current_attempts": 12,
+        "minimum_current_failures": 2,
+        "minimum_excess_failures": 4,
+        "minimum_success_rate_drop_bps": 1000,
+        "success_rate_drop_bps": 3634
+      },
+      "resolved_at": "2026-09-08T09:55:00Z",
+      "status": "resolved",
+      "synthetic": true
+    },
+    {
+      "affected_cohort": [
+        {
+          "dimension": "method",
+          "value": "upi"
+        }
+      ],
+      "diagnosis": {
+        "hypotheses": [
+          {
+            "confidence_ppm": 999608,
+            "evidence_event_ids": [
+              "evt_syn_hold_1126_failed",
+              "evt_syn_hold_1127_failed",
+              "evt_syn_hold_1128_failed",
+              "evt_syn_hold_1140_failed",
+              "evt_syn_hold_1152_failed",
+              "evt_syn_hold_1163_failed",
+              "evt_syn_hold_1174_failed",
+              "evt_syn_hold_1183_failed"
+            ],
+            "evidence_kind": "inferred_hypothesis",
+            "statement": "Merchant-local evidence is consistent with elevated payment_cancelled failures from customer during payment_authentication; external provider state is unverified."
+          }
+        ],
+        "likely_causes": [
+          "payment_cancelled",
+          "customer",
+          "payment_authentication"
+        ],
+        "unknowns": [
+          "External provider status is not verified by merchant-local payment events.",
+          "The contribution calculation is observational and does not prove causality."
+        ],
+        "verified_attributions": [
+          {
+            "baseline_attempts": 85,
+            "baseline_failures": 9,
+            "confidence_ppm": 999608,
+            "contribution_ppm": 698635,
+            "current_attempts": 19,
+            "current_failures": 8,
+            "dimension": "method",
+            "evidence_event_ids": [
+              "evt_syn_hold_1126_failed",
+              "evt_syn_hold_1127_failed",
+              "evt_syn_hold_1128_failed",
+              "evt_syn_hold_1140_failed",
+              "evt_syn_hold_1152_failed",
+              "evt_syn_hold_1163_failed",
+              "evt_syn_hold_1174_failed",
+              "evt_syn_hold_1183_failed"
+            ],
+            "evidence_kind": "verified_observation",
+            "excess_failures_milli": 5988,
+            "expected_failures_milli": 2012,
+            "rank": 1,
+            "value": "upi"
+          },
+          {
+            "baseline_attempts": 104,
+            "baseline_failures": 9,
+            "confidence_ppm": 846901,
+            "contribution_ppm": 204177,
+            "current_attempts": 26,
+            "current_failures": 4,
+            "dimension": "method",
+            "evidence_event_ids": [
+              "evt_syn_hold_1125_failed",
+              "evt_syn_hold_1130_failed",
+              "evt_syn_hold_1148_failed",
+              "evt_syn_hold_1151_failed"
+            ],
+            "evidence_kind": "verified_observation",
+            "excess_failures_milli": 1750,
+            "expected_failures_milli": 2250,
+            "rank": 2,
+            "value": "card"
+          },
+          {
+            "baseline_attempts": 42,
+            "baseline_failures": 7,
+            "confidence_ppm": 699741,
+            "contribution_ppm": 97188,
+            "current_attempts": 13,
+            "current_failures": 3,
+            "dimension": "method",
+            "evidence_event_ids": [
+              "evt_syn_hold_1143_failed",
+              "evt_syn_hold_1144_failed",
+              "evt_syn_hold_1177_failed"
+            ],
+            "evidence_kind": "verified_observation",
+            "excess_failures_milli": 833,
+            "expected_failures_milli": 2167,
+            "rank": 3,
+            "value": "netbanking"
+          },
+          {
+            "baseline_attempts": 25,
+            "baseline_failures": 2,
+            "confidence_ppm": 993039,
+            "contribution_ppm": 522293,
+            "current_attempts": 9,
+            "current_failures": 4,
+            "dimension": "issuer",
+            "evidence_event_ids": [
+              "evt_syn_hold_1126_failed",
+              "evt_syn_hold_1128_failed",
+              "evt_syn_hold_1163_failed",
+              "evt_syn_hold_1174_failed"
+            ],
+            "evidence_kind": "verified_observation",
+            "excess_failures_milli": 3280,
+            "expected_failures_milli": 720,
+            "rank": 1,
+            "value": "issuer_synthetic_beta"
+          },
+          {
+            "baseline_attempts": 17,
+            "baseline_failures": 0,
+            "confidence_ppm": 999115,
+            "contribution_ppm": 477707,
+            "current_attempts": 6,
+            "current_failures": 3,
+            "dimension": "issuer",
+            "evidence_event_ids": [
+              "evt_syn_hold_1127_failed",
+              "evt_syn_hold_1140_failed",
+              "evt_syn_hold_1152_failed"
+            ],
+            "evidence_kind": "verified_observation",
+            "excess_failures_milli": 3000,
+            "expected_failures_milli": 0,
+            "rank": 2,
+            "value": "issuer_synthetic_gamma"
+          },
+          {
+            "baseline_attempts": 85,
+            "baseline_failures": 9,
+            "confidence_ppm": 999608,
+            "contribution_ppm": 1000000,
+            "current_attempts": 19,
+            "current_failures": 8,
+            "dimension": "error_source",
+            "evidence_event_ids": [
+              "evt_syn_hold_1126_failed",
+              "evt_syn_hold_1127_failed",
+              "evt_syn_hold_1128_failed",
+              "evt_syn_hold_1140_failed",
+              "evt_syn_hold_1152_failed",
+              "evt_syn_hold_1163_failed",
+              "evt_syn_hold_1174_failed",
+              "evt_syn_hold_1183_failed"
+            ],
+            "evidence_kind": "verified_observation",
+            "excess_failures_milli": 5988,
+            "expected_failures_milli": 2012,
+            "rank": 1,
+            "value": "customer"
+          },
+          {
+            "baseline_attempts": 85,
+            "baseline_failures": 9,
+            "confidence_ppm": 999608,
+            "contribution_ppm": 1000000,
+            "current_attempts": 19,
+            "current_failures": 8,
+            "dimension": "error_step",
+            "evidence_event_ids": [
+              "evt_syn_hold_1126_failed",
+              "evt_syn_hold_1127_failed",
+              "evt_syn_hold_1128_failed",
+              "evt_syn_hold_1140_failed",
+              "evt_syn_hold_1152_failed",
+              "evt_syn_hold_1163_failed",
+              "evt_syn_hold_1174_failed",
+              "evt_syn_hold_1183_failed"
+            ],
+            "evidence_kind": "verified_observation",
+            "excess_failures_milli": 5988,
+            "expected_failures_milli": 2012,
+            "rank": 1,
+            "value": "payment_authentication"
+          },
+          {
+            "baseline_attempts": 85,
+            "baseline_failures": 9,
+            "confidence_ppm": 999608,
+            "contribution_ppm": 1000000,
+            "current_attempts": 19,
+            "current_failures": 8,
+            "dimension": "error_reason",
+            "evidence_event_ids": [
+              "evt_syn_hold_1126_failed",
+              "evt_syn_hold_1127_failed",
+              "evt_syn_hold_1128_failed",
+              "evt_syn_hold_1140_failed",
+              "evt_syn_hold_1152_failed",
+              "evt_syn_hold_1163_failed",
+              "evt_syn_hold_1174_failed",
+              "evt_syn_hold_1183_failed"
+            ],
+            "evidence_kind": "verified_observation",
+            "excess_failures_milli": 5988,
+            "expected_failures_milli": 2012,
+            "rank": 1,
+            "value": "payment_cancelled"
+          }
+        ]
+      },
+      "incident_id": "inc_4e14bcc93f5c47298dc1f4cc",
+      "last_observed_at": "2026-09-08T19:55:00Z",
+      "observation_count": 8,
+      "opened_at": "2026-09-08T19:15:00Z",
+      "peak_evidence_event_ids": [
+        "evt_syn_hold_1126_failed",
+        "evt_syn_hold_1127_failed",
+        "evt_syn_hold_1128_failed",
+        "evt_syn_hold_1129_authorized",
+        "evt_syn_hold_1129_captured",
+        "evt_syn_hold_1131_authorized",
+        "evt_syn_hold_1131_captured",
+        "evt_syn_hold_1136_authorized",
+        "evt_syn_hold_1136_captured",
+        "evt_syn_hold_1139_authorized",
+        "evt_syn_hold_1139_captured",
+        "evt_syn_hold_1140_failed",
+        "evt_syn_hold_1141_authorized",
+        "evt_syn_hold_1141_captured",
+        "evt_syn_hold_1142_authorized",
+        "evt_syn_hold_1142_captured",
+        "evt_syn_hold_1152_failed",
+        "evt_syn_hold_1153_authorized",
+        "evt_syn_hold_1153_captured",
+        "evt_syn_hold_1160_authorized",
+        "evt_syn_hold_1160_captured",
+        "evt_syn_hold_1163_failed",
+        "evt_syn_hold_1165_authorized",
+        "evt_syn_hold_1165_captured",
+        "evt_syn_hold_1171_authorized",
+        "evt_syn_hold_1171_captured",
+        "evt_syn_hold_1174_failed",
+        "evt_syn_hold_1183_failed",
+        "evt_syn_hold_1184_authorized",
+        "evt_syn_hold_1184_captured"
+      ],
+      "peak_statistics": {
+        "at_risk_gmv_subunits": 1175872,
+        "baseline_attempts": 85,
+        "baseline_ended_at": "2026-09-08T18:45:00Z",
+        "baseline_failure_rate_bps": 1059,
+        "baseline_failures": 9,
+        "baseline_minimum_attempts": 20,
+        "baseline_started_at": "2026-09-08T14:45:00Z",
+        "baseline_successes": 76,
+        "confidence_ppm": 999608,
+        "confidence_threshold_ppm": 987500,
+        "currency": "INR",
+        "current_attempts": 19,
+        "current_failure_rate_bps": 4211,
+        "current_failures": 8,
+        "current_started_at": "2026-09-08T18:45:00Z",
+        "current_successes": 11,
+        "current_window_minutes": 60,
+        "cusum_milli": 5038,
+        "cusum_threshold_milli": 1500,
+        "evaluated_at": "2026-09-08T19:45:00Z",
+        "ewma_drop_bps": 3271,
+        "ewma_drop_threshold_bps": 1000,
+        "ewma_failure_rate_bps": 4330,
+        "excess_failures": 6,
+        "gate_reason": "statistical_and_business_gates_pass",
+        "minimum_at_risk_gmv_subunits": 250000,
+        "minimum_current_attempts": 12,
+        "minimum_current_failures": 2,
+        "minimum_excess_failures": 4,
+        "minimum_success_rate_drop_bps": 1000,
+        "success_rate_drop_bps": 3152
+      },
+      "resolved_at": "2026-09-08T21:35:00Z",
+      "status": "resolved",
+      "synthetic": true
+    }
+  ],
+  "labels_loaded_after_detection": true,
+  "limitations": [
+    "Results are synthetic submission evidence, not Razorpay production claims.",
+    "Method-level detection is the frozen P0 default; issuer and error fields refine diagnosis.",
+    "The confidence calculation is a transparent asymptotic proportion test, not causal proof."
+  ],
+  "method_aggregate_attempts": 1440,
+  "payment_attempts": 1440,
+  "precision_ppm": 0,
+  "predicted_incidents": 2,
+  "raw_normalized_events": 2746,
+  "recall_ppm": 0,
+  "report_id": "detector_report_heldout_v1",
+  "schema_version": "1.0.0",
+  "synthetic": true,
+  "targets": {
+    "median_detection_delay_passed": false,
+    "median_detection_delay_target_seconds": 600,
+    "precision_passed": false,
+    "precision_target_ppm": 900000,
+    "recall_passed": false,
+    "recall_target_ppm": 850000,
+    "top_1_attribution_passed": false,
+    "top_1_attribution_target_ppm": 800000
+  },
+  "threshold_source_split": "tuning",
+  "top_1_attribution_ppm": 0,
+  "top_3_attribution_ppm": 0,
+  "true_positives": 0
+}

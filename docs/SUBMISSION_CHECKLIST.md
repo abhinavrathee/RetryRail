@@ -194,8 +194,8 @@ Recommended timing:
 
 | Claim | Evidence location |
 | --- | --- |
-| Detector precision/recall | `evals/reports/detector-heldout.json` and README |
-| Root-cause accuracy | `evals/reports/attribution-heldout.json` |
+| Detector precision/recall | `evals/reports/heldout.detector_report.v1.json` remains the failed v1 release evidence; `evals/reports/detector_v2.development.report.json` is development-only and awaits the official blind run |
+| Root-cause accuracy | v1 held-out remains unscorable after the miss; v2 development top-1 is perfect but is not a blind claim |
 | Agent grounding/safety | `evals/reports/agent-golden.json` |
 | No duplicate action | Integration test plus demo audit receipt |
 | Timeout reconciliation | Integration test and failure-demo recording |
@@ -204,5 +204,6 @@ Recommended timing:
 | Complete audit | Automated audit-completeness test and UI timeline |
 | Clean release | Public CI run for tagged commit |
 
-These paths are required targets and should be created by implementation. They
-do not exist in the planning-only repository yet.
+Later-milestone paths remain required targets. M3 detector evidence now exists,
+but its failed held-out release result must not be copied into the application
+form as a successful metric.

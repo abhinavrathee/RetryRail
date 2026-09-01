@@ -54,6 +54,11 @@ jobs:
         run: |
           uv run retryrail-contracts --check
           uv run retryrail-seed --check
+          uv run retryrail-v2-data --check
+      - name: Verify frozen detector evaluation
+        run: |
+          uv run retryrail-eval --check
+          uv run retryrail-v2-candidate --check
 
   web-quality:
     name: Web quality and production build

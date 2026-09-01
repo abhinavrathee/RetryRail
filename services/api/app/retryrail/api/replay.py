@@ -23,7 +23,7 @@ class ReplayRequest(BaseModel):
 
     model_config = ConfigDict(extra="forbid", frozen=True)
 
-    mode: Literal["required_cases"] = "required_cases"
+    mode: Literal["required_cases", "tuning"] = "required_cases"
     limit: int | None = Field(default=None, ge=1, le=10_000)
 
 

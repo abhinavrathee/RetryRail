@@ -1,0 +1,311 @@
+{
+  "artifacts": [
+    {
+      "bytes": 4338581,
+      "path": "fixtures/generated/detector_v2/development.normalized_events.v1.jsonl",
+      "records": 10751,
+      "sha256": "d06b533334e430140b9c849726cee6de8814cfb593de2fe6bda7a8f158209a1a"
+    },
+    {
+      "bytes": 2317777,
+      "path": "evals/generated/detector_v2/development.attempt_truth.v1.jsonl",
+      "records": 5760,
+      "sha256": "cbbea9d9df62d64adf613e9d7f278beed456ffcfddefe9d8e0160803e5214201"
+    }
+  ],
+  "attempt_interval_seconds": 30,
+  "currency": "INR",
+  "dataset_id": "retryrail_detector_v2_development_v1",
+  "dataset_role": "development",
+  "ends_at": "2026-09-17T00:00:00Z",
+  "event_artifact": "fixtures/generated/detector_v2/development.normalized_events.v1.jsonl",
+  "generator_version": "detector_v2_generator_v1_0_0",
+  "hard_negative_count": 4,
+  "merchant_id": "merchant_synthetic_001",
+  "normalized_events": 10751,
+  "payment_attempts": 5760,
+  "scenarios": [
+    {
+      "actual_attempt_count": 85,
+      "actual_failure_count": 41,
+      "affected_cohort": [
+        {
+          "dimension": "method",
+          "value": "card"
+        }
+      ],
+      "baseline_failure_rate_bps": 700,
+      "dataset_role": "development",
+      "ends_at": "2026-09-15T06:00:00Z",
+      "expected_gate_reason": "statistical_and_business_gates_pass",
+      "expected_root_cause": {
+        "code": "GATEWAY_ERROR",
+        "reason": "issuer_unavailable",
+        "source": "bank",
+        "step": "payment_authentication"
+      },
+      "family": "method_provider_degradation",
+      "kind": "true_incident",
+      "scenario_id": "scenario_v2_dev_01_method_provider_degradation",
+      "seeded_failure_rate_bps": 4800,
+      "should_open_incident": true,
+      "starts_at": "2026-09-15T04:00:00Z"
+    },
+    {
+      "actual_attempt_count": 37,
+      "actual_failure_count": 24,
+      "affected_cohort": [
+        {
+          "dimension": "method",
+          "value": "netbanking"
+        },
+        {
+          "dimension": "issuer",
+          "value": "issuer_synthetic_beta"
+        }
+      ],
+      "baseline_failure_rate_bps": 1100,
+      "dataset_role": "development",
+      "ends_at": "2026-09-15T11:00:00Z",
+      "expected_gate_reason": "statistical_and_business_gates_pass",
+      "expected_root_cause": {
+        "code": "GATEWAY_ERROR",
+        "reason": "issuer_unavailable",
+        "source": "bank",
+        "step": "payment_authentication"
+      },
+      "family": "issuer_provider_degradation",
+      "kind": "true_incident",
+      "scenario_id": "scenario_v2_dev_02_issuer_provider_degradation",
+      "seeded_failure_rate_bps": 6500,
+      "should_open_incident": true,
+      "starts_at": "2026-09-15T08:00:00Z"
+    },
+    {
+      "actual_attempt_count": 107,
+      "actual_failure_count": 76,
+      "affected_cohort": [
+        {
+          "dimension": "method",
+          "value": "upi"
+        }
+      ],
+      "baseline_failure_rate_bps": 900,
+      "dataset_role": "development",
+      "ends_at": "2026-09-15T15:00:00Z",
+      "expected_gate_reason": "blocked_by_non_actionable_error_source",
+      "expected_root_cause": {
+        "code": "BAD_REQUEST_ERROR",
+        "reason": "payment_cancelled",
+        "source": "customer",
+        "step": "payment_authentication"
+      },
+      "family": "customer_behavior_spike",
+      "kind": "hard_negative",
+      "scenario_id": "scenario_v2_dev_03_customer_behavior_spike",
+      "seeded_failure_rate_bps": 6500,
+      "should_open_incident": false,
+      "starts_at": "2026-09-15T13:00:00Z"
+    },
+    {
+      "actual_attempt_count": 27,
+      "actual_failure_count": 22,
+      "affected_cohort": [
+        {
+          "dimension": "method",
+          "value": "card"
+        },
+        {
+          "dimension": "issuer",
+          "value": "issuer_synthetic_gamma"
+        }
+      ],
+      "baseline_failure_rate_bps": 700,
+      "dataset_role": "development",
+      "ends_at": "2026-09-15T20:00:00Z",
+      "expected_gate_reason": "statistical_and_business_gates_pass",
+      "expected_root_cause": {
+        "code": "GATEWAY_ERROR",
+        "reason": "issuer_unavailable",
+        "source": "bank",
+        "step": "payment_authentication"
+      },
+      "family": "issuer_provider_degradation",
+      "kind": "true_incident",
+      "scenario_id": "scenario_v2_dev_04_issuer_provider_degradation",
+      "seeded_failure_rate_bps": 6500,
+      "should_open_incident": true,
+      "starts_at": "2026-09-15T18:00:00Z"
+    },
+    {
+      "actual_attempt_count": 5,
+      "actual_failure_count": 5,
+      "affected_cohort": [
+        {
+          "dimension": "method",
+          "value": "wallet"
+        },
+        {
+          "dimension": "issuer",
+          "value": "wallet_synthetic_amber"
+        }
+      ],
+      "baseline_failure_rate_bps": 1000,
+      "dataset_role": "development",
+      "ends_at": "2026-09-16T01:00:00Z",
+      "expected_gate_reason": "blocked_by_minimum_sample_gate",
+      "expected_root_cause": {
+        "code": "GATEWAY_ERROR",
+        "reason": "payment_timed_out",
+        "source": "wallet",
+        "step": "payment_processing"
+      },
+      "family": "low_volume_spike",
+      "kind": "hard_negative",
+      "scenario_id": "scenario_v2_dev_05_low_volume_spike",
+      "seeded_failure_rate_bps": 10000,
+      "should_open_incident": false,
+      "starts_at": "2026-09-16T00:00:00Z"
+    },
+    {
+      "actual_attempt_count": 84,
+      "actual_failure_count": 43,
+      "affected_cohort": [
+        {
+          "dimension": "method",
+          "value": "upi"
+        }
+      ],
+      "baseline_failure_rate_bps": 900,
+      "dataset_role": "development",
+      "ends_at": "2026-09-16T06:00:00Z",
+      "expected_gate_reason": "statistical_and_business_gates_pass",
+      "expected_root_cause": {
+        "code": "GATEWAY_ERROR",
+        "reason": "issuer_unavailable",
+        "source": "bank",
+        "step": "payment_authentication"
+      },
+      "family": "method_provider_degradation",
+      "kind": "true_incident",
+      "scenario_id": "scenario_v2_dev_06_method_provider_degradation",
+      "seeded_failure_rate_bps": 4800,
+      "should_open_incident": true,
+      "starts_at": "2026-09-16T04:00:00Z"
+    },
+    {
+      "actual_attempt_count": 9,
+      "actual_failure_count": 9,
+      "affected_cohort": [
+        {
+          "dimension": "method",
+          "value": "netbanking"
+        }
+      ],
+      "baseline_failure_rate_bps": 1100,
+      "dataset_role": "development",
+      "ends_at": "2026-09-16T09:10:00Z",
+      "expected_gate_reason": "blocked_by_confirmation_gate",
+      "expected_root_cause": {
+        "code": "GATEWAY_ERROR",
+        "reason": "issuer_unavailable",
+        "source": "bank",
+        "step": "payment_authentication"
+      },
+      "family": "transient_provider_burst",
+      "kind": "hard_negative",
+      "scenario_id": "scenario_v2_dev_07_transient_provider_burst",
+      "seeded_failure_rate_bps": 9500,
+      "should_open_incident": false,
+      "starts_at": "2026-09-16T09:00:00Z"
+    },
+    {
+      "actual_attempt_count": 67,
+      "actual_failure_count": 41,
+      "affected_cohort": [
+        {
+          "dimension": "method",
+          "value": "upi"
+        },
+        {
+          "dimension": "issuer",
+          "value": "issuer_synthetic_beta"
+        }
+      ],
+      "baseline_failure_rate_bps": 900,
+      "dataset_role": "development",
+      "ends_at": "2026-09-16T15:00:00Z",
+      "expected_gate_reason": "statistical_and_business_gates_pass",
+      "expected_root_cause": {
+        "code": "GATEWAY_ERROR",
+        "reason": "issuer_unavailable",
+        "source": "bank",
+        "step": "payment_authentication"
+      },
+      "family": "issuer_provider_degradation",
+      "kind": "true_incident",
+      "scenario_id": "scenario_v2_dev_08_issuer_provider_degradation",
+      "seeded_failure_rate_bps": 6500,
+      "should_open_incident": true,
+      "starts_at": "2026-09-16T12:00:00Z"
+    },
+    {
+      "actual_attempt_count": 49,
+      "actual_failure_count": 19,
+      "affected_cohort": [
+        {
+          "dimension": "method",
+          "value": "netbanking"
+        }
+      ],
+      "baseline_failure_rate_bps": 1100,
+      "dataset_role": "development",
+      "ends_at": "2026-09-16T19:00:00Z",
+      "expected_gate_reason": "statistical_and_business_gates_pass",
+      "expected_root_cause": {
+        "code": "GATEWAY_ERROR",
+        "reason": "issuer_unavailable",
+        "source": "bank",
+        "step": "payment_authentication"
+      },
+      "family": "method_provider_degradation",
+      "kind": "true_incident",
+      "scenario_id": "scenario_v2_dev_09_method_provider_degradation",
+      "seeded_failure_rate_bps": 4800,
+      "should_open_incident": true,
+      "starts_at": "2026-09-16T17:00:00Z"
+    },
+    {
+      "actual_attempt_count": 70,
+      "actual_failure_count": 39,
+      "affected_cohort": [
+        {
+          "dimension": "method",
+          "value": "card"
+        }
+      ],
+      "baseline_failure_rate_bps": 700,
+      "dataset_role": "development",
+      "ends_at": "2026-09-16T22:30:00Z",
+      "expected_gate_reason": "blocked_by_non_actionable_error_source",
+      "expected_root_cause": {
+        "code": "BAD_REQUEST_ERROR",
+        "reason": "incorrect_otp",
+        "source": "customer",
+        "step": "payment_authentication"
+      },
+      "family": "customer_behavior_spike",
+      "kind": "hard_negative",
+      "scenario_id": "scenario_v2_dev_10_customer_behavior_spike",
+      "seeded_failure_rate_bps": 6500,
+      "should_open_incident": false,
+      "starts_at": "2026-09-16T21:00:00Z"
+    }
+  ],
+  "schema_version": "2.0.0",
+  "seed_commitment_sha256": "a2d7c86bd6abab86e6cd6c528e421feda1d85a7b348b4ff1535b852519a1dd49",
+  "starts_at": "2026-09-15T00:00:00Z",
+  "synthetic": true,
+  "true_incident_count": 6,
+  "truth_artifact": "evals/generated/detector_v2/development.attempt_truth.v1.jsonl"
+}

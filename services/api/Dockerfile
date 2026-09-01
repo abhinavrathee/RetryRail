@@ -16,6 +16,8 @@ COPY --chown=retryrail:retryrail pyproject.toml uv.lock README.md LICENSE ./
 COPY --chown=retryrail:retryrail services/api/app ./services/api/app
 COPY --chown=retryrail:retryrail services/api/alembic.ini ./services/api/alembic.ini
 COPY --chown=retryrail:retryrail services/api/migrations ./services/api/migrations
+COPY --chown=retryrail:retryrail evals/golden/detector_v1.freeze.json ./evals/golden/detector_v1.freeze.json
+COPY --chown=retryrail:retryrail evals/reports/detector_v1.release.json ./evals/reports/detector_v1.release.json
 
 USER retryrail
 
