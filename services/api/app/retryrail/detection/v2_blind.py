@@ -6,7 +6,8 @@ import hashlib
 import json
 import os
 import sys
-from collections.abc import Callable
+from collections.abc import Callable, Iterator
+from contextlib import contextmanager
 from dataclasses import dataclass, replace
 from datetime import UTC, datetime
 from pathlib import Path
@@ -47,7 +48,11 @@ from retryrail.synthetic.v2_generator import (
     check_v2_artifacts,
     load_blind_truth,
 )
-from retryrail.synthetic.v2_models import V2DatasetRole, V2EvaluationProtocol
+from retryrail.synthetic.v2_models import (
+    V2DatasetManifest,
+    V2DatasetRole,
+    V2EvaluationProtocol,
+)
 
 _REPOSITORY_ROOT = Path(__file__).resolve().parents[5]
 _PROTOCOL_PATH = _REPOSITORY_ROOT / "evals/protocols/detector_v2.protocol.json"
@@ -102,6 +107,7 @@ class V2BlindRunPaths:
     nonce_reveal: Path
     completion_receipt: Path
     failure_receipt: Path
+    scoring_lock: Path
 
 
 def _sha256(content: bytes) -> str:
@@ -133,11 +139,12 @@ def _load_contract[ContractT: StrictContract](
     contract: type[ContractT],
 ) -> ContractT:
     try:
-        value = contract.model_validate_json(path.read_bytes())
+        content = path.read_bytes()
+        value = contract.model_validate_json(content)
     except (OSError, ValueError) as error:
         msg = f"invalid {_display_path(path)}"
         raise V2BlindIntegrityError(msg) from error
-    if path.read_bytes() != _canonical_json(value):
+    if content != _canonical_json(value):
         msg = f"non-canonical {_display_path(path)}"
         raise V2BlindIntegrityError(msg)
     return value
@@ -170,6 +177,7 @@ def _run_paths(run_id: str, root: Path = _REPOSITORY_ROOT) -> V2BlindRunPaths:
         nonce_reveal=evidence / "nonce.reveal.json",
         completion_receipt=evidence / "completion.receipt.json",
         failure_receipt=evidence / "failure.receipt.json",
+        scoring_lock=evidence / ".scoring.lock",
     )
 
 
@@ -191,22 +199,41 @@ def _write_new_durable(
 
     _relative(path, root)
     path.parent.mkdir(parents=True, exist_ok=True)
-    descriptor = os.open(path, os.O_WRONLY | os.O_CREAT | os.O_EXCL, 0o600)
     try:
-        with os.fdopen(descriptor, "wb") as stream:
-            stream.write(content)
-            stream.flush()
-            os.fsync(stream.fileno())
-    except BaseException:
-        if not path.exists():
-            os.close(descriptor)
-        raise
+        descriptor = os.open(path, os.O_WRONLY | os.O_CREAT | os.O_EXCL, 0o600)
+    except FileExistsError as error:
+        msg = f"append-only artifact already exists: {_display_path(path)}"
+        raise V2BlindStateError(msg) from error
+    with os.fdopen(descriptor, "wb") as stream:
+        stream.write(content)
+        stream.flush()
+        os.fsync(stream.fileno())
     if os.name != "nt":
         directory_descriptor = os.open(path.parent, os.O_RDONLY)
         try:
             os.fsync(directory_descriptor)
         finally:
             os.close(directory_descriptor)
+
+
+@contextmanager
+def _exclusive_lock(path: Path, *, root: Path) -> Iterator[None]:
+    """Serialize a critical stage with a repository-confined O_EXCL lock."""
+
+    _relative(path, root)
+    path.parent.mkdir(parents=True, exist_ok=True)
+    try:
+        descriptor = os.open(path, os.O_WRONLY | os.O_CREAT | os.O_EXCL, 0o600)
+    except FileExistsError as error:
+        msg = f"another blind process holds {_display_path(path)}"
+        raise V2BlindStateError(msg) from error
+    try:
+        os.write(descriptor, b"RetryRail official blind stage lock\n")
+        os.fsync(descriptor)
+        yield
+    finally:
+        os.close(descriptor)
+        path.unlink(missing_ok=True)
 
 
 def _artifact_digest(
@@ -280,6 +307,12 @@ def _assert_prediction_slot(root: Path) -> None:
         if failure.truth_may_have_been_loaded:
             msg = "a prior failed run may have opened truth; candidate release is blocked"
             raise V2BlindStateError(msg)
+
+
+def _assert_run_paths_available(paths: V2BlindRunPaths) -> None:
+    if paths.evidence_directory.exists() or paths.generated_directory.exists():
+        msg = "nonce-derived blind run paths already exist"
+        raise V2BlindStateError(msg)
 
 
 def _record_failure(
@@ -371,12 +404,8 @@ def persist_blind_predictions(
 
     _ensure_static_preflight()
     nonce_sha256 = _validate_official_nonce(nonce)
-    _assert_prediction_slot(output_root)
     run_id = _run_id(nonce_sha256)
     paths = _run_paths(run_id, output_root)
-    if paths.evidence_directory.exists() or paths.generated_directory.exists():
-        msg = "nonce-derived blind run paths already exist"
-        raise V2BlindStateError(msg)
     procedure, procedure_sha256 = _procedure_freeze()
     commitment = V2BlindNonceCommitment(
         commitment_id=f"commitment_{nonce_sha256[:_RUN_HASH_CHARACTERS]}",
@@ -392,12 +421,18 @@ def persist_blind_predictions(
         nonce_sha256=nonce_sha256,
         committed_at=clock(),
     )
+    commitment_written = False
     try:
-        _write_new_durable(
-            paths.nonce_commitment,
-            _canonical_json(commitment),
-            root=output_root,
-        )
+        prediction_lock = output_root / "evals/blind/detector_v2/.prediction.lock"
+        with _exclusive_lock(prediction_lock, root=output_root):
+            _assert_prediction_slot(output_root)
+            _assert_run_paths_available(paths)
+            _write_new_durable(
+                paths.nonce_commitment,
+                _canonical_json(commitment),
+                root=output_root,
+            )
+            commitment_written = True
         runtime = _repath_runtime(
             build_blind_runtime(nonce, official=True),
             paths,
@@ -459,14 +494,15 @@ def persist_blind_predictions(
             root=output_root,
         )
     except Exception:
-        _record_failure(
-            paths,
-            nonce_sha256=nonce_sha256,
-            stage=V2BlindFailureStage.PREDICTION,
-            truth_may_have_been_loaded=False,
-            clock=clock,
-            root=output_root,
-        )
+        if commitment_written:
+            _record_failure(
+                paths,
+                nonce_sha256=nonce_sha256,
+                stage=V2BlindFailureStage.PREDICTION,
+                truth_may_have_been_loaded=False,
+                clock=clock,
+                root=output_root,
+            )
         raise
     return receipt
 
@@ -840,17 +876,16 @@ def _verify_supplied_nonce(
         raise V2BlindIntegrityError(msg)
 
 
-def score_blind_run(
+def _score_blind_locked(
     nonce: str,
     *,
-    output_root: Path = _REPOSITORY_ROOT,
-    clock: Clock = _utc_now,
+    nonce_sha256: str,
+    paths: V2BlindRunPaths,
+    output_root: Path,
+    clock: Clock,
 ) -> V2BlindReleaseDecision:
-    """Open blind truth only after persisted prediction bytes reproduce exactly."""
+    """Run the scoring stage while the caller holds its exclusive lock."""
 
-    _ensure_static_preflight()
-    nonce_sha256 = _validate_official_nonce(nonce)
-    paths = _run_paths(_run_id(nonce_sha256), output_root)
     _assert_scoring_state(paths)
     truth_loaded = False
     try:
@@ -910,6 +945,28 @@ def score_blind_run(
             root=output_root,
         )
         raise
+
+
+def score_blind_run(
+    nonce: str,
+    *,
+    output_root: Path = _REPOSITORY_ROOT,
+    clock: Clock = _utc_now,
+) -> V2BlindReleaseDecision:
+    """Open blind truth only after persisted prediction bytes reproduce exactly."""
+
+    _ensure_static_preflight()
+    nonce_sha256 = _validate_official_nonce(nonce)
+    paths = _run_paths(_run_id(nonce_sha256), output_root)
+    _assert_scoring_state(paths)
+    with _exclusive_lock(paths.scoring_lock, root=output_root):
+        return _score_blind_locked(
+            nonce,
+            nonce_sha256=nonce_sha256,
+            paths=paths,
+            output_root=output_root,
+            clock=clock,
+        )
 
 
 def blind_runner_bundle_sha256(root: Path = _REPOSITORY_ROOT) -> str:
@@ -1018,32 +1075,100 @@ def _check_prediction_state(
     return findings
 
 
+def _check_completed_links(
+    paths: V2BlindRunPaths,
+    *,
+    commitment: V2BlindNonceCommitment,
+    completion: V2BlindCompletionReceipt,
+    report: V2BlindReport,
+    release: V2BlindReleaseDecision,
+    reveal: V2BlindNonceReveal,
+    manifest: V2DatasetManifest,
+    prediction: V2PredictionArtifact,
+) -> list[str]:
+    findings: list[str] = []
+    artifact_paths = {item.path for item in completion.artifacts}
+    expected_paths = {
+        _relative(path)
+        for path in (
+            paths.nonce_commitment,
+            paths.normalized_events,
+            paths.predictions,
+            paths.prediction_receipt,
+            paths.truth_access_receipt,
+            paths.attempt_truth,
+            paths.dataset_manifest,
+            paths.report,
+            paths.release_decision,
+            paths.nonce_reveal,
+        )
+    }
+    if artifact_paths != expected_paths:
+        findings.append(f"completion artifact inventory mismatch for {paths.run_id}")
+    report_sha256 = _sha256(paths.report.read_bytes())
+    release_sha256 = _sha256(paths.release_decision.read_bytes())
+    reveal_sha256 = _sha256(paths.nonce_reveal.read_bytes())
+    manifest_sha256 = _sha256(paths.dataset_manifest.read_bytes())
+    prediction_sha256 = _sha256(paths.predictions.read_bytes())
+    prediction_receipt_sha256 = _sha256(paths.prediction_receipt.read_bytes())
+    truth_access_sha256 = _sha256(paths.truth_access_receipt.read_bytes())
+    linked_digests = (
+        completion.report_sha256 == report_sha256,
+        completion.release_decision_sha256 == release_sha256,
+        completion.nonce_reveal_sha256 == reveal_sha256,
+        completion.prediction_receipt_sha256 == prediction_receipt_sha256,
+        completion.truth_access_receipt_sha256 == truth_access_sha256,
+        completion.procedure_freeze_sha256 == commitment.procedure_freeze_sha256,
+        report.dataset_manifest_sha256 == manifest_sha256,
+        report.prediction_artifact_sha256 == prediction_sha256,
+        report.prediction_receipt_sha256 == prediction_receipt_sha256,
+        report.truth_access_receipt_sha256 == truth_access_sha256,
+        release.source_report_sha256 == report_sha256,
+        reveal.release_decision_sha256 == release_sha256,
+        prediction.event_artifact_sha256 == report.event_artifact_sha256,
+    )
+    if not all(linked_digests):
+        findings.append(f"completed digest chain mismatch for {paths.run_id}")
+    manifest_digests = {item.path: item.sha256 for item in manifest.artifacts}
+    if (
+        manifest_digests.get(manifest.event_artifact) != report.event_artifact_sha256
+        or manifest_digests.get(manifest.truth_artifact)
+        != report.truth_artifact_sha256
+    ):
+        findings.append(f"manifest/report artifact mismatch for {paths.run_id}")
+    for artifact in completion.artifacts:
+        finding = _check_digest(artifact)
+        if finding is not None:
+            findings.append(finding)
+    return findings
+
+
 def _check_completed_state(
     paths: V2BlindRunPaths,
     commitment: V2BlindNonceCommitment,
 ) -> list[str]:
-    findings: list[str] = []
     try:
         completion = _load_contract(paths.completion_receipt, V2BlindCompletionReceipt)
         report = _load_contract(paths.report, V2BlindReport)
         release = _load_contract(paths.release_decision, V2BlindReleaseDecision)
         reveal = _load_contract(paths.nonce_reveal, V2BlindNonceReveal)
+        manifest = _load_contract(paths.dataset_manifest, V2DatasetManifest)
+        prediction = _load_contract(paths.predictions, V2PredictionArtifact)
         truth_access = _load_contract(
             paths.truth_access_receipt,
             V2BlindTruthAccessReceipt,
         )
     except V2BlindIntegrityError as error:
         return [str(error)]
-    if any(
-        run_id != paths.run_id
-        for run_id in (
-            completion.run_id,
-            report.run_id,
-            release.run_id,
-            reveal.run_id,
-            truth_access.run_id,
-        )
-    ):
+    findings: list[str] = []
+    identities = (
+        completion.run_id,
+        report.run_id,
+        release.run_id,
+        reveal.run_id,
+        truth_access.run_id,
+    )
+    if any(run_id != paths.run_id for run_id in identities):
         findings.append(f"completed artifact identity mismatch for {paths.run_id}")
     if reveal.nonce_sha256 != commitment.nonce_sha256:
         findings.append(f"nonce reveal mismatch for {paths.run_id}")
@@ -1051,10 +1176,35 @@ def _check_completed_state(
         findings.append(f"completion/report qualification mismatch for {paths.run_id}")
     if release.release_qualified is not report.release_qualified:
         findings.append(f"release/report qualification mismatch for {paths.run_id}")
-    for artifact in completion.artifacts:
-        finding = _check_digest(artifact)
-        if finding is not None:
-            findings.append(finding)
+    findings.extend(
+        _check_completed_links(
+            paths,
+            commitment=commitment,
+            completion=completion,
+            report=report,
+            release=release,
+            reveal=reveal,
+            manifest=manifest,
+            prediction=prediction,
+        )
+    )
+    return findings
+
+
+def _check_failed_state(
+    paths: V2BlindRunPaths,
+    commitment: V2BlindNonceCommitment,
+) -> list[str]:
+    findings: list[str] = []
+    if paths.completion_receipt.is_file():
+        findings.append(f"run is both failed and complete: {commitment.run_id}")
+    try:
+        failure = _load_contract(paths.failure_receipt, V2BlindFailureReceipt)
+    except V2BlindIntegrityError as error:
+        findings.append(str(error))
+    else:
+        if failure.run_id != commitment.run_id:
+            findings.append(f"failure receipt mismatch for {commitment.run_id}")
     return findings
 
 
@@ -1069,19 +1219,15 @@ def _check_run_state(
         return [str(error)], False, False
     paths = _run_paths(commitment.run_id)
     findings: list[str] = []
+    if paths.scoring_lock.exists():
+        findings.append(f"stale scoring lock for {commitment.run_id}")
     if commitment_path != paths.nonce_commitment:
         return [f"commitment directory mismatch for {commitment.run_id}"], False, False
     if _run_id(commitment.nonce_sha256) != commitment.run_id:
         findings.append(f"nonce/run identity mismatch for {commitment.run_id}")
     findings.extend(_check_prediction_state(paths, commitment))
     if paths.failure_receipt.is_file():
-        try:
-            failure = _load_contract(paths.failure_receipt, V2BlindFailureReceipt)
-        except V2BlindIntegrityError as error:
-            findings.append(str(error))
-        else:
-            if failure.run_id != commitment.run_id:
-                findings.append(f"failure receipt mismatch for {commitment.run_id}")
+        findings.extend(_check_failed_state(paths, commitment))
         return findings, False, False
     if paths.completion_receipt.is_file():
         findings.extend(_check_completed_state(paths, commitment))
@@ -1103,6 +1249,9 @@ def check_official_blind_artifacts() -> list[str]:
     """Verify every historical state without opening unopened truth."""
 
     findings = check_blind_procedure()
+    prediction_lock = _REPOSITORY_ROOT / "evals/blind/detector_v2/.prediction.lock"
+    if prediction_lock.exists():
+        findings.append("stale official blind prediction lock")
     completed_runs = 0
     active_runs = 0
     for commitment_path in _commitment_paths():

@@ -365,6 +365,41 @@ def test_second_active_nonce_and_known_test_nonce_fail_closed(
     assert not (clean_root / "evals").exists()
 
 
+def test_stage_locks_reject_concurrent_prediction_and_truth_access(
+    predicted_fixture: _PredictedFixture,
+    development_blind_inputs: tuple[V2BlindRuntime, V2BlindTruth],
+    tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    runtime, _ = development_blind_inputs
+    scoring_root = tmp_path / "scoring"
+    _copy_predicted_run(predicted_fixture.root, scoring_root)
+    _install_preflight_stubs(monkeypatch, runtime=runtime)
+    evidence = _evidence_directory(predicted_fixture, root=scoring_root)
+    scoring_lock = evidence / ".scoring.lock"
+    scoring_lock.write_text("held by test\n", encoding="utf-8")
+    with pytest.raises(V2BlindStateError, match="another blind process"):
+        score_blind_run(
+            _TEST_NONCE,
+            output_root=scoring_root,
+            clock=lambda: _TEST_NOW,
+        )
+    assert not (evidence / "failure.receipt.json").exists()
+    assert not (evidence / "truth_access.receipt.json").exists()
+
+    prediction_root = tmp_path / "prediction"
+    prediction_lock = prediction_root / "evals/blind/detector_v2/.prediction.lock"
+    prediction_lock.parent.mkdir(parents=True)
+    prediction_lock.write_text("held by test\n", encoding="utf-8")
+    with pytest.raises(V2BlindStateError, match="another blind process"):
+        persist_blind_predictions(
+            _TEST_NONCE,
+            output_root=prediction_root,
+            clock=lambda: _TEST_NOW,
+        )
+    assert not tuple(prediction_root.glob("**/nonce.commitment.json"))
+
+
 def test_runner_bundle_hash_is_cross_platform_and_freeze_has_no_nonce(
     tmp_path: Path,
 ) -> None:

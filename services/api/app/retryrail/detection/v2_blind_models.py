@@ -147,6 +147,12 @@ class V2BlindPredictionReceipt(StrictContract):
         if not self.starts_at < self.ends_at < self.predicted_at:
             msg = "blind prediction receipt timestamps must be strictly ordered"
             raise ValueError(msg)
+        if self.prediction_artifact.records != 1:
+            msg = "blind prediction artifact must contain exactly one JSON document"
+            raise ValueError(msg)
+        if self.event_artifact.path == self.prediction_artifact.path:
+            msg = "blind events and predictions must be physically separate"
+            raise ValueError(msg)
         return self
 
 
@@ -233,6 +239,47 @@ class V2BlindReport(StrictContract):
             raise ValueError(msg)
         if self.approved_for_m4_integration is not self.release_qualified:
             msg = "M4 integration approval must equal blind qualification"
+            raise ValueError(msg)
+        if self.predicted_incidents != len(self.incidents):
+            msg = "predicted incident count must reconcile with incident summaries"
+            raise ValueError(msg)
+        observed_counts = (
+            sum(item.expected_incident and item.detected_incident for item in self.cases),
+            sum(not item.expected_incident and item.detected_incident for item in self.cases),
+            sum(item.expected_incident and not item.detected_incident for item in self.cases),
+        )
+        if observed_counts != (
+            self.true_positives,
+            self.false_positives,
+            self.false_negatives,
+        ):
+            msg = "blind confusion counts must reconcile with evaluation cases"
+            raise ValueError(msg)
+        target_checks = (
+            self.targets.precision_passed
+            is (self.precision_ppm >= self.targets.precision_target_ppm),
+            self.targets.recall_passed
+            is (self.recall_ppm >= self.targets.recall_target_ppm),
+            self.targets.top_1_attribution_passed
+            is (
+                self.top_1_attribution_ppm
+                >= self.targets.top_1_attribution_target_ppm
+            ),
+            self.targets.median_detection_delay_passed
+            is (
+                self.median_detection_delay_seconds is not None
+                and self.median_detection_delay_seconds
+                <= self.targets.median_detection_delay_target_seconds
+            ),
+            self.targets.hard_negative_action_eligible_incidents_passed
+            is (self.hard_negative_action_eligible_incidents == 0),
+            self.targets.baseline_leakage_violations_passed
+            is (self.baseline_leakage_violations == 0),
+            self.targets.evidence_reconciliation_violations_passed
+            is (self.evidence_reconciliation_violations == 0),
+        )
+        if not all(target_checks):
+            msg = "blind target flags must reconcile with measured values"
             raise ValueError(msg)
         return self
 
