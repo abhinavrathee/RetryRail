@@ -1,0 +1,38 @@
+{
+  "candidate_bundle_sha256": "81f990e7ee63cf18b8ccdf4dab03affdc4d8de4edeae5a16c24c9f98e8bd91a2",
+  "dataset_id": "retryrail_detector_v2_blind_v1",
+  "dataset_role": "blind",
+  "detector_config_sha256": "0a32ca8a813e34c02472169314f70397b940079603b91cdf3a5e6d4b1f20f14b",
+  "detector_version": "detector_v3_0_0",
+  "ends_at": "2026-10-03T00:00:00Z",
+  "event_artifact": {
+    "bytes": 4367800,
+    "path": "evals/generated/detector_v3/blind/detector_v3_official_blind_1a1852634945b54e300a/blind.normalized_events.v1.jsonl",
+    "records": 10704,
+    "sha256": "0387edb6af06013ab79ca8b4afbbe1770c45c162579ccccb1cfa10d9187944d4"
+  },
+  "labels_loaded": false,
+  "nonce_commitment_sha256": "ce5ef24cde7422a866884e703c93028021a331728e65216de5d61ab128b9a012",
+  "nonce_sha256": "1a1852634945b54e300a6e3d80e21d9746894e08c4103728e61d0f105b86ed1d",
+  "payment_attempts": 5760,
+  "persisted_at": "2026-09-01T18:42:10.005352Z",
+  "predicted_at": "2026-10-03T00:05:00Z",
+  "prediction_artifact": {
+    "bytes": 604112,
+    "path": "evals/blind/detector_v3/runs/detector_v3_official_blind_1a1852634945b54e300a/blind.predictions.v1.json",
+    "records": 1,
+    "sha256": "6e41057bd526dfa7090085b452172ffc3d2982c5ab1fc61fb293d7899edaa13e"
+  },
+  "prediction_readback_verified": true,
+  "procedure_freeze_sha256": "3f95eec40577011adf6cf56a15bb3180225d28a657de79176922d494045a720f",
+  "receipt_id": "prediction_receipt_1a1852634945b54e300a",
+  "release_action_eligible": false,
+  "run_id": "detector_v3_official_blind_1a1852634945b54e300a",
+  "runner_bundle_sha256": "8ff1a614412278ca4de471dc4e8cdb46315ca67ec9071acdb30555dc2148f5e6",
+  "schema_version": "1.0.0",
+  "seed_commitment_sha256": "1a1852634945b54e300a6e3d80e21d9746894e08c4103728e61d0f105b86ed1d",
+  "starts_at": "2026-10-01T00:00:00Z",
+  "status": "predictions_persisted_truth_unopened",
+  "synthetic": true,
+  "truth_loaded": false
+}
