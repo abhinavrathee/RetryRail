@@ -23,21 +23,29 @@ from retryrail.detection.v2_blind_models import (
     V2BlindPredictionReceipt,
     V2BlindProcedureFreeze,
     V2BlindReleaseDecision,
+    V2BlindReleaseStatus,
+    V2BlindReleaseTarget,
     V2BlindReport,
     V2BlindTruthAccessReceipt,
 )
 from retryrail.detection.v2_evaluation import (
     V2CandidateFreeze,
+    V2DevelopmentReport,
     V2PredictionArtifact,
+    V2PredictionBuild,
     check_development_artifacts,
     predict_runtime,
+    score_predictions,
 )
 from retryrail.synthetic.models import ArtifactDigest
 from retryrail.synthetic.v2_generator import (
     GeneratedV2Artifact,
     V2BlindRuntime,
+    V2BlindTruth,
+    assemble_blind_dataset,
     build_blind_runtime,
     check_v2_artifacts,
+    load_blind_truth,
 )
 from retryrail.synthetic.v2_models import V2DatasetRole, V2EvaluationProtocol
 
@@ -58,12 +66,12 @@ _RUN_HASH_CHARACTERS = 20
 _MAXIMUM_NONCE_CHARACTERS = 256
 _ASCII_CONTROL_LIMIT = 32
 _ASCII_DELETE = 127
-_LABEL_TOKENS = (
+_EVALUATION_LABEL_TOKENS = (
     b'"scenario_id"',
-    b'"dataset_role"',
     b'"expected_incident"',
     b'"expected_incident_member"',
 )
+_DATASET_ROLE_TOKEN = b'"dataset_role"'
 
 Clock = Callable[[], datetime]
 
@@ -283,7 +291,11 @@ def _record_failure(
     clock: Clock,
     root: Path,
 ) -> None:
-    if not paths.nonce_commitment.is_file() or paths.failure_receipt.exists():
+    if (
+        not paths.nonce_commitment.is_file()
+        or paths.failure_receipt.exists()
+        or paths.completion_receipt.exists()
+    ):
         return
     failure = V2BlindFailureReceipt(
         receipt_id=f"failure_receipt_{nonce_sha256[:_RUN_HASH_CHARACTERS]}",
@@ -311,8 +323,18 @@ def _repath_runtime(
     return replace(runtime, event_artifact=event_artifact)
 
 
-def _assert_label_free(content: bytes, *, artifact_name: str) -> None:
-    leaked = tuple(token.decode() for token in _LABEL_TOKENS if token in content)
+def _assert_label_free(
+    content: bytes,
+    *,
+    artifact_name: str,
+    forbid_dataset_role: bool = False,
+) -> None:
+    forbidden = (
+        (*_EVALUATION_LABEL_TOKENS, _DATASET_ROLE_TOKEN)
+        if forbid_dataset_role
+        else _EVALUATION_LABEL_TOKENS
+    )
+    leaked = tuple(token.decode() for token in forbidden if token in content)
     if leaked:
         msg = f"{artifact_name} contains evaluation-only fields: {', '.join(leaked)}"
         raise V2BlindIntegrityError(msg)
@@ -381,7 +403,11 @@ def persist_blind_predictions(
             paths,
             root=output_root,
         )
-        _assert_label_free(runtime.event_artifact.content, artifact_name="blind events")
+        _assert_label_free(
+            runtime.event_artifact.content,
+            artifact_name="blind events",
+            forbid_dataset_role=True,
+        )
         _write_new_durable(
             paths.normalized_events,
             runtime.event_artifact.content,
@@ -443,6 +469,447 @@ def persist_blind_predictions(
         )
         raise
     return receipt
+
+
+def _assert_scoring_state(paths: V2BlindRunPaths) -> None:
+    if not paths.nonce_commitment.is_file():
+        msg = "no prediction-stage commitment exists for this nonce"
+        raise V2BlindStateError(msg)
+    if paths.failure_receipt.is_file():
+        msg = "the selected blind run is terminally failed and cannot be retried"
+        raise V2BlindStateError(msg)
+    if paths.completion_receipt.is_file():
+        msg = "the selected blind run is already complete and cannot be replayed"
+        raise V2BlindStateError(msg)
+    unexpected = (
+        paths.truth_access_receipt,
+        paths.attempt_truth,
+        paths.dataset_manifest,
+        paths.report,
+        paths.release_decision,
+        paths.nonce_reveal,
+    )
+    if any(path.exists() for path in unexpected):
+        msg = "partial truth-stage artifacts exist; append-only scoring cannot continue"
+        raise V2BlindStateError(msg)
+
+
+def _verify_scoring_identity(
+    commitment: V2BlindNonceCommitment,
+    receipt: V2BlindPredictionReceipt,
+    procedure: V2BlindProcedureFreeze,
+    procedure_sha256: str,
+    paths: V2BlindRunPaths,
+) -> None:
+    commitment_sha256 = _sha256(paths.nonce_commitment.read_bytes())
+    expected = (
+        commitment.procedure_freeze_sha256 == procedure_sha256,
+        commitment.protocol_sha256 == procedure.protocol_sha256,
+        commitment.candidate_freeze_sha256 == procedure.candidate_freeze_sha256,
+        commitment.generator_bundle_sha256 == procedure.generator_bundle_sha256,
+        commitment.detector_config_sha256 == procedure.detector_config_sha256,
+        commitment.candidate_bundle_sha256 == procedure.candidate_bundle_sha256,
+        commitment.runner_bundle_sha256 == procedure.runner_bundle_sha256,
+        receipt.nonce_commitment_sha256 == commitment_sha256,
+        receipt.procedure_freeze_sha256 == procedure_sha256,
+        receipt.detector_version == procedure.detector_version,
+        receipt.detector_config_sha256 == procedure.detector_config_sha256,
+        receipt.candidate_bundle_sha256 == procedure.candidate_bundle_sha256,
+        receipt.runner_bundle_sha256 == procedure.runner_bundle_sha256,
+    )
+    if not all(expected):
+        msg = "blind prediction evidence differs from the current frozen procedure"
+        raise V2BlindIntegrityError(msg)
+
+
+def _require_digest(
+    artifact: ArtifactDigest,
+    *,
+    root: Path,
+) -> None:
+    finding = _check_digest(artifact, root=root)
+    if finding is not None:
+        raise V2BlindIntegrityError(finding)
+
+
+def _rebuild_persisted_prediction(
+    receipt: V2BlindPredictionReceipt,
+    paths: V2BlindRunPaths,
+    *,
+    root: Path,
+) -> tuple[V2BlindRuntime, V2PredictionBuild]:
+    if receipt.event_artifact.path != _relative(paths.normalized_events, root):
+        msg = "prediction receipt points to an unexpected event artifact"
+        raise V2BlindIntegrityError(msg)
+    if receipt.prediction_artifact.path != _relative(paths.predictions, root):
+        msg = "prediction receipt points to an unexpected prediction artifact"
+        raise V2BlindIntegrityError(msg)
+    _require_digest(receipt.event_artifact, root=root)
+    _require_digest(receipt.prediction_artifact, root=root)
+    event_content = paths.normalized_events.read_bytes()
+    prediction_content = paths.predictions.read_bytes()
+    _assert_label_free(
+        event_content,
+        artifact_name="persisted blind events",
+        forbid_dataset_role=True,
+    )
+    _assert_label_free(prediction_content, artifact_name="persisted blind predictions")
+    runtime = V2BlindRuntime(
+        dataset_id=receipt.dataset_id,
+        seed_commitment_sha256=receipt.seed_commitment_sha256,
+        starts_at=receipt.starts_at,
+        ends_at=receipt.ends_at,
+        payment_attempts=receipt.payment_attempts,
+        event_artifact=GeneratedV2Artifact(
+            path=receipt.event_artifact.path,
+            content=event_content,
+            records=receipt.event_artifact.records,
+        ),
+    )
+    prediction = predict_runtime(
+        dataset_id=runtime.dataset_id,
+        dataset_role=V2DatasetRole.BLIND,
+        seed_commitment_sha256=runtime.seed_commitment_sha256,
+        starts_at=runtime.starts_at,
+        ends_at=runtime.ends_at,
+        event_artifact=runtime.event_artifact,
+    )
+    if prediction.content != prediction_content:
+        msg = "frozen detector no longer reproduces persisted prediction bytes"
+        raise V2BlindIntegrityError(msg)
+    if prediction.sha256 != receipt.prediction_artifact.sha256:
+        msg = "reproduced prediction digest differs from its receipt"
+        raise V2BlindIntegrityError(msg)
+    return runtime, prediction
+
+
+def _repath_truth(
+    truth: V2BlindTruth,
+    paths: V2BlindRunPaths,
+    *,
+    root: Path,
+) -> V2BlindTruth:
+    return replace(
+        truth,
+        truth_artifact=GeneratedV2Artifact(
+            path=_relative(paths.attempt_truth, root),
+            content=truth.truth_artifact.content,
+            records=truth.truth_artifact.records,
+        ),
+    )
+
+
+def _build_blind_report(
+    scorecard: V2DevelopmentReport,
+    *,
+    run_id: str,
+    nonce_sha256: str,
+    runner_bundle_sha256: str,
+    prediction_receipt_sha256: str,
+    truth_access_receipt_sha256: str,
+) -> V2BlindReport:
+    qualified = scorecard.targets.all_passed
+    return V2BlindReport(
+        run_id=run_id,
+        detector_version=scorecard.detector_version,
+        detector_config_sha256=scorecard.detector_config_sha256,
+        candidate_bundle_sha256=scorecard.candidate_bundle_sha256,
+        runner_bundle_sha256=runner_bundle_sha256,
+        dataset_id=scorecard.dataset_id,
+        nonce_sha256=nonce_sha256,
+        dataset_manifest_sha256=scorecard.dataset_manifest_sha256,
+        event_artifact_sha256=scorecard.event_artifact_sha256,
+        truth_artifact_sha256=scorecard.truth_artifact_sha256,
+        prediction_artifact_sha256=scorecard.prediction_artifact_sha256,
+        prediction_receipt_sha256=prediction_receipt_sha256,
+        truth_access_receipt_sha256=truth_access_receipt_sha256,
+        evaluated_at=scorecard.evaluated_at,
+        release_qualified=qualified,
+        approved_for_m4_integration=qualified,
+        payment_attempts=scorecard.payment_attempts,
+        raw_normalized_events=scorecard.raw_normalized_events,
+        predicted_incidents=scorecard.predicted_incidents,
+        suppressed_candidates=scorecard.suppressed_candidates,
+        true_positives=scorecard.true_positives,
+        false_positives=scorecard.false_positives,
+        false_negatives=scorecard.false_negatives,
+        precision_ppm=scorecard.precision_ppm,
+        recall_ppm=scorecard.recall_ppm,
+        top_1_attribution_ppm=scorecard.top_1_attribution_ppm,
+        top_3_attribution_ppm=scorecard.top_3_attribution_ppm,
+        median_detection_delay_seconds=scorecard.median_detection_delay_seconds,
+        maximum_detection_delay_seconds=scorecard.maximum_detection_delay_seconds,
+        median_confirmation_delay_seconds=scorecard.median_confirmation_delay_seconds,
+        maximum_confirmation_delay_seconds=scorecard.maximum_confirmation_delay_seconds,
+        hard_negative_action_eligible_incidents=(
+            scorecard.hard_negative_action_eligible_incidents
+        ),
+        baseline_leakage_violations=scorecard.baseline_leakage_violations,
+        evidence_reconciliation_violations=(
+            scorecard.evidence_reconciliation_violations
+        ),
+        targets=scorecard.targets,
+        cases=scorecard.cases,
+        incidents=scorecard.incidents,
+        limitations=(
+            "This is a nonce-derived synthetic blind evaluation, not production traffic.",
+            "The nonce was unavailable during candidate development and prediction.",
+            "Qualification permits M4 integration review but does not activate actions.",
+            "Every detector output remains runtime action-ineligible until M4 completes.",
+        ),
+    )
+
+
+def _failed_targets(report: V2BlindReport) -> tuple[V2BlindReleaseTarget, ...]:
+    comparisons = (
+        (V2BlindReleaseTarget.PRECISION, report.targets.precision_passed),
+        (V2BlindReleaseTarget.RECALL, report.targets.recall_passed),
+        (
+            V2BlindReleaseTarget.TOP_1_ATTRIBUTION,
+            report.targets.top_1_attribution_passed,
+        ),
+        (
+            V2BlindReleaseTarget.MEDIAN_DETECTION_DELAY,
+            report.targets.median_detection_delay_passed,
+        ),
+        (
+            V2BlindReleaseTarget.HARD_NEGATIVE_ACTION_ELIGIBILITY,
+            report.targets.hard_negative_action_eligible_incidents_passed,
+        ),
+        (
+            V2BlindReleaseTarget.BASELINE_LEAKAGE,
+            report.targets.baseline_leakage_violations_passed,
+        ),
+        (
+            V2BlindReleaseTarget.EVIDENCE_RECONCILIATION,
+            report.targets.evidence_reconciliation_violations_passed,
+        ),
+    )
+    return tuple(target for target, passed in comparisons if not passed)
+
+
+def _build_release_decision(
+    report: V2BlindReport,
+    *,
+    report_sha256: str,
+) -> V2BlindReleaseDecision:
+    failed = _failed_targets(report)
+    qualified = not failed
+    return V2BlindReleaseDecision(
+        run_id=report.run_id,
+        source_report_sha256=report_sha256,
+        detector_version=report.detector_version,
+        detector_config_sha256=report.detector_config_sha256,
+        candidate_bundle_sha256=report.candidate_bundle_sha256,
+        dataset_manifest_sha256=report.dataset_manifest_sha256,
+        prediction_artifact_sha256=report.prediction_artifact_sha256,
+        nonce_sha256=report.nonce_sha256,
+        evaluated_at=report.evaluated_at,
+        status=(
+            V2BlindReleaseStatus.QUALIFIED
+            if qualified
+            else V2BlindReleaseStatus.BLOCKED
+        ),
+        failed_targets=failed,
+        release_qualified=qualified,
+        approved_for_m4_integration=qualified,
+    )
+
+
+def _completion_artifacts(
+    paths: V2BlindRunPaths,
+    *,
+    truth_records: int,
+    root: Path,
+) -> tuple[ArtifactDigest, ...]:
+    values = (
+        (paths.nonce_commitment, 1),
+        (paths.normalized_events, paths.normalized_events.read_bytes().count(b"\n")),
+        (paths.predictions, 1),
+        (paths.prediction_receipt, 1),
+        (paths.truth_access_receipt, 1),
+        (paths.attempt_truth, truth_records),
+        (paths.dataset_manifest, 1),
+        (paths.report, 1),
+        (paths.release_decision, 1),
+        (paths.nonce_reveal, 1),
+    )
+    return tuple(
+        _artifact_digest(path, records=records, root=root) for path, records in values
+    )
+
+
+def _score_after_truth_access(
+    nonce: str,
+    *,
+    nonce_sha256: str,
+    paths: V2BlindRunPaths,
+    runtime: V2BlindRuntime,
+    prediction: V2PredictionBuild,
+    procedure: V2BlindProcedureFreeze,
+    procedure_sha256: str,
+    clock: Clock,
+    output_root: Path,
+) -> V2BlindReleaseDecision:
+    truth = _repath_truth(
+        load_blind_truth(nonce, official=True),
+        paths,
+        root=output_root,
+    )
+    if (
+        truth.dataset_id != runtime.dataset_id
+        or truth.seed_commitment_sha256 != runtime.seed_commitment_sha256
+    ):
+        msg = "blind truth identity differs from persisted runtime commitment"
+        raise V2BlindIntegrityError(msg)
+    dataset = assemble_blind_dataset(runtime, truth)
+    scorecard = score_predictions(
+        prediction,
+        scenarios=dataset.manifest.scenarios,
+        dataset_manifest_sha256=dataset.manifest_sha256,
+        truth_artifact_sha256=dataset.truth_artifact.sha256,
+        normalized_events=dataset.manifest.normalized_events,
+    )
+    prediction_receipt_sha256 = _sha256(paths.prediction_receipt.read_bytes())
+    truth_access_sha256 = _sha256(paths.truth_access_receipt.read_bytes())
+    report = _build_blind_report(
+        scorecard,
+        run_id=paths.run_id,
+        nonce_sha256=nonce_sha256,
+        runner_bundle_sha256=procedure.runner_bundle_sha256,
+        prediction_receipt_sha256=prediction_receipt_sha256,
+        truth_access_receipt_sha256=truth_access_sha256,
+    )
+    report_content = _canonical_json(report)
+    release = _build_release_decision(report, report_sha256=_sha256(report_content))
+    release_content = _canonical_json(release)
+    reveal = V2BlindNonceReveal(
+        reveal_id=f"nonce_reveal_{nonce_sha256[:_RUN_HASH_CHARACTERS]}",
+        run_id=paths.run_id,
+        nonce=nonce,
+        nonce_sha256=nonce_sha256,
+        release_decision_sha256=_sha256(release_content),
+        revealed_at=clock(),
+    )
+    _write_new_durable(
+        paths.attempt_truth,
+        dataset.truth_artifact.content,
+        root=output_root,
+    )
+    _write_new_durable(
+        paths.dataset_manifest,
+        dataset.manifest_content,
+        root=output_root,
+    )
+    _write_new_durable(paths.report, report_content, root=output_root)
+    _write_new_durable(paths.release_decision, release_content, root=output_root)
+    _write_new_durable(paths.nonce_reveal, _canonical_json(reveal), root=output_root)
+    completion = V2BlindCompletionReceipt(
+        receipt_id=f"completion_receipt_{nonce_sha256[:_RUN_HASH_CHARACTERS]}",
+        run_id=paths.run_id,
+        nonce_sha256=nonce_sha256,
+        procedure_freeze_sha256=procedure_sha256,
+        prediction_receipt_sha256=prediction_receipt_sha256,
+        truth_access_receipt_sha256=truth_access_sha256,
+        report_sha256=_sha256(report_content),
+        release_decision_sha256=_sha256(release_content),
+        nonce_reveal_sha256=_sha256(paths.nonce_reveal.read_bytes()),
+        artifacts=_completion_artifacts(
+            paths,
+            truth_records=dataset.truth_artifact.records,
+            root=output_root,
+        ),
+        completed_at=clock(),
+        release_qualified=release.release_qualified,
+        approved_for_m4_integration=release.approved_for_m4_integration,
+    )
+    _write_new_durable(
+        paths.completion_receipt,
+        _canonical_json(completion),
+        root=output_root,
+    )
+    return release
+
+
+def _verify_supplied_nonce(
+    commitment: V2BlindNonceCommitment,
+    nonce_sha256: str,
+) -> None:
+    if commitment.nonce_sha256 != nonce_sha256:
+        msg = "supplied nonce does not match the selected run commitment"
+        raise V2BlindIntegrityError(msg)
+
+
+def score_blind_run(
+    nonce: str,
+    *,
+    output_root: Path = _REPOSITORY_ROOT,
+    clock: Clock = _utc_now,
+) -> V2BlindReleaseDecision:
+    """Open blind truth only after persisted prediction bytes reproduce exactly."""
+
+    _ensure_static_preflight()
+    nonce_sha256 = _validate_official_nonce(nonce)
+    paths = _run_paths(_run_id(nonce_sha256), output_root)
+    _assert_scoring_state(paths)
+    truth_loaded = False
+    try:
+        procedure, procedure_sha256 = _procedure_freeze()
+        commitment = _load_contract(paths.nonce_commitment, V2BlindNonceCommitment)
+        prediction_receipt = _load_contract(
+            paths.prediction_receipt,
+            V2BlindPredictionReceipt,
+        )
+        _verify_supplied_nonce(commitment, nonce_sha256)
+        _verify_scoring_identity(
+            commitment,
+            prediction_receipt,
+            procedure,
+            procedure_sha256,
+            paths,
+        )
+        runtime, prediction = _rebuild_persisted_prediction(
+            prediction_receipt,
+            paths,
+            root=output_root,
+        )
+        prediction_receipt_sha256 = _sha256(paths.prediction_receipt.read_bytes())
+        truth_access = V2BlindTruthAccessReceipt(
+            authorization_id=f"truth_access_{nonce_sha256[:_RUN_HASH_CHARACTERS]}",
+            run_id=paths.run_id,
+            nonce_sha256=nonce_sha256,
+            prediction_receipt_sha256=prediction_receipt_sha256,
+            prediction_artifact_sha256=prediction.sha256,
+            procedure_freeze_sha256=procedure_sha256,
+            authorized_at=clock(),
+        )
+        _write_new_durable(
+            paths.truth_access_receipt,
+            _canonical_json(truth_access),
+            root=output_root,
+        )
+        truth_loaded = True
+        return _score_after_truth_access(
+            nonce,
+            nonce_sha256=nonce_sha256,
+            paths=paths,
+            runtime=runtime,
+            prediction=prediction,
+            procedure=procedure,
+            procedure_sha256=procedure_sha256,
+            clock=clock,
+            output_root=output_root,
+        )
+    except Exception:
+        _record_failure(
+            paths,
+            nonce_sha256=nonce_sha256,
+            stage=V2BlindFailureStage.SCORING,
+            truth_may_have_been_loaded=truth_loaded,
+            clock=clock,
+            root=output_root,
+        )
+        raise
 
 
 def blind_runner_bundle_sha256(root: Path = _REPOSITORY_ROOT) -> str:
@@ -684,6 +1151,11 @@ def _parser() -> argparse.ArgumentParser:
         action="store_true",
         help="prompt for a nonce and persist label-free predictions without truth",
     )
+    parser.add_argument(
+        "--score",
+        action="store_true",
+        help="re-verify persisted predictions, then open truth and score exactly once",
+    )
     return parser
 
 
@@ -696,6 +1168,7 @@ def main() -> None:
             arguments.check,
             arguments.print_procedure_freeze,
             arguments.predict,
+            arguments.score,
         )
     )
     if selected != 1:
@@ -711,6 +1184,16 @@ def main() -> None:
         receipt = persist_blind_predictions(nonce)
         sys.stdout.write(
             f"{receipt.run_id}: predictions persisted; blind truth remains unopened\n"
+        )
+        return
+    if arguments.score:
+        nonce = getpass.getpass(
+            "Committed public non-secret blind nonce (hidden while entered): "
+        )
+        decision = score_blind_run(nonce)
+        sys.stdout.write(
+            f"{decision.run_id}: blind evaluation {decision.status.value}; "
+            "runtime actions remain disabled pending M4\n"
         )
         return
     findings = check_official_blind_artifacts()
