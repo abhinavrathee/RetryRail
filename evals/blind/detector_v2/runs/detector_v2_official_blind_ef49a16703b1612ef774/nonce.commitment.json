@@ -1,0 +1,22 @@
+{
+  "candidate_bundle_sha256": "e85b8803208539c3e77679b5194f0b278b225ad6b39e5998570d156332e8477d",
+  "candidate_freeze_sha256": "18b2960739fdb377ed387ddcc5978f36952ef4f90fb556abc273cc473a437979",
+  "commitment_id": "commitment_ef49a16703b1612ef774",
+  "committed_at": "2026-09-01T14:11:36.718120Z",
+  "detector_config_sha256": "75c751853bf173be2adb4b7b9ebebf862cd15b8ffdbcdeb85c403003617a2bd6",
+  "detector_version": "detector_v2_0_0",
+  "events_generated": false,
+  "generator_bundle_sha256": "a91e12e9945dd9cab9252dbd6f345e99fd52229505baf10a9aafc5dae511a9b9",
+  "nonce_sha256": "ef49a16703b1612ef774ce54bb84e8ba6aeefacd8ead586d4fd5791615ee84bb",
+  "predictions_persisted": false,
+  "procedure_freeze_sha256": "ec5a05b0c6aee79d866e865671847b57338a6212d89ebbb974310a28ae1c85fd",
+  "protocol_id": "detector_v2_protocol_v1",
+  "protocol_sha256": "994c24d2c71c00bb736449795c6e669f6dee6b3f1e1c9166a9eb0832ca6befd7",
+  "raw_nonce_persisted": false,
+  "run_id": "detector_v2_official_blind_ef49a16703b1612ef774",
+  "runner_bundle_sha256": "1a2b6bffda0bd67d130f59e96d92691255919bcb8a9c953dfee65fefed8f5b82",
+  "schema_version": "1.0.0",
+  "status": "nonce_committed_before_generation",
+  "synthetic": true,
+  "truth_loaded": false
+}
