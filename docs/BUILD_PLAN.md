@@ -472,12 +472,16 @@ cannot be tuned in place or silently reused as held-out evidence:
    unchanged targets failed on precision and recall, and the frozen writer's
    omission of an unresolved incident's null `resolved_at` field made its own
    report contract reject the persisted bytes;
-5. **In progress:** append-only evidence and a separate fail-closed post-run
-   audit are implemented. Local repository, security and clean-checkout gates
-   must pass before the evidence is pushed, followed by remote CI verification.
+5. **Complete — blocked and invalid result preserved:** append-only evidence
+   and a separate fail-closed post-run audit are implemented. Local repository,
+   security and clean-checkout gates passed, protected pushes completed without
+   a new secret incident, and GitHub Actions run 23 passed all five jobs at
+   commit `92dc3d9`.
 
-The v3 protocol deliberately retains the original nonce-derived benchmark
-distribution after seeing the v2 failure. The v2 official run is permitted
+M3R.4 is complete as an evidence-preservation and release-verification
+milestone, not as detector qualification. The v3 protocol deliberately
+retains the original nonce-derived benchmark distribution after seeing the v2
+failure. The v2 official run is permitted
 development evidence now and is explicitly ineligible as future blind
 evidence. The consumed v3 batch is also revealed evidence and cannot be used
 as blind evidence again. It must not be rerun or repaired in place. M4 remains

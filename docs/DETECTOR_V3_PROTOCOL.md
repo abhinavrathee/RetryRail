@@ -2,15 +2,15 @@
 
 ## Current status
 
-M3R.4 phases R4.1 through R4.4 are complete. The one official detector-v3
+M3R.4 phases R4.1 through R4.5 are complete. The one official detector-v3
 synthetic blind slot was consumed after the candidate and runner freeze. Its
 release decision is blocked on precision and recall, and its persisted report
 is invalid under the frozen report contract because the canonical writer
 omitted one unresolved incident's null `resolved_at` field. The run is not a
 qualification attempt that may be repaired or repeated. Detector v2 and v3
 remain immutable failed predecessors and every detector output remains runtime
-action-ineligible. R4.5 preservation and release-gate verification are in
-progress.
+action-ineligible. R4.5 preserves that exact outcome and has passed the local,
+security, clean-checkout and remote CI release gates.
 
 The machine-readable process contract is
 `evals/protocols/detector_v3.protocol.json`. It is regenerated from and bound
@@ -78,7 +78,7 @@ anchored to a known scenario start.
 | R4.2 | Implement and tune one separately versioned guarded-baseline candidate | Complete |
 | R4.3 | Run adversarial checks; freeze candidate, matcher, evaluator and runner | Complete |
 | R4.4 | Create one fresh nonce, persist predictions, reproduce, authorize truth once | Complete — blocked and procedurally invalid |
-| R4.5 | Preserve the decision and run all repository/security/CI gates | In progress |
+| R4.5 | Preserve the decision and run all repository/security/CI gates | Complete — blocked/invalid evidence verified |
 
 R4.2 cannot claim release success. It must pass every unchanged target on each
 approved development partition independently before R4.3.
@@ -269,3 +269,23 @@ The frozen `retryrail-v3-blind --check` command is intentionally not replaced
 or changed: its exact one-field failure is historical evidence of the defect.
 The post-run command verifies preservation of a failed run; a zero exit status
 does not qualify detector v3.
+
+## R4.5 preservation and release verification
+
+The repository-local release gates completed with 241 Python tests and 86.99%
+branch-aware coverage, Ruff, mypy, contract checks, web lint/typecheck/unit and
+production-build checks, Chromium smoke coverage, Bandit, the repository
+secret/fixture scanner, and Python and JavaScript dependency audits. The
+post-run auditor also passes from a clean checkout where ignored generated
+inputs are absent, reproducing both inputs in memory without writing them.
+
+Protected pushes scanned the repository and outgoing commits. The final code
+and regression-test commit is `92dc3d9`; [GitHub Actions run
+23](https://github.com/abhinavrathee/RetryRail/actions/runs/33563751001)
+passed all five jobs, including the 23-minute Python quality/contracts job.
+GitGuardian showed no new RetryRail incident after the protected pushes.
+
+R4.5 closes M3R.4 only as a faithfully preserved blocked and procedurally
+invalid result. Detector v3 is not qualified, M4 integration remains blocked,
+and any future official attempt requires a separately versioned candidate and
+runner behind a new precommit boundary and fresh nonce.
