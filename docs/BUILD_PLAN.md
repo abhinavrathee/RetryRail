@@ -466,15 +466,23 @@ cannot be tuned in place or silently reused as held-out evidence:
    approved development partitions, requiring each partition to pass;
 3. **Complete:** adversarial cases, candidate/matcher/evaluator, typed evidence
    contracts and the append-only blind runner are frozen before nonce creation;
-4. **Not started:** create one fresh public nonce, persist and reproduce
-   predictions, then authorize and load truth exactly once;
-5. **Not started:** preserve the append-only release decision and run all
-   repository, security, clean-checkout and remote CI gates.
+4. **Complete — blocked and invalid:** one fresh public nonce created run
+   `detector_v3_official_blind_1a1852634945b54e300a`; predictions were
+   persisted and reproduced before truth was authorized and loaded once. The
+   unchanged targets failed on precision and recall, and the frozen writer's
+   omission of an unresolved incident's null `resolved_at` field made its own
+   report contract reject the persisted bytes;
+5. **In progress:** append-only evidence and a separate fail-closed post-run
+   audit are implemented. Local repository, security and clean-checkout gates
+   must pass before the evidence is pushed, followed by remote CI verification.
 
 The v3 protocol deliberately retains the original nonce-derived benchmark
 distribution after seeing the v2 failure. The v2 official run is permitted
 development evidence now and is explicitly ineligible as future blind
-evidence. M4 remains blocked until R4.4 produces a qualified release decision.
+evidence. The consumed v3 batch is also revealed evidence and cannot be used
+as blind evidence again. It must not be rerun or repaired in place. M4 remains
+blocked; a future attempt requires a separately versioned candidate, runner
+and fresh nonce after a new precommit boundary.
 
 ### M4 — Policy engine and deterministic recovery path
 

@@ -195,6 +195,15 @@ and a completed official synthetic blind run in
 and attribution targets but failed median detection delay and baseline leakage.
 Its release decision is blocked; it is not integrated or runtime-authorized.
 
+Detector v3 subsequently passed both allowed development partitions but its
+one official synthetic blind run recorded 5 true positives, 1 false positive
+and 1 false negative. Precision and recall were both 833,333 ppm, below the
+unchanged 900,000 and 850,000 ppm targets. Its frozen canonical writer also
+omitted a required nullable `resolved_at` field for an open incident, so the
+persisted report does not reload under its frozen contract. The run is
+preserved as blocked and procedurally invalid; it cannot be repaired or rerun.
+See `docs/DETECTOR_V3_PROTOCOL.md`.
+
 Committed evidence:
 
 - `evals/reports/tuning.detector_report.v1.json`
@@ -203,6 +212,9 @@ Committed evidence:
 - `evals/reports/detector_v1.release.json`
 - `evals/blind/detector_v2/runs/detector_v2_official_blind_ef49a16703b1612ef774/blind.report.v1.json`
 - `evals/blind/detector_v2/runs/detector_v2_official_blind_ef49a16703b1612ef774/blind.release.v1.json`
+- `evals/blind/detector_v3/runs/detector_v3_official_blind_1a1852634945b54e300a/blind.report.v1.json`
+- `evals/blind/detector_v3/runs/detector_v3_official_blind_1a1852634945b54e300a/blind.release.v1.json`
+- `evals/blind/detector_v3/runs/detector_v3_official_blind_1a1852634945b54e300a/postrun.audit.v1.json`
 
 ## Verification
 

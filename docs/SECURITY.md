@@ -17,9 +17,9 @@ a payment or customer-facing mutation.
 | Evaluation-label leakage into runtime data | Physically separate truth artifacts and schemas | Split-isolation and forbidden-field tests |
 | Detector threshold changed after blind result | Committed config hash and byte-reproducible reports | `retryrail-eval --check` plus exact-result tests |
 | V2 blind output influences candidate tuning | Generator/protocol precommit, source/config/matcher/runner freeze, post-freeze nonce, event-first prediction receipt and separate truth loader | `retryrail-v2-data --check`, `retryrail-v2-candidate --check`, `retryrail-v2-blind --check` and isolation tests |
-| V3 remediation reuses revealed evidence as blind or retries after failure | Exact development-evidence allowlist, unchanged generator digest, prior/test nonce denylist, separate candidate/runner freezes and one terminal official-run slot | `retryrail-v3-protocol --check`, `retryrail-v3-freeze --check`, `retryrail-v3-blind --check` and v3 isolation tests |
+| V3 remediation reuses revealed evidence as blind or retries after failure | Exact development-evidence allowlist, unchanged generator digest, prior/test nonce denylist, separate candidate/runner freezes and one terminal official-run slot | `retryrail-v3-protocol --check`, `retryrail-v3-freeze --check`, `retryrail-v3-blind-postrun` and v3 isolation tests |
 | Concurrent or replayed blind stage opens truth twice | Exclusive create-only stage locks, append-only receipts, byte-for-byte prediction replay and terminal completion/failure state | Blind workflow concurrency, tamper and replay-refusal tests |
-| Clean checkout silently omits ignored blind inputs | Public-reveal reproduction is confined to the receipt-named run, digest-bound and create-only; mismatched files and symlinks fail closed | `retryrail-v2-blind-reproduce` before every local/CI blind check plus reproduction tamper tests |
+| Clean checkout silently omits ignored blind inputs | V2 public-reveal reproduction is confined, digest-bound and create-only; v3 reproduces both derived inputs in memory and validates any existing bytes without rewriting | `retryrail-v2-blind-reproduce`, `retryrail-v3-blind-postrun` and reproduction tamper tests |
 | Sparse high failure percentage creates an action incident | Current/baseline sample, excess-failure and GMV gates | Held-out wallet hard-negative test |
 | Incident baseline absorbs incident traffic | Opening reference interval is frozen for every update | Per-observation leakage assertions |
 | No traffic is mistaken for recovery | Resolution requires a sample-eligible window with the rate drop below threshold | No-traffic lifecycle regression test |
@@ -103,6 +103,16 @@ only that exact historical path/value digest; any different high-entropy value
 assigned to a sensitive-looking key fails before future pushes. The dashboard
 incident is classified as a false positive, not as a revoked credential.
 
+The v3 truth-access receipt repeated the same secret-shaped identifier design.
+It was detected before staging or pushing. GitGuardian now has one anchored
+exact-value pattern exclusion scoped only to `abhinavrathee/RetryRail`; no
+detector, path or global source was excluded. A path scan reports zero detected
+and one ignored value. RetryRail's independent scanner separately permits only
+the immutable v3 receipt path and exact SHA-256 value digest, with a regression
+test proving that a one-character variation remains blocked. A future blind
+runner must use a plainly non-secret-shaped receipt identifier before its
+pre-nonce freeze rather than adding a general exception.
+
 ## Known M0–M3 limits
 
 - The P0 API currently serves one configured merchant. Full merchant
@@ -131,3 +141,10 @@ incident is classified as a false positive, not as a revoked credential.
   and baseline leakage. Its generated release decision is blocked, forces
   runtime action eligibility to false and creates no recovery authorization
   path. The public nonce is reproducibility material, not a credential.
+- Detector-v3 R4.4 consumed its only official synthetic blind slot. It failed
+  precision and recall, and the frozen writer produced report bytes that its
+  required-nullable field contract cannot reload. The exact evidence is
+  preserved as `blocked` and `invalid`; runtime action eligibility and M4
+  approval remain false. The separate post-run audit verifies the one known
+  omission and rejects any other schema or digest difference without changing
+  official evidence.

@@ -1,6 +1,6 @@
 # ADR 0005: Preserve the benchmark and remediate detector baselines in v3
 
-- Status: Accepted; protocol precommitted before candidate work
+- Status: Accepted; official run consumed and preserved blocked/invalid
 - Date: 2026-09-01
 
 ## Context
@@ -45,3 +45,14 @@ locally authored benchmark rather than an external double-blind evaluation.
 M4 remains blocked. Development success cannot qualify the detector, and even
 a qualifying blind decision still enters M4 through deterministic policy and
 merchant approval rather than enabling direct mutation.
+
+## Recorded outcome
+
+The separately frozen v3 candidate passed both allowed development partitions.
+Its one official synthetic blind run then failed the unchanged precision and
+recall targets at 833,333 ppm each. The frozen canonical writer also omitted
+the nullable-but-required `resolved_at` field for one open incident, so its
+persisted report fails the frozen reload contract. The evidence and blocked
+decision remain byte-immutable. The run cannot be retried, repaired in place or
+used as blind evidence for another candidate; any future attempt needs a new
+versioned precommit boundary and fresh nonce.

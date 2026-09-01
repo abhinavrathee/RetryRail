@@ -2,12 +2,15 @@
 
 ## Current status
 
-M3R.4 phases R4.1 through R4.3 are complete. The detector-v3 development
-candidate passes both precommitted partitions, and its candidate, matcher,
-evaluator, development evidence, ten-case adversarial report, typed blind
-contracts and append-only runner are frozen. No blind nonce or release claim
-exists yet. Detector v2 remains the immutable failed predecessor and every
-detector output remains runtime action-ineligible.
+M3R.4 phases R4.1 through R4.4 are complete. The one official detector-v3
+synthetic blind slot was consumed after the candidate and runner freeze. Its
+release decision is blocked on precision and recall, and its persisted report
+is invalid under the frozen report contract because the canonical writer
+omitted one unresolved incident's null `resolved_at` field. The run is not a
+qualification attempt that may be repaired or repeated. Detector v2 and v3
+remain immutable failed predecessors and every detector output remains runtime
+action-ineligible. R4.5 preservation and release-gate verification are in
+progress.
 
 The machine-readable process contract is
 `evals/protocols/detector_v3.protocol.json`. It is regenerated from and bound
@@ -74,8 +77,8 @@ anchored to a known scenario start.
 | R4.1 | Bind failure analysis, allowed evidence, unchanged benchmark and release rules | Complete |
 | R4.2 | Implement and tune one separately versioned guarded-baseline candidate | Complete |
 | R4.3 | Run adversarial checks; freeze candidate, matcher, evaluator and runner | Complete |
-| R4.4 | Create one fresh nonce, persist predictions, reproduce, authorize truth once | Not started |
-| R4.5 | Commit release decision and run all repository/security/CI gates | Not started |
+| R4.4 | Create one fresh nonce, persist predictions, reproduce, authorize truth once | Complete — blocked and procedurally invalid |
+| R4.5 | Preserve the decision and run all repository/security/CI gates | In progress |
 
 R4.2 cannot claim release success. It must pass every unchanged target on each
 approved development partition independently before R4.3.
@@ -112,9 +115,9 @@ These are development results only. The suite report forces
 `candidate_frozen=false`, `official_blind_evaluated=false`,
 `release_qualified=false` and `runtime_action_eligible=false`.
 
-## Future blind boundary
+## Executed blind boundary
 
-After candidate and runner freeze, the future procedure must:
+After candidate and runner freeze, the official procedure was required to:
 
 1. create exactly one fresh 16–256 character public, non-secret nonce;
 2. reject the v2 official nonce and all committed v2/v3 test nonces by digest;
@@ -126,9 +129,11 @@ After candidate and runner freeze, the future procedure must:
 8. write an append-only report, decision, completion receipt and public reveal;
 9. keep a failed result permanently action-ineligible.
 
-Any algorithm, configuration, matcher, evaluator or runner change after nonce
-creation invalidates that run for release and requires a different nonce and
-run identity. Previous evidence is never overwritten.
+The prediction/truth ordering and create-only receipt chain completed, but the
+persisted report failed its own frozen reload contract. Any algorithm,
+configuration, matcher, evaluator, contract or runner change after nonce
+creation invalidates that run for release. Previous evidence is never
+overwritten.
 
 ## Unchanged release targets
 
@@ -208,8 +213,59 @@ uv run retryrail-v3-freeze --check
 uv run retryrail-v3-blind --check
 uv run pytest services/api/tests/detection/test_v3_freeze.py \
   services/api/tests/detection/test_v3_blind.py
-make v3-blind-check
 ```
 
 Only after this freeze is committed and pushed may R4.4 create its one fresh
 public, non-sensitive nonce.
+
+## R4.4 official result
+
+The committed pre-truth prediction evidence was pushed before truth access.
+The same public nonce then completed exactly one scoring stage under run
+`detector_v3_official_blind_1a1852634945b54e300a`. The raw outcome is:
+
+| Measure | Result | Target | Decision |
+| --- | ---: | ---: | --- |
+| Payment attempts | 5,760 | fixed batch | informational |
+| True / false positives / false negatives | 5 / 1 / 1 | — | informational |
+| Precision | 833,333 ppm | >= 900,000 ppm | fail |
+| Recall | 833,333 ppm | >= 850,000 ppm | fail |
+| Top-1 attribution | 1,000,000 ppm | >= 800,000 ppm | pass |
+| Median first-signal delay | 300 seconds | <= 600 seconds | pass |
+| Maximum first-signal delay | 2,100 seconds | — | disclosed |
+| Hard-negative action-eligible incidents | 0 | 0 | pass |
+| Baseline leakage violations | 0 | 0 | pass |
+| Evidence reconciliation violations | 0 | 0 | pass |
+
+The false negative is blind scenario 02. The false positive is one unmatched
+background incident. Both target misses are retained; no threshold or evidence
+was changed after reveal. The release decision is `blocked`, M4 approval is
+false and runtime action eligibility remains false everywhere.
+
+### Frozen report-contract defect
+
+The final predicted incident remained open, so its in-memory `resolved_at` was
+`None`. The frozen canonical writer used `exclude_none=true` and omitted that
+field. `V2IncidentEvaluationSummary` declares `resolved_at` nullable but
+required, so `retryrail-v3-blind --check` now rejects the persisted report at
+`incidents[5].resolved_at`. The report content validates only after adding that
+single `None` in memory; canonicalizing the hydrated model reproduces the exact
+original bytes. No official file is modified.
+
+This is a procedure failure in addition to the metric failures. The separate
+`postrun.audit.v1.json` binds the completion, report and decision digests and
+records `preserved_blocked_invalid`. `retryrail-v3-blind-postrun` verifies the
+known defect exactly, the complete digest and identity chain, the blocked
+flags, the public-nonce reproduction of both ignored inputs, and any existing
+derived bytes. Any additional or different schema failure is rejected.
+
+```bash
+uv run retryrail-v3-blind-postrun
+uv run pytest services/api/tests/detection/test_v3_blind_postrun.py
+make v3-blind-check
+```
+
+The frozen `retryrail-v3-blind --check` command is intentionally not replaced
+or changed: its exact one-field failure is historical evidence of the defect.
+The post-run command verifies preservation of a failed run; a zero exit status
+does not qualify detector v3.

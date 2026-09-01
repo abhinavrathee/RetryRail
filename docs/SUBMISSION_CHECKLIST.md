@@ -194,8 +194,8 @@ Recommended timing:
 
 | Claim | Evidence location |
 | --- | --- |
-| Detector precision/recall | `evals/reports/heldout.detector_report.v1.json` remains the failed v1 evidence; the official synthetic v2 blind report is `evals/blind/detector_v2/runs/detector_v2_official_blind_ef49a16703b1612ef774/blind.report.v1.json` and must be presented with its blocked release decision, not as a pass |
-| Root-cause accuracy | v1 held-out remains unscorable after the miss; official synthetic v2 blind top-1 attribution is 1,000,000 ppm, but the overall release is blocked by detection delay and baseline leakage |
+| Detector precision/recall | V1 remains failed; v2 remains blocked on delay/leakage; v3 official synthetic evidence records 833,333 ppm precision and recall and is blocked plus procedurally invalid. None may be presented as a qualified release |
+| Root-cause accuracy | V1 held-out remains unscorable after the miss; v2 and v3 official synthetic top-1 attribution are 1,000,000 ppm, but both overall releases are blocked |
 | Agent grounding/safety | `evals/reports/agent-golden.json` |
 | No duplicate action | Integration test plus demo audit receipt |
 | Timeout reconciliation | Integration test and failure-demo recording |
@@ -205,6 +205,7 @@ Recommended timing:
 | Clean release | Public CI run for tagged commit |
 
 Later-milestone paths remain required targets. M3 detector evidence now exists,
-but neither v1 nor v2 has a qualifying release. If v2's strong blind accuracy
-metrics are used in the application, the synthetic limitation and blocked
-latency/leakage decision must appear beside them.
+but none of v1, v2 or v3 has a qualifying release. If any strong component
+metric is used in the application, its synthetic limitation and full blocked
+release context must appear beside it. V3's report-contract defect must also be
+disclosed wherever its official metrics appear.

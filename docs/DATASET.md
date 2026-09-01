@@ -132,6 +132,9 @@ evaluation truth use separate paths, and its committed manifest SHA-256 is
 
 R2 consumed this batch as development evidence and committed a label-free
 prediction followed by a separate scored report. It cannot be represented as
-held-out evidence. The v2 official blind batch still does not exist; the
-candidate is now frozen, but a fresh user-provided nonce is intentionally
-deferred to R3. See `DETECTOR_V2_PROTOCOL.md`.
+held-out evidence. The later v2 official batch is revealed, release-blocked
+development evidence for v3 and must never be called blind for another
+candidate. V3's fresh official batch is also now consumed: its release failed
+precision and recall and its report failed the frozen reload contract. Neither
+batch may be reused as held-out evidence. See `DETECTOR_V2_PROTOCOL.md` and
+`DETECTOR_V3_PROTOCOL.md`.

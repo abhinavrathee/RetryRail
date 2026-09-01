@@ -121,3 +121,12 @@ median detection delay and baseline leakage. Confirmed candidate incidents
 remain globally action-ineligible; M4 remains behind a future qualified
 release decision and cannot let a model or policy override detector
 eligibility.
+
+Detector-v3 introduced a guarded, frozen baseline and passed both approved
+development partitions. Its one official synthetic blind run nevertheless
+failed precision and recall, and its frozen canonical report omitted a
+required nullable field for an unresolved incident. The append-only run is
+preserved as blocked and procedurally invalid. An independent post-run audit
+reproduces the public-nonce inputs and validates the exact failure without
+altering the frozen runner or evidence. M4 therefore remains blocked behind a
+future separately versioned detector release.
