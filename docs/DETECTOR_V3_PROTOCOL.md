@@ -2,12 +2,12 @@
 
 ## Current status
 
-M3R.4 phases R4.1 and R4.2 are complete, and R4.3 is in progress. The
-detector-v3 development candidate passes both precommitted partitions and its
-candidate, matcher, evaluator, development evidence and ten-case adversarial
-report are now frozen. The append-only blind runner is not frozen yet, so no
-blind nonce or release claim exists. Detector v2 remains the immutable failed
-predecessor and every detector output remains runtime action-ineligible.
+M3R.4 phases R4.1 through R4.3 are complete. The detector-v3 development
+candidate passes both precommitted partitions, and its candidate, matcher,
+evaluator, development evidence, ten-case adversarial report, typed blind
+contracts and append-only runner are frozen. No blind nonce or release claim
+exists yet. Detector v2 remains the immutable failed predecessor and every
+detector output remains runtime action-ineligible.
 
 The machine-readable process contract is
 `evals/protocols/detector_v3.protocol.json`. It is regenerated from and bound
@@ -73,7 +73,7 @@ anchored to a known scenario start.
 | --- | --- | --- |
 | R4.1 | Bind failure analysis, allowed evidence, unchanged benchmark and release rules | Complete |
 | R4.2 | Implement and tune one separately versioned guarded-baseline candidate | Complete |
-| R4.3 | Run adversarial checks; freeze candidate, matcher, evaluator and runner | In progress — candidate frozen, runner pending |
+| R4.3 | Run adversarial checks; freeze candidate, matcher, evaluator and runner | Complete |
 | R4.4 | Create one fresh nonce, persist predictions, reproduce, authorize truth once | Not started |
 | R4.5 | Commit release decision and run all repository/security/CI gates | Not started |
 
@@ -167,7 +167,7 @@ selection, every hard-negative family, label-free prediction bytes, evidence
 reconciliation, fail-closed action eligibility and cross-platform bundle
 identity.
 
-## R4.3 candidate freeze
+## R4.3 candidate and runner freeze
 
 `evals/golden/detector_v3.freeze.json` binds the protocol and unchanged
 generator to the candidate configuration, twelve ordered source files, both
@@ -181,12 +181,35 @@ eight hard negatives across the two development partitions, leakage and
 evidence reconciliation, label-free prediction artifacts, and continued
 disclosure of the 2,100-second slow case.
 
-The candidate freeze alone does not authorize nonce creation. R4.3 remains in
-progress until the append-only runner and all of its evidence contracts are
-implemented, tested and bound by a separate procedure freeze.
+The candidate freeze alone does not authorize nonce creation. The separate
+`evals/golden/detector_v3.blind_procedure.freeze.json` now binds the candidate
+and generator identities to the exact blind runner and evidence-contract
+sources. Its runner bundle SHA-256 is
+`8ff1a614412278ca4de471dc4e8cdb46315ca67ec9071acdb30555dc2148f5e6`.
+
+The runner uses create-only durable writes and repository-confined paths. It
+persists label-free events and canonical v3 predictions first, reads those
+bytes back, and requires an exact independent detector replay before writing a
+truth-access receipt. Truth is then loaded through the separate loader exactly
+once. Completion links every artifact digest; failure is terminal, redacted,
+and permanently consumes the candidate's one official run slot. Stage locks
+reject concurrent prediction or scoring, and no CLI argument can carry the
+nonce into the process list.
+
+Nine isolation and integrity tests cover truth-loader exclusion during
+prediction, v3 artifact identity, exact replay-before-truth ordering, terminal
+replay refusal, byte tampering, prior/test/malformed nonce rejection,
+single-run failure semantics, concurrent stage locks, raw-nonce absence and
+cross-platform runner hashing.
 
 ```bash
 uv run retryrail-v3-adversarial --check
 uv run retryrail-v3-freeze --check
-uv run pytest services/api/tests/detection/test_v3_freeze.py
+uv run retryrail-v3-blind --check
+uv run pytest services/api/tests/detection/test_v3_freeze.py \
+  services/api/tests/detection/test_v3_blind.py
+make v3-blind-check
 ```
+
+Only after this freeze is committed and pushed may R4.4 create its one fresh
+public, non-sensitive nonce.

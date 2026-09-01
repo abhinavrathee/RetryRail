@@ -464,9 +464,8 @@ cannot be tuned in place or silently reused as held-out evidence:
    unchanged release targets and fresh-nonce procedure;
 2. **Complete:** implement and tune one separately versioned candidate on both
    approved development partitions, requiring each partition to pass;
-3. **In progress:** adversarial cases and the candidate/matcher/evaluator are
-   frozen; the append-only blind runner freeze is still required before nonce
-   creation;
+3. **Complete:** adversarial cases, candidate/matcher/evaluator, typed evidence
+   contracts and the append-only blind runner are frozen before nonce creation;
 4. **Not started:** create one fresh public nonce, persist and reproduce
    predictions, then authorize and load truth exactly once;
 5. **Not started:** preserve the append-only release decision and run all

@@ -130,12 +130,11 @@ locally and against PostgreSQL 16 in the Python CI job.
 
 ## Status
 
-Parts 1–4 / M0–M3 and M3R.1–R.3 are implemented. M3R.4 R4.1–R4.2 now
-precommit the detector-v3 boundary and produce a candidate that passes both
-approved development partitions. R4.3 has frozen that candidate and its
-adversarial evidence, while the blind runner freeze is still pending. This is
-not a release claim: no new blind nonce exists and every output remains
-action-ineligible.
+Parts 1–4 / M0–M3 and M3R.1–R.3 are implemented. M3R.4 R4.1–R4.3 now
+precommit the detector-v3 boundary, qualify the candidate independently on both
+approved development partitions, and freeze its adversarial evidence plus the
+append-only blind runner. This is not a release claim: no new blind nonce
+exists and every output remains action-ineligible.
 Detector v1 failed its P0 held-out targets, and detector v2's official synthetic
 blind release decision remains blocked by detection delay and baseline leakage.
 GitHub Actions includes PostgreSQL 16 integration and all detector evaluation

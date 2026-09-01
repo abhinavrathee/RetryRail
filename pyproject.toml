@@ -39,6 +39,7 @@ retryrail-v3-protocol = "retryrail.detection.v3_protocol:main"
 retryrail-v3-candidate = "retryrail.detection.v3_evaluation:main"
 retryrail-v3-adversarial = "retryrail.detection.v3_adversarial:main"
 retryrail-v3-freeze = "retryrail.detection.v3_freeze:main"
+retryrail-v3-blind = "retryrail.detection.v3_blind:main"
 
 [dependency-groups]
 dev = [
