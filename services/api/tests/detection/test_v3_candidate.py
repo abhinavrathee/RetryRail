@@ -1,6 +1,7 @@
 """Detector-v3 guarded baseline, provenance and development-suite tests."""
 
 import hashlib
+import json
 from collections.abc import Mapping
 from datetime import timedelta
 from pathlib import Path
@@ -8,16 +9,20 @@ from pathlib import Path
 import pytest
 from pydantic import ValidationError
 
+from retryrail.detection import v3_evaluation
 from retryrail.detection.v3_config import load_detector_v3_config
 from retryrail.detection.v3_engine import DetectorV3Engine
 from retryrail.detection.v3_evaluation import (
     V3DevelopmentOrigin,
     V3DevelopmentPartitionReport,
     V3DevelopmentSuiteReport,
+    V3DevelopmentTargetError,
     V3PredictionArtifact,
     candidate_bundle_sha256,
     candidate_source_paths,
+    check_development_artifacts,
     render_development_artifacts,
+    write_development_artifacts,
 )
 from retryrail.detection.v3_models import DetectorV3Config
 from retryrail.synthetic.v2_generator import build_development_dataset
@@ -241,3 +246,70 @@ def test_candidate_bundle_identity_is_cross_platform_line_ending_safe(
         ).hexdigest()
         == suite.detector_config_sha256
     )
+
+
+def _relocated_artifacts(
+    artifacts: Mapping[Path, bytes],
+    root: Path,
+) -> dict[Path, bytes]:
+    reports = root / "evals/reports"
+    return {reports / path.name: content for path, content in artifacts.items()}
+
+
+def test_development_artifact_check_and_atomic_write_cover_drift(
+    rendered_candidate_artifacts: Mapping[Path, bytes],
+    tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    expected = _relocated_artifacts(rendered_candidate_artifacts, tmp_path)
+    suite_path = tmp_path / "evals/reports/detector_v3.development.json"
+    monkeypatch.setattr(v3_evaluation, "_REPOSITORY_ROOT", tmp_path)
+    monkeypatch.setattr(v3_evaluation, "_SUITE_REPORT_PATH", suite_path)
+    monkeypatch.setattr(v3_evaluation, "render_development_artifacts", lambda: expected)
+
+    missing = check_development_artifacts()
+    assert len(missing) == len(expected)
+    assert all(item.startswith("missing evals/reports/") for item in missing)
+
+    stale_path = next(path for path in expected if path != suite_path)
+    stale_path.parent.mkdir(parents=True)
+    stale_path.write_bytes(b"stale\n")
+    findings = check_development_artifacts()
+    assert f"stale {stale_path.relative_to(tmp_path).as_posix()}" in findings
+
+    write_development_artifacts()
+
+    assert all(path.read_bytes() == content for path, content in expected.items())
+    assert not tuple(tmp_path.rglob(".*.tmp"))
+
+
+def test_development_artifact_gate_refuses_a_nonpassing_suite(
+    rendered_candidate_artifacts: Mapping[Path, bytes],
+    tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    expected = _relocated_artifacts(rendered_candidate_artifacts, tmp_path)
+    suite_path = tmp_path / "evals/reports/detector_v3.development.json"
+    suite = json.loads(expected[suite_path])
+    suite["partitions"][0]["development_targets_passed"] = False
+    suite["all_development_partitions_passed"] = False
+    suite["candidate_ready_for_adversarial_freeze"] = False
+    expected[suite_path] = (
+        json.dumps(
+            suite,
+            ensure_ascii=True,
+            indent=2,
+            sort_keys=True,
+            separators=(",", ": "),
+        )
+        + "\n"
+    ).encode()
+    monkeypatch.setattr(v3_evaluation, "_REPOSITORY_ROOT", tmp_path)
+    monkeypatch.setattr(v3_evaluation, "_SUITE_REPORT_PATH", suite_path)
+    monkeypatch.setattr(v3_evaluation, "render_development_artifacts", lambda: expected)
+
+    assert "detector-v3 development partitions did not all pass" in (
+        check_development_artifacts()
+    )
+    with pytest.raises(V3DevelopmentTargetError):
+        write_development_artifacts()

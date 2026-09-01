@@ -1,14 +1,18 @@
 """Detector-v3 remediation protocol and evidence-boundary tests."""
 
 import hashlib
+import json
+import shutil
 from pathlib import Path
 
 import pytest
 from pydantic import ValidationError
 
+from retryrail.detection import v3_protocol
 from retryrail.detection.v3_protocol import (
     V3BlindProcedure,
     V3CandidateConstraints,
+    V3DevelopmentEvidence,
     V3EvaluationProtocol,
     build_v3_protocol,
     check_v3_protocol,
@@ -96,3 +100,114 @@ def test_committed_protocol_matches_canonical_predecessor_evidence() -> None:
 
     assert check_v3_protocol() == []
     assert protocol_path.read_bytes() == render_v3_protocol()
+
+
+@pytest.mark.parametrize("duplicate_field", ["path", "sha256"])
+def test_development_evidence_rejects_duplicate_artifact_identity(
+    duplicate_field: str,
+) -> None:
+    evidence = build_v3_protocol().allowed_development_evidence[0]
+    content = evidence.model_dump(mode="json")
+    content["artifacts"][1][duplicate_field] = content["artifacts"][0][duplicate_field]
+
+    with pytest.raises(ValidationError, match="must be unique"):
+        V3DevelopmentEvidence.model_validate(content)
+
+
+@pytest.mark.parametrize("mode", ["duplicate_id", "duplicate_origin"])
+def test_protocol_rejects_ambiguous_development_partitions(mode: str) -> None:
+    protocol = build_v3_protocol()
+    content = protocol.model_dump(mode="json")
+    if mode == "duplicate_id":
+        content["allowed_development_evidence"][1]["evidence_id"] = content[
+            "allowed_development_evidence"
+        ][0]["evidence_id"]
+        expected = "identifiers must be unique"
+    else:
+        content["allowed_development_evidence"][1]["origin"] = "prior_development"
+        expected = "requires prior development and revealed blocked evidence"
+
+    with pytest.raises(ValidationError, match=expected):
+        V3EvaluationProtocol.model_validate(content)
+
+
+def test_protocol_check_and_atomic_write_cover_missing_and_stale_files(
+    tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    expected = b'{"protocol":"synthetic"}\n'
+    monkeypatch.setattr(v3_protocol, "render_v3_protocol", lambda _root: expected)
+
+    assert check_v3_protocol(tmp_path) == ["missing evals/protocols/detector_v3.protocol.json"]
+    target = tmp_path / "evals/protocols/detector_v3.protocol.json"
+    target.parent.mkdir(parents=True)
+    target.write_bytes(b"stale\n")
+    assert check_v3_protocol(tmp_path) == ["stale evals/protocols/detector_v3.protocol.json"]
+
+    v3_protocol.write_v3_protocol(tmp_path)
+
+    assert target.read_bytes() == expected
+    assert not (target.parent / f".{target.name}.tmp").exists()
+
+
+def _copy_protocol_predecessor_files(root: Path) -> tuple[Path, Path]:
+    repository_root = Path(__file__).resolve().parents[4]
+    relative_paths = (
+        Path("evals/protocols/detector_v2.protocol.json"),
+        Path(
+            "evals/blind/detector_v2/runs/"
+            "detector_v2_official_blind_ef49a16703b1612ef774/blind.release.v1.json"
+        ),
+        Path(
+            "evals/blind/detector_v2/runs/"
+            "detector_v2_official_blind_ef49a16703b1612ef774/nonce.reveal.json"
+        ),
+    )
+    for relative in relative_paths:
+        target = root / relative
+        target.parent.mkdir(parents=True, exist_ok=True)
+        shutil.copyfile(repository_root / relative, target)
+    return root / relative_paths[1], root / relative_paths[2]
+
+
+@pytest.mark.parametrize(
+    ("mode", "expected"),
+    [
+        ("qualified", "requires a blocked predecessor"),
+        ("targets", "failures changed"),
+        ("nonce", "do not reconcile"),
+        ("generator", "generator no longer matches"),
+    ],
+)
+def test_protocol_builder_rejects_predecessor_or_generator_drift(
+    tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
+    mode: str,
+    expected: str,
+) -> None:
+    release_path, _reveal_path = _copy_protocol_predecessor_files(tmp_path)
+    release = json.loads(release_path.read_bytes())
+    if mode == "qualified":
+        release.update(
+            {
+                "approved_for_m4_integration": True,
+                "failed_targets": [],
+                "release_qualified": True,
+                "status": "qualified",
+            }
+        )
+    elif mode == "targets":
+        release["failed_targets"] = ["precision"]
+    elif mode == "nonce":
+        release["nonce_sha256"] = "0" * 64
+    else:
+        monkeypatch.setattr(v3_protocol, "generator_bundle_sha256", lambda _root: "0" * 64)
+    release_path.write_text(
+        json.dumps(release, ensure_ascii=True, indent=2, sort_keys=True, separators=(",", ": "))
+        + "\n",
+        encoding="utf-8",
+        newline="\n",
+    )
+
+    with pytest.raises(ValueError, match=expected):
+        build_v3_protocol(tmp_path)
