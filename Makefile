@@ -47,6 +47,7 @@ v2-candidate-check:
 	uv run retryrail-v2-candidate --check
 
 v2-blind-check:
+	uv run retryrail-v2-blind-reproduce
 	uv run retryrail-v2-blind --check
 
 replay:
@@ -86,6 +87,7 @@ build:
 eval:
 	uv run retryrail-eval --check
 	uv run retryrail-v2-candidate --check
+	uv run retryrail-v2-blind-reproduce
 	uv run retryrail-v2-blind --check
 
 security-check:

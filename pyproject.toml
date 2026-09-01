@@ -34,6 +34,7 @@ retryrail-seed = "retryrail.synthetic.generator:main"
 retryrail-v2-data = "retryrail.synthetic.v2_generator:main"
 retryrail-v2-candidate = "retryrail.detection.v2_evaluation:main"
 retryrail-v2-blind = "retryrail.detection.v2_blind:main"
+retryrail-v2-blind-reproduce = "retryrail.detection.v2_blind_reproduction:main"
 
 [dependency-groups]
 dev = [

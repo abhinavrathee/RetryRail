@@ -18,6 +18,7 @@ a payment or customer-facing mutation.
 | Detector threshold changed after blind result | Committed config hash and byte-reproducible reports | `retryrail-eval --check` plus exact-result tests |
 | V2 blind output influences candidate tuning | Generator/protocol precommit, source/config/matcher/runner freeze, post-freeze nonce, event-first prediction receipt and separate truth loader | `retryrail-v2-data --check`, `retryrail-v2-candidate --check`, `retryrail-v2-blind --check` and isolation tests |
 | Concurrent or replayed blind stage opens truth twice | Exclusive create-only stage locks, append-only receipts, byte-for-byte prediction replay and terminal completion/failure state | Blind workflow concurrency, tamper and replay-refusal tests |
+| Clean checkout silently omits ignored blind inputs | Public-reveal reproduction is confined to the receipt-named run, digest-bound and create-only; mismatched files and symlinks fail closed | `retryrail-v2-blind-reproduce` before every local/CI blind check plus reproduction tamper tests |
 | Sparse high failure percentage creates an action incident | Current/baseline sample, excess-failure and GMV gates | Held-out wallet hard-negative test |
 | Incident baseline absorbs incident traffic | Opening reference interval is frozen for every update | Per-observation leakage assertions |
 | No traffic is mistaken for recovery | Resolution requires a sample-eligible window with the rate drop below threshold | No-traffic lifecycle regression test |

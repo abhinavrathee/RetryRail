@@ -256,6 +256,7 @@ absence of any blind identity from the freeze.
 ## R3 verification
 
 ```bash
+uv run retryrail-v2-blind-reproduce
 uv run retryrail-v2-blind --check
 uv run pytest services/api/tests/detection/test_v2_blind.py
 make v2-blind-check
@@ -272,6 +273,16 @@ For the completed official run, `retryrail-v2-blind --check` verifies the
 terminal receipt and every committed digest without regenerating or rescoring
 the batch. The release JSON is the authoritative M4 gate; strong individual
 metrics cannot override its blocked decision.
+
+The two large deterministic JSONL inputs remain ignored build artifacts. In a
+clean checkout, `retryrail-v2-blind-reproduce` reads only a completed run's
+committed public nonce reveal and append-only receipts, regenerates the event
+and truth bytes with the frozen generator, and requires their byte length,
+record count and SHA-256 digest to match before create-only persistence. It
+rejects receipt path substitution, symlink traversal and mismatched existing
+bytes; it never overwrites an artifact or reruns prediction/scoring. The local
+and CI evaluation gates run this reproduction step before the frozen evidence
+check.
 
 `retryrail-v2-candidate --check` deliberately verifies the nonce-free R2 freeze
 and retains its historical pre-blind status message. It must not be changed
