@@ -1,5 +1,5 @@
 {
-  "candidate_bundle_sha256": "500b6b3903dd8c2dbb5552dd6bc8a1b500cd9ab3ab12f78fcb21aaf6cc7cb6f7",
+  "candidate_bundle_sha256": "81f990e7ee63cf18b8ccdf4dab03affdc4d8de4edeae5a16c24c9f98e8bd91a2",
   "detector_config_sha256": "0a32ca8a813e34c02472169314f70397b940079603b91cdf3a5e6d4b1f20f14b",
   "detector_version": "detector_v3_0_0",
   "development_evidence_id": "detector_v2_development_v1",
@@ -1781,7 +1781,7 @@
     "true_positives": 6
   },
   "official_blind_evaluated": false,
-  "prediction_artifact_sha256": "d17929d8d52cd8f56da51b90be8e34a57aa10782031bdc7c80eeeb890a22dcfc",
+  "prediction_artifact_sha256": "7c08a727c73213c79c1a53395dbff3905fec6818e4b229cd568120e024e2c142",
   "protocol_id": "detector_v3_protocol_v1",
   "release_qualified": false,
   "report_id": "detector_v3_development_prior_development",

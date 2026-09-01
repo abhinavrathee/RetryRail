@@ -1,6 +1,6 @@
 {
   "all_development_partitions_passed": true,
-  "candidate_bundle_sha256": "500b6b3903dd8c2dbb5552dd6bc8a1b500cd9ab3ab12f78fcb21aaf6cc7cb6f7",
+  "candidate_bundle_sha256": "81f990e7ee63cf18b8ccdf4dab03affdc4d8de4edeae5a16c24c9f98e8bd91a2",
   "candidate_frozen": false,
   "candidate_ready_for_adversarial_freeze": true,
   "detector_config_sha256": "0a32ca8a813e34c02472169314f70397b940079603b91cdf3a5e6d4b1f20f14b",
@@ -17,9 +17,9 @@
       "evidence_reconciliation_violations": 0,
       "median_detection_delay_seconds": 600,
       "precision_ppm": 1000000,
-      "prediction_artifact_sha256": "d17929d8d52cd8f56da51b90be8e34a57aa10782031bdc7c80eeeb890a22dcfc",
+      "prediction_artifact_sha256": "7c08a727c73213c79c1a53395dbff3905fec6818e4b229cd568120e024e2c142",
       "recall_ppm": 1000000,
-      "report_artifact_sha256": "4da68643cd3019513f7d9b5c170069c2b121f50e2173d0c0e066b87dd03aa0c8",
+      "report_artifact_sha256": "07be4eee27accd5501812d8c3a2851b3642b43f304f9b8433bc985c5cd2e641e",
       "top_1_attribution_ppm": 1000000
     },
     {
@@ -30,9 +30,9 @@
       "evidence_reconciliation_violations": 0,
       "median_detection_delay_seconds": 600,
       "precision_ppm": 1000000,
-      "prediction_artifact_sha256": "8d7b2d2f9c5f5d30d4516d798333f3268c2bd4e28827a076704656599fa494b4",
+      "prediction_artifact_sha256": "ba7f808b17c3dea33dfa96d9ec1b723e53812c2965ab664ee8527b7935cad7af",
       "recall_ppm": 1000000,
-      "report_artifact_sha256": "f89b7e26ea90d95b389063a0c1c9cfdd5c817c256e9554a6f7ab3dec080813f1",
+      "report_artifact_sha256": "674ca96a926de535f264d2dca1e29adb2c0d631f033d4bf6018e01465b9a894a",
       "top_1_attribution_ppm": 1000000
     }
   ],

@@ -63,6 +63,7 @@ _CANDIDATE_SOURCE_PATHS = (
     "services/api/app/retryrail/detection/v2_engine.py",
     "services/api/app/retryrail/detection/v2_evaluation.py",
     "services/api/app/retryrail/detection/v2_models.py",
+    "services/api/app/retryrail/detection/v3_adversarial.py",
     "services/api/app/retryrail/detection/v3_config.py",
     "services/api/app/retryrail/detection/v3_engine.py",
     "services/api/app/retryrail/detection/v3_evaluation.py",

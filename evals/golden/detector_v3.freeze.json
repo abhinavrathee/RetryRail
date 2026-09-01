@@ -1,0 +1,72 @@
+{
+  "adversarial_cases": 10,
+  "adversarial_report": {
+    "bytes": 2597,
+    "path": "evals/reports/detector_v3.adversarial.json",
+    "records": 1,
+    "sha256": "7fb1b78d3e99930d9f276da0cec237a2ea0bddd96098ea53219d1501a56e5dd0"
+  },
+  "all_adversarial_cases_passed": true,
+  "all_development_partitions_passed": true,
+  "benchmark_generator_bundle_sha256": "a91e12e9945dd9cab9252dbd6f345e99fd52229505baf10a9aafc5dae511a9b9",
+  "candidate_bundle_sha256": "81f990e7ee63cf18b8ccdf4dab03affdc4d8de4edeae5a16c24c9f98e8bd91a2",
+  "candidate_source_paths": [
+    "services/api/app/retryrail/contracts/domain.py",
+    "services/api/app/retryrail/detection/engine.py",
+    "services/api/app/retryrail/detection/models.py",
+    "services/api/app/retryrail/detection/v2_engine.py",
+    "services/api/app/retryrail/detection/v2_evaluation.py",
+    "services/api/app/retryrail/detection/v2_models.py",
+    "services/api/app/retryrail/detection/v3_adversarial.py",
+    "services/api/app/retryrail/detection/v3_config.py",
+    "services/api/app/retryrail/detection/v3_engine.py",
+    "services/api/app/retryrail/detection/v3_evaluation.py",
+    "services/api/app/retryrail/detection/v3_models.py",
+    "services/api/app/retryrail/events/models.py"
+  ],
+  "detector_config_sha256": "0a32ca8a813e34c02472169314f70397b940079603b91cdf3a5e6d4b1f20f14b",
+  "detector_version": "detector_v3_0_0",
+  "development_artifacts": [
+    {
+      "bytes": 2045,
+      "path": "evals/reports/detector_v3.development.json",
+      "records": 1,
+      "sha256": "33c86c034fb18550cb99f504026d4952ce9f34d079f95e0e2f0f0d3f5f32870d"
+    },
+    {
+      "bytes": 535638,
+      "path": "evals/reports/detector_v3.prior_development.predictions.json",
+      "records": 1,
+      "sha256": "7c08a727c73213c79c1a53395dbff3905fec6818e4b229cd568120e024e2c142"
+    },
+    {
+      "bytes": 64385,
+      "path": "evals/reports/detector_v3.prior_development.report.json",
+      "records": 1,
+      "sha256": "07be4eee27accd5501812d8c3a2851b3642b43f304f9b8433bc985c5cd2e641e"
+    },
+    {
+      "bytes": 553504,
+      "path": "evals/reports/detector_v3.revealed_predecessor.predictions.json",
+      "records": 1,
+      "sha256": "ba7f808b17c3dea33dfa96d9ec1b723e53812c2965ab664ee8527b7935cad7af"
+    },
+    {
+      "bytes": 63751,
+      "path": "evals/reports/detector_v3.revealed_predecessor.report.json",
+      "records": 1,
+      "sha256": "674ca96a926de535f264d2dca1e29adb2c0d631f033d4bf6018e01465b9a894a"
+    }
+  ],
+  "freeze_id": "detector_v3_candidate_freeze_v1",
+  "frozen_at": "2026-09-01T17:25:00Z",
+  "matcher_version": "detector_v2_matcher_v1_0_0",
+  "official_blind_evaluated": false,
+  "protocol_id": "detector_v3_protocol_v1",
+  "protocol_sha256": "0ecdd4ae8ccaf6c203a063f161dd3ae2340880c331a2275b5e684e80997bdeee",
+  "release_qualified": false,
+  "runtime_action_eligible": false,
+  "schema_version": "1.0.0",
+  "status": "candidate_frozen_for_blind_runner",
+  "synthetic": true
+}

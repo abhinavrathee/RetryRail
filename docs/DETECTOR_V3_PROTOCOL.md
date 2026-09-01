@@ -2,11 +2,12 @@
 
 ## Current status
 
-M3R.4 phases R4.1 and R4.2 are complete. The detector-v3 development candidate
-passes both precommitted development partitions, but it is not yet the R4.3
-adversarially checked candidate freeze. No blind runner, blind nonce or release
-claim exists yet. Detector v2 remains the immutable failed predecessor and
-every detector output remains runtime action-ineligible.
+M3R.4 phases R4.1 and R4.2 are complete, and R4.3 is in progress. The
+detector-v3 development candidate passes both precommitted partitions and its
+candidate, matcher, evaluator, development evidence and ten-case adversarial
+report are now frozen. The append-only blind runner is not frozen yet, so no
+blind nonce or release claim exists. Detector v2 remains the immutable failed
+predecessor and every detector output remains runtime action-ineligible.
 
 The machine-readable process contract is
 `evals/protocols/detector_v3.protocol.json`. It is regenerated from and bound
@@ -72,7 +73,7 @@ anchored to a known scenario start.
 | --- | --- | --- |
 | R4.1 | Bind failure analysis, allowed evidence, unchanged benchmark and release rules | Complete |
 | R4.2 | Implement and tune one separately versioned guarded-baseline candidate | Complete |
-| R4.3 | Run adversarial checks; freeze candidate, matcher, evaluator and runner | Not started |
+| R4.3 | Run adversarial checks; freeze candidate, matcher, evaluator and runner | In progress — candidate frozen, runner pending |
 | R4.4 | Create one fresh nonce, persist predictions, reproduce, authorize truth once | Not started |
 | R4.5 | Commit release decision and run all repository/security/CI gates | Not started |
 
@@ -165,3 +166,27 @@ baseline gaps and freeze behavior, bounded method confirmation, hierarchy
 selection, every hard-negative family, label-free prediction bytes, evidence
 reconciliation, fail-closed action eligibility and cross-platform bundle
 identity.
+
+## R4.3 candidate freeze
+
+`evals/golden/detector_v3.freeze.json` binds the protocol and unchanged
+generator to the candidate configuration, twelve ordered source files, both
+development prediction/report pairs, the suite decision and the adversarial
+report. It contains no nonce digest or blind run identifier.
+
+The adversarial report records ten passing cases: guard coverage across all
+windows, opening-baseline freeze, guard-weakening rejection, timezone
+validation, out-of-order input invariance, bounded method confirmation, all
+eight hard negatives across the two development partitions, leakage and
+evidence reconciliation, label-free prediction artifacts, and continued
+disclosure of the 2,100-second slow case.
+
+The candidate freeze alone does not authorize nonce creation. R4.3 remains in
+progress until the append-only runner and all of its evidence contracts are
+implemented, tested and bound by a separate procedure freeze.
+
+```bash
+uv run retryrail-v3-adversarial --check
+uv run retryrail-v3-freeze --check
+uv run pytest services/api/tests/detection/test_v3_freeze.py
+```

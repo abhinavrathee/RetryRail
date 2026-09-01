@@ -1,6 +1,6 @@
 .DEFAULT_GOAL := help
 
-.PHONY: help bootstrap install-security-hook dev migrate seed v2-data-check v2-candidate-check v2-blind-check v3-protocol-check v3-candidate-check replay detect demo lint typecheck test test-contract test-e2e build eval security-check check
+.PHONY: help bootstrap install-security-hook dev migrate seed v2-data-check v2-candidate-check v2-blind-check v3-protocol-check v3-candidate-check v3-adversarial-check v3-freeze-check replay detect demo lint typecheck test test-contract test-e2e build eval security-check check
 
 help:
 	@echo "RetryRail commands"
@@ -14,6 +14,8 @@ help:
 	@echo "  v2-blind-check  Verify the frozen blind procedure and append-only evidence"
 	@echo "  v3-protocol-check Verify the pre-candidate detector-v3 remediation boundary"
 	@echo "  v3-candidate-check Verify both detector-v3 development partitions"
+	@echo "  v3-adversarial-check Verify detector-v3 temporal and lifecycle edge cases"
+	@echo "  v3-freeze-check Verify the nonce-free detector-v3 candidate freeze"
 	@echo "  replay          Run the protected M2 reliability-case replay"
 	@echo "  detect          Refresh deterministic aggregates and incidents once"
 	@echo "  eval            Verify frozen detector reports and release decision"
@@ -58,6 +60,12 @@ v3-protocol-check:
 v3-candidate-check:
 	uv run retryrail-v3-candidate --check
 
+v3-adversarial-check:
+	uv run retryrail-v3-adversarial --check
+
+v3-freeze-check:
+	uv run retryrail-v3-freeze --check
+
 replay:
 	uv run retryrail-replay --mode required_cases
 
@@ -100,6 +108,8 @@ eval:
 	uv run retryrail-v2-blind --check
 	uv run retryrail-v3-protocol --check
 	uv run retryrail-v3-candidate --check
+	uv run retryrail-v3-adversarial --check
+	uv run retryrail-v3-freeze --check
 
 security-check:
 	uv run bandit -c pyproject.toml -r services/api/app

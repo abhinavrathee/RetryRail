@@ -1,0 +1,101 @@
+{
+  "all_cases_passed": true,
+  "candidate_bundle_sha256": "81f990e7ee63cf18b8ccdf4dab03affdc4d8de4edeae5a16c24c9f98e8bd91a2",
+  "cases": [
+    {
+      "case_id": "guard_covers_every_window",
+      "category": "temporal_safety",
+      "observations": [
+        "window_15_gap_minutes=45",
+        "window_30_gap_minutes=30",
+        "window_60_gap_minutes=0"
+      ],
+      "passed": true
+    },
+    {
+      "case_id": "opening_baseline_freezes",
+      "category": "temporal_safety",
+      "observations": [
+        "baseline_ended_at=2026-09-15T03:05:00+00:00"
+      ],
+      "passed": true
+    },
+    {
+      "case_id": "guard_weakening_rejected",
+      "category": "input_validation",
+      "observations": [
+        "attempted_guard_minutes=55"
+      ],
+      "passed": true
+    },
+    {
+      "case_id": "naive_time_rejected",
+      "category": "input_validation",
+      "observations": [
+        "timezone_requirement=aware"
+      ],
+      "passed": true
+    },
+    {
+      "case_id": "out_of_order_input_invariant",
+      "category": "ordering",
+      "observations": [
+        "event_records=464"
+      ],
+      "passed": true
+    },
+    {
+      "case_id": "bounded_method_confirmation",
+      "category": "lifecycle",
+      "observations": [
+        "maximum_minutes=30",
+        "fresh_latest_step=true"
+      ],
+      "passed": true
+    },
+    {
+      "case_id": "all_hard_negatives_suppressed",
+      "category": "hard_negative",
+      "observations": [
+        "hard_negative_cases=8"
+      ],
+      "passed": true
+    },
+    {
+      "case_id": "evidence_reconciles_without_leakage",
+      "category": "temporal_safety",
+      "observations": [
+        "partitions=2",
+        "leakage_violations=0",
+        "reconciliation_violations=0"
+      ],
+      "passed": true
+    },
+    {
+      "case_id": "prediction_artifacts_are_label_free",
+      "category": "provenance",
+      "observations": [
+        "prediction_artifacts=2"
+      ],
+      "passed": true
+    },
+    {
+      "case_id": "slow_case_remains_disclosed",
+      "category": "provenance",
+      "observations": [
+        "maximum_detection_delay_seconds=2100"
+      ],
+      "passed": true
+    }
+  ],
+  "detector_config_sha256": "0a32ca8a813e34c02472169314f70397b940079603b91cdf3a5e6d4b1f20f14b",
+  "detector_version": "detector_v3_0_0",
+  "evaluated_at": "2026-10-03T00:15:00Z",
+  "official_blind_evaluated": false,
+  "protocol_id": "detector_v3_protocol_v1",
+  "release_qualified": false,
+  "report_id": "detector_v3_adversarial_v1",
+  "runtime_action_eligible": false,
+  "schema_version": "1.0.0",
+  "synthetic": true
+}
