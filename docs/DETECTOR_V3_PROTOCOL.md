@@ -2,10 +2,11 @@
 
 ## Current status
 
-M3R.4 phase R4.1 is precommitted. No detector-v3 candidate, candidate freeze,
-blind runner, blind nonce or release claim exists yet. Detector v2 remains the
-immutable failed predecessor and every detector output remains runtime
-action-ineligible.
+M3R.4 phases R4.1 and R4.2 are complete. The detector-v3 development candidate
+passes both precommitted development partitions, but it is not yet the R4.3
+adversarially checked candidate freeze. No blind runner, blind nonce or release
+claim exists yet. Detector v2 remains the immutable failed predecessor and
+every detector output remains runtime action-ineligible.
 
 The machine-readable process contract is
 `evals/protocols/detector_v3.protocol.json`. It is regenerated from and bound
@@ -70,13 +71,45 @@ anchored to a known scenario start.
 | Phase | Work | Status |
 | --- | --- | --- |
 | R4.1 | Bind failure analysis, allowed evidence, unchanged benchmark and release rules | Complete |
-| R4.2 | Implement and tune one separately versioned guarded-baseline candidate | Not started |
+| R4.2 | Implement and tune one separately versioned guarded-baseline candidate | Complete |
 | R4.3 | Run adversarial checks; freeze candidate, matcher, evaluator and runner | Not started |
 | R4.4 | Create one fresh nonce, persist predictions, reproduce, authorize truth once | Not started |
 | R4.5 | Commit release decision and run all repository/security/CI gates | Not started |
 
 R4.2 cannot claim release success. It must pass every unchanged target on each
 approved development partition independently before R4.3.
+
+## R4.2 candidate and development result
+
+`detector_v3_0_0` retains v2's deterministic statistical, business-impact,
+actionability, confirmation and diagnosis evidence contracts. Three bounded
+changes address observed lifecycle failures:
+
+1. a 60-minute baseline guard covers the maximum current window, leaving a
+   label-free gap before shorter current windows;
+2. a method candidate may survive statistical misses for at most 30 minutes,
+   while still requiring four passing signals, three fresh-evidence steps,
+   four unique provider failures and fresh evidence in its latest confirming
+   step;
+3. issuer attribution must explain at least 80% of method excess failures
+   before replacing a passing method-level candidate, reducing unstable sparse
+   slice selection.
+
+The ten-minute provider burst still fails confirmation, customer failures stay
+non-actionable, and low-volume evidence still fails the sample gate. The exact
+configuration is `evals/golden/detector_v3.candidate.json`; development
+predictions contain no scenario identities or expected outcomes.
+
+Both approved synthetic partitions independently record six true positives,
+zero false positives, zero false negatives, 1,000,000 ppm precision, recall and
+top-1 attribution, a 600-second median first-signal delay, zero hard-negative
+incidents, zero baseline leakage and zero evidence-reconciliation violations.
+The revealed predecessor delays are `[300, 300, 300, 900, 900, 2100]` seconds;
+the 2,100-second maximum is retained rather than hidden by the median.
+
+These are development results only. The suite report forces
+`candidate_frozen=false`, `official_blind_evaluated=false`,
+`release_qualified=false` and `runtime_action_eligible=false`.
 
 ## Future blind boundary
 
@@ -118,3 +151,17 @@ make v3-protocol-check
 
 The check fails if any bound v2 artifact, the frozen generator bundle, nonce
 denylist, target, or canonical protocol byte changes.
+
+## R4.2 verification
+
+```bash
+uv run retryrail-v3-candidate --check
+uv run pytest services/api/tests/detection/test_v3_candidate.py
+make v3-candidate-check
+```
+
+The tests cover both development partitions, exact target comparisons,
+baseline gaps and freeze behavior, bounded method confirmation, hierarchy
+selection, every hard-negative family, label-free prediction bytes, evidence
+reconciliation, fail-closed action eligibility and cross-platform bundle
+identity.

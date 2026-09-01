@@ -1,0 +1,63 @@
+{
+  "actionable_error_sources": [
+    "bank",
+    "gateway",
+    "wallet"
+  ],
+  "attribution_issuer_share_ppm": 800000,
+  "attribution_minimum_failures": 2,
+  "baseline_guard_minutes": 60,
+  "baseline_lookback_minutes": 240,
+  "candidate_levels": [
+    "method",
+    "method_issuer"
+  ],
+  "current_window_minutes": [
+    15,
+    30,
+    60
+  ],
+  "detector_version": "detector_v3_0_0",
+  "development_dataset_id": "retryrail_detector_v2_development_v1",
+  "development_evidence_ids": [
+    "detector_v2_development_v1",
+    "detector_v2_official_blind_ef49a16703b1612ef774"
+  ],
+  "development_manifest_sha256": "09ea61ca4ae08b8bcef7771358478f20896133d4a1e88bde7b06450c5dd9de37",
+  "frozen_at": "2026-09-01T17:25:00Z",
+  "healthy_window_minutes": 60,
+  "issuer_baseline_minimum_attempts": 10,
+  "issuer_confidence_threshold_ppm": 900000,
+  "issuer_minimum_actionable_rate_drop_bps": 2500,
+  "issuer_minimum_attempts_per_hour": 8,
+  "issuer_confirmation_evidence_steps": 2,
+  "issuer_confirmation_maximum_minutes": 60,
+  "issuer_confirmation_minimum_post_open_attempts": 5,
+  "issuer_confirmation_requires_fresh_latest_step": true,
+  "issuer_confirmation_signals": 3,
+  "issuer_confirmation_unique_actionable_failures": 2,
+  "issuer_minimum_current_attempts": 2,
+  "method_confirmation_evidence_steps": 3,
+  "method_confirmation_maximum_minutes": 30,
+  "method_confirmation_requires_fresh_latest_step": true,
+  "method_confirmation_signals": 4,
+  "method_confirmation_tolerates_statistical_misses": true,
+  "method_confirmation_unique_actionable_failures": 4,
+  "method_baseline_minimum_attempts": 50,
+  "method_confidence_threshold_ppm": 950000,
+  "method_minimum_actionable_rate_drop_bps": 1500,
+  "method_minimum_current_attempts": 10,
+  "minimum_actionable_failures": 2,
+  "minimum_at_risk_gmv_subunits": 50000,
+  "minimum_excess_actionable_failures": 2,
+  "non_actionable_error_sources": [
+    "customer"
+  ],
+  "protocol_id": "detector_v3_protocol_v1",
+  "protocol_sha256": "0ecdd4ae8ccaf6c203a063f161dd3ae2340880c331a2275b5e684e80997bdeee",
+  "recent_evidence_minutes": 5,
+  "revealed_development_manifest_sha256": "a3f0de6880ea932ae7f8e7655f8e6e57eb99bc6c0ff0342afd205d51048ebb79",
+  "schema_version": "3.0.0",
+  "step_minutes": 5,
+  "suppressed_candidate_cooldown_minutes": 30
+}

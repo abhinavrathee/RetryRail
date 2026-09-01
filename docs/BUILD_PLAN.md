@@ -462,8 +462,8 @@ cannot be tuned in place or silently reused as held-out evidence:
 1. **Complete:** precommit the v3 failure analysis, exact allowed development
    evidence, unchanged benchmark generator, baseline-safety constraints,
    unchanged release targets and fresh-nonce procedure;
-2. **Not started:** implement and tune one separately versioned candidate on
-   both approved development partitions, requiring each partition to pass;
+2. **Complete:** implement and tune one separately versioned candidate on both
+   approved development partitions, requiring each partition to pass;
 3. **Not started:** run adversarial cases and freeze candidate, matcher,
    evaluator and append-only runner before nonce creation;
 4. **Not started:** create one fresh public nonce, persist and reproduce

@@ -1,0 +1,1795 @@
+{
+  "candidate_bundle_sha256": "500b6b3903dd8c2dbb5552dd6bc8a1b500cd9ab3ab12f78fcb21aaf6cc7cb6f7",
+  "detector_config_sha256": "0a32ca8a813e34c02472169314f70397b940079603b91cdf3a5e6d4b1f20f14b",
+  "detector_version": "detector_v3_0_0",
+  "development_evidence_id": "detector_v2_development_v1",
+  "development_origin": "prior_development",
+  "evaluated_at": "2026-09-17T00:10:00Z",
+  "event_artifact_sha256": "d06b533334e430140b9c849726cee6de8814cfb593de2fe6bda7a8f158209a1a",
+  "labels_loaded_after_prediction_bytes": true,
+  "limitations": [
+    "This is synthetic development evidence, not production performance.",
+    "The revealed predecessor partition is no longer blind evidence.",
+    "The unchanged v2 matcher is reused to preserve score comparability.",
+    "Development success cannot qualify release or enable runtime actions."
+  ],
+  "matcher_version": "detector_v2_matcher_v1_0_0",
+  "metrics": {
+    "baseline_leakage_violations": 0,
+    "cases": [
+      {
+        "confirmation_delay_seconds": 1200,
+        "detected_incident": true,
+        "detection_delay_seconds": 300,
+        "expected_cohort": [
+          {
+            "dimension": "method",
+            "value": "card"
+          }
+        ],
+        "expected_incident": true,
+        "expected_top_causes": [
+          "issuer_unavailable",
+          "bank",
+          "payment_authentication"
+        ],
+        "gate_reason": "statistical_and_business_gates_pass",
+        "matched_incident_id": "inc_9d7de7e3f8f98703f2eb821a",
+        "observed_cohort": [
+          {
+            "dimension": "method",
+            "value": "card"
+          }
+        ],
+        "observed_top_causes": [
+          "issuer_unavailable",
+          "bank",
+          "payment_authentication"
+        ],
+        "scenario_family": "method_provider_degradation",
+        "scenario_id": "scenario_v2_dev_01_method_provider_degradation",
+        "scenario_kind": "true_incident"
+      },
+      {
+        "confirmation_delay_seconds": 3300,
+        "detected_incident": true,
+        "detection_delay_seconds": 600,
+        "expected_cohort": [
+          {
+            "dimension": "method",
+            "value": "netbanking"
+          },
+          {
+            "dimension": "issuer",
+            "value": "issuer_synthetic_beta"
+          }
+        ],
+        "expected_incident": true,
+        "expected_top_causes": [
+          "issuer_unavailable",
+          "bank",
+          "payment_authentication"
+        ],
+        "gate_reason": "statistical_and_business_gates_pass",
+        "matched_incident_id": "inc_9761d3f3c99ca831d5b0bd22",
+        "observed_cohort": [
+          {
+            "dimension": "method",
+            "value": "netbanking"
+          },
+          {
+            "dimension": "issuer",
+            "value": "issuer_synthetic_beta"
+          }
+        ],
+        "observed_top_causes": [
+          "issuer_unavailable",
+          "bank",
+          "payment_authentication"
+        ],
+        "scenario_family": "issuer_provider_degradation",
+        "scenario_id": "scenario_v2_dev_02_issuer_provider_degradation",
+        "scenario_kind": "true_incident"
+      },
+      {
+        "detected_incident": false,
+        "expected_cohort": [
+          {
+            "dimension": "method",
+            "value": "upi"
+          }
+        ],
+        "expected_incident": false,
+        "expected_top_causes": [
+          "payment_cancelled",
+          "customer",
+          "payment_authentication"
+        ],
+        "gate_reason": "blocked_by_non_actionable_error_source",
+        "observed_cohort": [],
+        "observed_top_causes": [],
+        "scenario_family": "customer_behavior_spike",
+        "scenario_id": "scenario_v2_dev_03_customer_behavior_spike",
+        "scenario_kind": "hard_negative"
+      },
+      {
+        "confirmation_delay_seconds": 2100,
+        "detected_incident": true,
+        "detection_delay_seconds": 600,
+        "expected_cohort": [
+          {
+            "dimension": "method",
+            "value": "card"
+          },
+          {
+            "dimension": "issuer",
+            "value": "issuer_synthetic_gamma"
+          }
+        ],
+        "expected_incident": true,
+        "expected_top_causes": [
+          "issuer_unavailable",
+          "bank",
+          "payment_authentication"
+        ],
+        "gate_reason": "statistical_and_business_gates_pass",
+        "matched_incident_id": "inc_5d58bee615b75f346b2a9304",
+        "observed_cohort": [
+          {
+            "dimension": "method",
+            "value": "card"
+          },
+          {
+            "dimension": "issuer",
+            "value": "issuer_synthetic_gamma"
+          }
+        ],
+        "observed_top_causes": [
+          "issuer_unavailable",
+          "bank",
+          "payment_authentication"
+        ],
+        "scenario_family": "issuer_provider_degradation",
+        "scenario_id": "scenario_v2_dev_04_issuer_provider_degradation",
+        "scenario_kind": "true_incident"
+      },
+      {
+        "detected_incident": false,
+        "expected_cohort": [
+          {
+            "dimension": "method",
+            "value": "wallet"
+          },
+          {
+            "dimension": "issuer",
+            "value": "wallet_synthetic_amber"
+          }
+        ],
+        "expected_incident": false,
+        "expected_top_causes": [
+          "payment_timed_out",
+          "wallet",
+          "payment_processing"
+        ],
+        "gate_reason": "blocked_by_minimum_sample_gate",
+        "observed_cohort": [],
+        "observed_top_causes": [],
+        "scenario_family": "low_volume_spike",
+        "scenario_id": "scenario_v2_dev_05_low_volume_spike",
+        "scenario_kind": "hard_negative"
+      },
+      {
+        "confirmation_delay_seconds": 1500,
+        "detected_incident": true,
+        "detection_delay_seconds": 600,
+        "expected_cohort": [
+          {
+            "dimension": "method",
+            "value": "upi"
+          }
+        ],
+        "expected_incident": true,
+        "expected_top_causes": [
+          "issuer_unavailable",
+          "bank",
+          "payment_authentication"
+        ],
+        "gate_reason": "statistical_and_business_gates_pass",
+        "matched_incident_id": "inc_9f6f0d19565772ed10c823ed",
+        "observed_cohort": [
+          {
+            "dimension": "method",
+            "value": "upi"
+          }
+        ],
+        "observed_top_causes": [
+          "issuer_unavailable",
+          "bank",
+          "payment_authentication"
+        ],
+        "scenario_family": "method_provider_degradation",
+        "scenario_id": "scenario_v2_dev_06_method_provider_degradation",
+        "scenario_kind": "true_incident"
+      },
+      {
+        "detected_incident": false,
+        "expected_cohort": [
+          {
+            "dimension": "method",
+            "value": "netbanking"
+          }
+        ],
+        "expected_incident": false,
+        "expected_top_causes": [
+          "issuer_unavailable",
+          "bank",
+          "payment_authentication"
+        ],
+        "gate_reason": "blocked_by_confirmation_gate",
+        "observed_cohort": [],
+        "observed_top_causes": [],
+        "scenario_family": "transient_provider_burst",
+        "scenario_id": "scenario_v2_dev_07_transient_provider_burst",
+        "scenario_kind": "hard_negative"
+      },
+      {
+        "confirmation_delay_seconds": 2100,
+        "detected_incident": true,
+        "detection_delay_seconds": 900,
+        "expected_cohort": [
+          {
+            "dimension": "method",
+            "value": "upi"
+          },
+          {
+            "dimension": "issuer",
+            "value": "issuer_synthetic_beta"
+          }
+        ],
+        "expected_incident": true,
+        "expected_top_causes": [
+          "issuer_unavailable",
+          "bank",
+          "payment_authentication"
+        ],
+        "gate_reason": "statistical_and_business_gates_pass",
+        "matched_incident_id": "inc_42f0c6732285c915aacbedd9",
+        "observed_cohort": [
+          {
+            "dimension": "method",
+            "value": "upi"
+          },
+          {
+            "dimension": "issuer",
+            "value": "issuer_synthetic_beta"
+          }
+        ],
+        "observed_top_causes": [
+          "issuer_unavailable",
+          "bank",
+          "payment_authentication"
+        ],
+        "scenario_family": "issuer_provider_degradation",
+        "scenario_id": "scenario_v2_dev_08_issuer_provider_degradation",
+        "scenario_kind": "true_incident"
+      },
+      {
+        "confirmation_delay_seconds": 3300,
+        "detected_incident": true,
+        "detection_delay_seconds": 900,
+        "expected_cohort": [
+          {
+            "dimension": "method",
+            "value": "netbanking"
+          }
+        ],
+        "expected_incident": true,
+        "expected_top_causes": [
+          "issuer_unavailable",
+          "bank",
+          "payment_authentication"
+        ],
+        "gate_reason": "statistical_and_business_gates_pass",
+        "matched_incident_id": "inc_7d9da95de6b5d56b16a0da1b",
+        "observed_cohort": [
+          {
+            "dimension": "method",
+            "value": "netbanking"
+          },
+          {
+            "dimension": "issuer",
+            "value": "issuer_synthetic_alpha"
+          }
+        ],
+        "observed_top_causes": [
+          "issuer_unavailable",
+          "bank",
+          "payment_authentication"
+        ],
+        "scenario_family": "method_provider_degradation",
+        "scenario_id": "scenario_v2_dev_09_method_provider_degradation",
+        "scenario_kind": "true_incident"
+      },
+      {
+        "detected_incident": false,
+        "expected_cohort": [
+          {
+            "dimension": "method",
+            "value": "card"
+          }
+        ],
+        "expected_incident": false,
+        "expected_top_causes": [
+          "incorrect_otp",
+          "customer",
+          "payment_authentication"
+        ],
+        "gate_reason": "blocked_by_non_actionable_error_source",
+        "observed_cohort": [],
+        "observed_top_causes": [],
+        "scenario_family": "customer_behavior_spike",
+        "scenario_id": "scenario_v2_dev_10_customer_behavior_spike",
+        "scenario_kind": "hard_negative"
+      }
+    ],
+    "development_targets_passed": true,
+    "evidence_reconciliation_violations": 0,
+    "false_negatives": 0,
+    "false_positives": 0,
+    "hard_negative_action_eligible_incidents": 0,
+    "incidents": [
+      {
+        "affected_cohort": [
+          {
+            "dimension": "method",
+            "value": "card"
+          }
+        ],
+        "confirmation_evidence_steps": 21,
+        "confirmation_unique_actionable_failures": 41,
+        "confirmed_at": "2026-09-15T04:20:00Z",
+        "detector_cohort": [
+          {
+            "dimension": "method",
+            "value": "card"
+          }
+        ],
+        "diagnosis": {
+          "hypotheses": [
+            {
+              "confidence_ppm": 1000000,
+              "evidence_event_ids": [
+                "evt_v2_dev_00665_failed",
+                "evt_v2_dev_00671_failed",
+                "evt_v2_dev_00672_failed",
+                "evt_v2_dev_00674_failed",
+                "evt_v2_dev_00679_failed",
+                "evt_v2_dev_00682_failed",
+                "evt_v2_dev_00683_failed",
+                "evt_v2_dev_00691_failed",
+                "evt_v2_dev_00702_failed",
+                "evt_v2_dev_00711_failed",
+                "evt_v2_dev_00713_failed",
+                "evt_v2_dev_00718_failed"
+              ],
+              "evidence_kind": "inferred_hypothesis",
+              "statement": "Merchant-local provider-actionable evidence is consistent with elevated issuer_unavailable failures from bank during payment_authentication; external provider state is unverified."
+            }
+          ],
+          "likely_causes": [
+            "issuer_unavailable",
+            "bank",
+            "payment_authentication"
+          ],
+          "unknowns": [
+            "External provider status is not verified by merchant-local events.",
+            "The deterministic contribution calculation does not prove causality."
+          ],
+          "verified_attributions": [
+            {
+              "baseline_attempts": 124,
+              "baseline_failures": 0,
+              "confidence_ppm": 1000000,
+              "contribution_ppm": 899415,
+              "current_attempts": 23,
+              "current_failures": 12,
+              "dimension": "method",
+              "evidence_event_ids": [
+                "evt_v2_dev_00665_failed",
+                "evt_v2_dev_00671_failed",
+                "evt_v2_dev_00672_failed",
+                "evt_v2_dev_00674_failed",
+                "evt_v2_dev_00679_failed",
+                "evt_v2_dev_00682_failed",
+                "evt_v2_dev_00683_failed",
+                "evt_v2_dev_00691_failed",
+                "evt_v2_dev_00702_failed",
+                "evt_v2_dev_00711_failed",
+                "evt_v2_dev_00713_failed",
+                "evt_v2_dev_00718_failed"
+              ],
+              "evidence_kind": "verified_observation",
+              "excess_failures_milli": 12000,
+              "expected_failures_milli": 0,
+              "rank": 1,
+              "value": "card"
+            },
+            {
+              "baseline_attempts": 73,
+              "baseline_failures": 4,
+              "confidence_ppm": 919565,
+              "contribution_ppm": 100585,
+              "current_attempts": 12,
+              "current_failures": 2,
+              "dimension": "method",
+              "evidence_event_ids": [
+                "evt_v2_dev_00698_failed",
+                "evt_v2_dev_00700_failed"
+              ],
+              "evidence_kind": "verified_observation",
+              "excess_failures_milli": 1342,
+              "expected_failures_milli": 658,
+              "rank": 2,
+              "value": "netbanking"
+            },
+            {
+              "baseline_attempts": 53,
+              "baseline_failures": 0,
+              "confidence_ppm": 1000000,
+              "contribution_ppm": 500000,
+              "current_attempts": 10,
+              "current_failures": 6,
+              "dimension": "issuer",
+              "evidence_event_ids": [
+                "evt_v2_dev_00674_failed",
+                "evt_v2_dev_00679_failed",
+                "evt_v2_dev_00683_failed",
+                "evt_v2_dev_00702_failed",
+                "evt_v2_dev_00711_failed",
+                "evt_v2_dev_00718_failed"
+              ],
+              "evidence_kind": "verified_observation",
+              "excess_failures_milli": 6000,
+              "expected_failures_milli": 0,
+              "rank": 1,
+              "value": "issuer_synthetic_beta"
+            },
+            {
+              "baseline_attempts": 44,
+              "baseline_failures": 0,
+              "confidence_ppm": 999986,
+              "contribution_ppm": 250000,
+              "current_attempts": 8,
+              "current_failures": 3,
+              "dimension": "issuer",
+              "evidence_event_ids": [
+                "evt_v2_dev_00671_failed",
+                "evt_v2_dev_00682_failed",
+                "evt_v2_dev_00713_failed"
+              ],
+              "evidence_kind": "verified_observation",
+              "excess_failures_milli": 3000,
+              "expected_failures_milli": 0,
+              "rank": 2,
+              "value": "issuer_synthetic_alpha"
+            },
+            {
+              "baseline_attempts": 27,
+              "baseline_failures": 0,
+              "confidence_ppm": 999988,
+              "contribution_ppm": 250000,
+              "current_attempts": 5,
+              "current_failures": 3,
+              "dimension": "issuer",
+              "evidence_event_ids": [
+                "evt_v2_dev_00665_failed",
+                "evt_v2_dev_00672_failed",
+                "evt_v2_dev_00691_failed"
+              ],
+              "evidence_kind": "verified_observation",
+              "excess_failures_milli": 3000,
+              "expected_failures_milli": 0,
+              "rank": 3,
+              "value": "issuer_synthetic_gamma"
+            },
+            {
+              "baseline_attempts": 124,
+              "baseline_failures": 0,
+              "confidence_ppm": 1000000,
+              "contribution_ppm": 1000000,
+              "current_attempts": 23,
+              "current_failures": 12,
+              "dimension": "error_source",
+              "evidence_event_ids": [
+                "evt_v2_dev_00665_failed",
+                "evt_v2_dev_00671_failed",
+                "evt_v2_dev_00672_failed",
+                "evt_v2_dev_00674_failed",
+                "evt_v2_dev_00679_failed",
+                "evt_v2_dev_00682_failed",
+                "evt_v2_dev_00683_failed",
+                "evt_v2_dev_00691_failed",
+                "evt_v2_dev_00702_failed",
+                "evt_v2_dev_00711_failed",
+                "evt_v2_dev_00713_failed",
+                "evt_v2_dev_00718_failed"
+              ],
+              "evidence_kind": "verified_observation",
+              "excess_failures_milli": 12000,
+              "expected_failures_milli": 0,
+              "rank": 1,
+              "value": "bank"
+            },
+            {
+              "baseline_attempts": 124,
+              "baseline_failures": 0,
+              "confidence_ppm": 1000000,
+              "contribution_ppm": 1000000,
+              "current_attempts": 23,
+              "current_failures": 12,
+              "dimension": "error_step",
+              "evidence_event_ids": [
+                "evt_v2_dev_00665_failed",
+                "evt_v2_dev_00671_failed",
+                "evt_v2_dev_00672_failed",
+                "evt_v2_dev_00674_failed",
+                "evt_v2_dev_00679_failed",
+                "evt_v2_dev_00682_failed",
+                "evt_v2_dev_00683_failed",
+                "evt_v2_dev_00691_failed",
+                "evt_v2_dev_00702_failed",
+                "evt_v2_dev_00711_failed",
+                "evt_v2_dev_00713_failed",
+                "evt_v2_dev_00718_failed"
+              ],
+              "evidence_kind": "verified_observation",
+              "excess_failures_milli": 12000,
+              "expected_failures_milli": 0,
+              "rank": 1,
+              "value": "payment_authentication"
+            },
+            {
+              "baseline_attempts": 124,
+              "baseline_failures": 0,
+              "confidence_ppm": 1000000,
+              "contribution_ppm": 1000000,
+              "current_attempts": 23,
+              "current_failures": 12,
+              "dimension": "error_reason",
+              "evidence_event_ids": [
+                "evt_v2_dev_00665_failed",
+                "evt_v2_dev_00671_failed",
+                "evt_v2_dev_00672_failed",
+                "evt_v2_dev_00674_failed",
+                "evt_v2_dev_00679_failed",
+                "evt_v2_dev_00682_failed",
+                "evt_v2_dev_00683_failed",
+                "evt_v2_dev_00691_failed",
+                "evt_v2_dev_00702_failed",
+                "evt_v2_dev_00711_failed",
+                "evt_v2_dev_00713_failed",
+                "evt_v2_dev_00718_failed"
+              ],
+              "evidence_kind": "verified_observation",
+              "excess_failures_milli": 12000,
+              "expected_failures_milli": 0,
+              "rank": 1,
+              "value": "issuer_unavailable"
+            }
+          ]
+        },
+        "incident_id": "inc_9d7de7e3f8f98703f2eb821a",
+        "last_observed_at": "2026-09-15T06:10:00Z",
+        "observation_count": 26,
+        "opened_at": "2026-09-15T04:05:00Z",
+        "peak_statistics": {
+          "actionable_rate_drop_bps": 5217,
+          "at_risk_gmv_subunits": 2398800,
+          "baseline_actionable_failure_rate_bps": 0,
+          "baseline_actionable_failures": 0,
+          "baseline_attempts": 124,
+          "baseline_ended_at": "2026-09-15T03:05:00Z",
+          "baseline_failures": 7,
+          "baseline_minimum_attempts": 50,
+          "baseline_started_at": "2026-09-15T00:00:00Z",
+          "cohort": [
+            {
+              "dimension": "method",
+              "value": "card"
+            }
+          ],
+          "cohort_level": "method",
+          "confidence_ppm": 1000000,
+          "confidence_threshold_ppm": 950000,
+          "currency": "INR",
+          "current_actionable_failure_rate_bps": 5217,
+          "current_actionable_failures": 12,
+          "current_attempts": 23,
+          "current_failures": 12,
+          "current_non_actionable_failures": 0,
+          "current_started_at": "2026-09-15T05:30:00Z",
+          "current_window_minutes": 30,
+          "evaluated_at": "2026-09-15T06:00:00Z",
+          "excess_actionable_failures": 12,
+          "gate_reason": "statistical_and_business_gates_pass",
+          "minimum_actionable_failures": 2,
+          "minimum_actionable_rate_drop_bps": 1500,
+          "minimum_at_risk_gmv_subunits": 50000,
+          "minimum_current_attempts": 10,
+          "minimum_excess_actionable_failures": 2,
+          "recent_actionable_failures": 3
+        },
+        "resolved_at": "2026-09-15T07:10:00Z",
+        "runtime_action_eligible": false,
+        "status": "resolved",
+        "synthetic": true
+      },
+      {
+        "affected_cohort": [
+          {
+            "dimension": "method",
+            "value": "netbanking"
+          },
+          {
+            "dimension": "issuer",
+            "value": "issuer_synthetic_beta"
+          }
+        ],
+        "confirmation_evidence_steps": 14,
+        "confirmation_unique_actionable_failures": 19,
+        "confirmed_at": "2026-09-15T08:55:00Z",
+        "detector_cohort": [
+          {
+            "dimension": "method",
+            "value": "netbanking"
+          },
+          {
+            "dimension": "issuer",
+            "value": "issuer_synthetic_beta"
+          }
+        ],
+        "diagnosis": {
+          "hypotheses": [
+            {
+              "confidence_ppm": 998515,
+              "evidence_event_ids": [
+                "evt_v2_dev_01105_failed",
+                "evt_v2_dev_01120_failed",
+                "evt_v2_dev_01121_failed",
+                "evt_v2_dev_01140_failed",
+                "evt_v2_dev_01141_failed",
+                "evt_v2_dev_01160_failed",
+                "evt_v2_dev_01200_failed"
+              ],
+              "evidence_kind": "inferred_hypothesis",
+              "statement": "Merchant-local provider-actionable evidence is consistent with elevated issuer_unavailable failures from bank during payment_authentication; external provider state is unverified."
+            }
+          ],
+          "likely_causes": [
+            "issuer_unavailable",
+            "bank",
+            "payment_authentication"
+          ],
+          "unknowns": [
+            "External provider status is not verified by merchant-local events.",
+            "The deterministic contribution calculation does not prove causality."
+          ],
+          "verified_attributions": [
+            {
+              "baseline_attempts": 85,
+              "baseline_failures": 9,
+              "confidence_ppm": 999930,
+              "contribution_ppm": 1000000,
+              "current_attempts": 25,
+              "current_failures": 11,
+              "dimension": "method",
+              "evidence_event_ids": [
+                "evt_v2_dev_01105_failed",
+                "evt_v2_dev_01120_failed",
+                "evt_v2_dev_01121_failed",
+                "evt_v2_dev_01129_failed",
+                "evt_v2_dev_01137_failed",
+                "evt_v2_dev_01140_failed",
+                "evt_v2_dev_01141_failed",
+                "evt_v2_dev_01148_failed",
+                "evt_v2_dev_01160_failed",
+                "evt_v2_dev_01195_failed",
+                "evt_v2_dev_01200_failed"
+              ],
+              "evidence_kind": "verified_observation",
+              "excess_failures_milli": 8353,
+              "expected_failures_milli": 2647,
+              "rank": 1,
+              "value": "netbanking"
+            },
+            {
+              "baseline_attempts": 27,
+              "baseline_failures": 5,
+              "confidence_ppm": 998515,
+              "contribution_ppm": 733020,
+              "current_attempts": 10,
+              "current_failures": 7,
+              "dimension": "issuer",
+              "evidence_event_ids": [
+                "evt_v2_dev_01105_failed",
+                "evt_v2_dev_01120_failed",
+                "evt_v2_dev_01121_failed",
+                "evt_v2_dev_01140_failed",
+                "evt_v2_dev_01141_failed",
+                "evt_v2_dev_01160_failed",
+                "evt_v2_dev_01200_failed"
+              ],
+              "evidence_kind": "verified_observation",
+              "excess_failures_milli": 5148,
+              "expected_failures_milli": 1852,
+              "rank": 1,
+              "value": "issuer_synthetic_beta"
+            },
+            {
+              "baseline_attempts": 16,
+              "baseline_failures": 2,
+              "confidence_ppm": 894350,
+              "contribution_ppm": 266980,
+              "current_attempts": 9,
+              "current_failures": 3,
+              "dimension": "issuer",
+              "evidence_event_ids": [
+                "evt_v2_dev_01129_failed",
+                "evt_v2_dev_01137_failed",
+                "evt_v2_dev_01148_failed"
+              ],
+              "evidence_kind": "verified_observation",
+              "excess_failures_milli": 1875,
+              "expected_failures_milli": 1125,
+              "rank": 2,
+              "value": "issuer_synthetic_gamma"
+            },
+            {
+              "baseline_attempts": 27,
+              "baseline_failures": 5,
+              "confidence_ppm": 998515,
+              "contribution_ppm": 1000000,
+              "current_attempts": 10,
+              "current_failures": 7,
+              "dimension": "error_source",
+              "evidence_event_ids": [
+                "evt_v2_dev_01105_failed",
+                "evt_v2_dev_01120_failed",
+                "evt_v2_dev_01121_failed",
+                "evt_v2_dev_01140_failed",
+                "evt_v2_dev_01141_failed",
+                "evt_v2_dev_01160_failed",
+                "evt_v2_dev_01200_failed"
+              ],
+              "evidence_kind": "verified_observation",
+              "excess_failures_milli": 5148,
+              "expected_failures_milli": 1852,
+              "rank": 1,
+              "value": "bank"
+            },
+            {
+              "baseline_attempts": 27,
+              "baseline_failures": 0,
+              "confidence_ppm": 999999,
+              "contribution_ppm": 1000000,
+              "current_attempts": 10,
+              "current_failures": 7,
+              "dimension": "error_step",
+              "evidence_event_ids": [
+                "evt_v2_dev_01105_failed",
+                "evt_v2_dev_01120_failed",
+                "evt_v2_dev_01121_failed",
+                "evt_v2_dev_01140_failed",
+                "evt_v2_dev_01141_failed",
+                "evt_v2_dev_01160_failed",
+                "evt_v2_dev_01200_failed"
+              ],
+              "evidence_kind": "verified_observation",
+              "excess_failures_milli": 7000,
+              "expected_failures_milli": 0,
+              "rank": 1,
+              "value": "payment_authentication"
+            },
+            {
+              "baseline_attempts": 27,
+              "baseline_failures": 0,
+              "confidence_ppm": 999999,
+              "contribution_ppm": 1000000,
+              "current_attempts": 10,
+              "current_failures": 7,
+              "dimension": "error_reason",
+              "evidence_event_ids": [
+                "evt_v2_dev_01105_failed",
+                "evt_v2_dev_01120_failed",
+                "evt_v2_dev_01121_failed",
+                "evt_v2_dev_01140_failed",
+                "evt_v2_dev_01141_failed",
+                "evt_v2_dev_01160_failed",
+                "evt_v2_dev_01200_failed"
+              ],
+              "evidence_kind": "verified_observation",
+              "excess_failures_milli": 7000,
+              "expected_failures_milli": 0,
+              "rank": 1,
+              "value": "issuer_unavailable"
+            }
+          ]
+        },
+        "incident_id": "inc_9761d3f3c99ca831d5b0bd22",
+        "last_observed_at": "2026-09-15T10:40:00Z",
+        "observation_count": 20,
+        "opened_at": "2026-09-15T08:10:00Z",
+        "peak_statistics": {
+          "actionable_rate_drop_bps": 5148,
+          "at_risk_gmv_subunits": 1542078,
+          "baseline_actionable_failure_rate_bps": 1852,
+          "baseline_actionable_failures": 5,
+          "baseline_attempts": 27,
+          "baseline_ended_at": "2026-09-15T07:10:00Z",
+          "baseline_failures": 5,
+          "baseline_minimum_attempts": 10,
+          "baseline_started_at": "2026-09-15T03:10:00Z",
+          "cohort": [
+            {
+              "dimension": "method",
+              "value": "netbanking"
+            },
+            {
+              "dimension": "issuer",
+              "value": "issuer_synthetic_beta"
+            }
+          ],
+          "cohort_level": "method_issuer",
+          "confidence_ppm": 998515,
+          "confidence_threshold_ppm": 900000,
+          "currency": "INR",
+          "current_actionable_failure_rate_bps": 7000,
+          "current_actionable_failures": 7,
+          "current_attempts": 10,
+          "current_failures": 7,
+          "current_non_actionable_failures": 0,
+          "current_started_at": "2026-09-15T09:10:00Z",
+          "current_window_minutes": 60,
+          "evaluated_at": "2026-09-15T10:10:00Z",
+          "excess_actionable_failures": 5,
+          "gate_reason": "statistical_and_business_gates_pass",
+          "minimum_actionable_failures": 2,
+          "minimum_actionable_rate_drop_bps": 2500,
+          "minimum_at_risk_gmv_subunits": 50000,
+          "minimum_current_attempts": 8,
+          "minimum_excess_actionable_failures": 2,
+          "recent_actionable_failures": 0
+        },
+        "resolved_at": "2026-09-15T11:40:00Z",
+        "runtime_action_eligible": false,
+        "status": "resolved",
+        "synthetic": true
+      },
+      {
+        "affected_cohort": [
+          {
+            "dimension": "method",
+            "value": "card"
+          },
+          {
+            "dimension": "issuer",
+            "value": "issuer_synthetic_gamma"
+          }
+        ],
+        "confirmation_evidence_steps": 16,
+        "confirmation_unique_actionable_failures": 20,
+        "confirmed_at": "2026-09-15T18:35:00Z",
+        "detector_cohort": [
+          {
+            "dimension": "method",
+            "value": "card"
+          },
+          {
+            "dimension": "issuer",
+            "value": "issuer_synthetic_gamma"
+          }
+        ],
+        "diagnosis": {
+          "hypotheses": [
+            {
+              "confidence_ppm": 1000000,
+              "evidence_event_ids": [
+                "evt_v2_dev_02300_failed",
+                "evt_v2_dev_02316_failed",
+                "evt_v2_dev_02320_failed",
+                "evt_v2_dev_02328_failed"
+              ],
+              "evidence_kind": "inferred_hypothesis",
+              "statement": "Merchant-local provider-actionable evidence is consistent with elevated issuer_unavailable failures from bank during payment_authentication; external provider state is unverified."
+            }
+          ],
+          "likely_causes": [
+            "issuer_unavailable",
+            "bank",
+            "payment_authentication"
+          ],
+          "unknowns": [
+            "External provider status is not verified by merchant-local events.",
+            "The deterministic contribution calculation does not prove causality."
+          ],
+          "verified_attributions": [
+            {
+              "baseline_attempts": 166,
+              "baseline_failures": 0,
+              "confidence_ppm": 1000000,
+              "contribution_ppm": 1000000,
+              "current_attempts": 13,
+              "current_failures": 4,
+              "dimension": "method",
+              "evidence_event_ids": [
+                "evt_v2_dev_02300_failed",
+                "evt_v2_dev_02316_failed",
+                "evt_v2_dev_02320_failed",
+                "evt_v2_dev_02328_failed"
+              ],
+              "evidence_kind": "verified_observation",
+              "excess_failures_milli": 4000,
+              "expected_failures_milli": 0,
+              "rank": 1,
+              "value": "card"
+            },
+            {
+              "baseline_attempts": 37,
+              "baseline_failures": 0,
+              "confidence_ppm": 1000000,
+              "contribution_ppm": 1000000,
+              "current_attempts": 6,
+              "current_failures": 4,
+              "dimension": "issuer",
+              "evidence_event_ids": [
+                "evt_v2_dev_02300_failed",
+                "evt_v2_dev_02316_failed",
+                "evt_v2_dev_02320_failed",
+                "evt_v2_dev_02328_failed"
+              ],
+              "evidence_kind": "verified_observation",
+              "excess_failures_milli": 4000,
+              "expected_failures_milli": 0,
+              "rank": 1,
+              "value": "issuer_synthetic_gamma"
+            },
+            {
+              "baseline_attempts": 37,
+              "baseline_failures": 0,
+              "confidence_ppm": 1000000,
+              "contribution_ppm": 1000000,
+              "current_attempts": 6,
+              "current_failures": 4,
+              "dimension": "error_source",
+              "evidence_event_ids": [
+                "evt_v2_dev_02300_failed",
+                "evt_v2_dev_02316_failed",
+                "evt_v2_dev_02320_failed",
+                "evt_v2_dev_02328_failed"
+              ],
+              "evidence_kind": "verified_observation",
+              "excess_failures_milli": 4000,
+              "expected_failures_milli": 0,
+              "rank": 1,
+              "value": "bank"
+            },
+            {
+              "baseline_attempts": 37,
+              "baseline_failures": 0,
+              "confidence_ppm": 1000000,
+              "contribution_ppm": 1000000,
+              "current_attempts": 6,
+              "current_failures": 4,
+              "dimension": "error_step",
+              "evidence_event_ids": [
+                "evt_v2_dev_02300_failed",
+                "evt_v2_dev_02316_failed",
+                "evt_v2_dev_02320_failed",
+                "evt_v2_dev_02328_failed"
+              ],
+              "evidence_kind": "verified_observation",
+              "excess_failures_milli": 4000,
+              "expected_failures_milli": 0,
+              "rank": 1,
+              "value": "payment_authentication"
+            },
+            {
+              "baseline_attempts": 37,
+              "baseline_failures": 0,
+              "confidence_ppm": 1000000,
+              "contribution_ppm": 1000000,
+              "current_attempts": 6,
+              "current_failures": 4,
+              "dimension": "error_reason",
+              "evidence_event_ids": [
+                "evt_v2_dev_02300_failed",
+                "evt_v2_dev_02316_failed",
+                "evt_v2_dev_02320_failed",
+                "evt_v2_dev_02328_failed"
+              ],
+              "evidence_kind": "verified_observation",
+              "excess_failures_milli": 4000,
+              "expected_failures_milli": 0,
+              "rank": 1,
+              "value": "issuer_unavailable"
+            }
+          ]
+        },
+        "incident_id": "inc_5d58bee615b75f346b2a9304",
+        "last_observed_at": "2026-09-15T19:50:00Z",
+        "observation_count": 21,
+        "opened_at": "2026-09-15T18:10:00Z",
+        "peak_statistics": {
+          "actionable_rate_drop_bps": 6667,
+          "at_risk_gmv_subunits": 949600,
+          "baseline_actionable_failure_rate_bps": 0,
+          "baseline_actionable_failures": 0,
+          "baseline_attempts": 37,
+          "baseline_ended_at": "2026-09-15T17:10:00Z",
+          "baseline_failures": 0,
+          "baseline_minimum_attempts": 10,
+          "baseline_started_at": "2026-09-15T13:10:00Z",
+          "cohort": [
+            {
+              "dimension": "method",
+              "value": "card"
+            },
+            {
+              "dimension": "issuer",
+              "value": "issuer_synthetic_gamma"
+            }
+          ],
+          "cohort_level": "method_issuer",
+          "confidence_ppm": 1000000,
+          "confidence_threshold_ppm": 900000,
+          "currency": "INR",
+          "current_actionable_failure_rate_bps": 6667,
+          "current_actionable_failures": 4,
+          "current_attempts": 6,
+          "current_failures": 4,
+          "current_non_actionable_failures": 0,
+          "current_started_at": "2026-09-15T19:10:00Z",
+          "current_window_minutes": 15,
+          "evaluated_at": "2026-09-15T19:25:00Z",
+          "excess_actionable_failures": 4,
+          "gate_reason": "statistical_and_business_gates_pass",
+          "minimum_actionable_failures": 2,
+          "minimum_actionable_rate_drop_bps": 2500,
+          "minimum_at_risk_gmv_subunits": 50000,
+          "minimum_current_attempts": 2,
+          "minimum_excess_actionable_failures": 2,
+          "recent_actionable_failures": 2
+        },
+        "resolved_at": "2026-09-15T21:10:00Z",
+        "runtime_action_eligible": false,
+        "status": "resolved",
+        "synthetic": true
+      },
+      {
+        "affected_cohort": [
+          {
+            "dimension": "method",
+            "value": "upi"
+          }
+        ],
+        "confirmation_evidence_steps": 20,
+        "confirmation_unique_actionable_failures": 41,
+        "confirmed_at": "2026-09-16T04:25:00Z",
+        "detector_cohort": [
+          {
+            "dimension": "method",
+            "value": "upi"
+          }
+        ],
+        "diagnosis": {
+          "hypotheses": [
+            {
+              "confidence_ppm": 1000000,
+              "evidence_event_ids": [
+                "evt_v2_dev_03509_failed",
+                "evt_v2_dev_03514_failed",
+                "evt_v2_dev_03515_failed",
+                "evt_v2_dev_03529_failed",
+                "evt_v2_dev_03531_failed",
+                "evt_v2_dev_03540_failed",
+                "evt_v2_dev_03541_failed",
+                "evt_v2_dev_03547_failed",
+                "evt_v2_dev_03554_failed"
+              ],
+              "evidence_kind": "inferred_hypothesis",
+              "statement": "Merchant-local provider-actionable evidence is consistent with elevated issuer_unavailable failures from bank during payment_authentication; external provider state is unverified."
+            }
+          ],
+          "likely_causes": [
+            "issuer_unavailable",
+            "bank",
+            "payment_authentication"
+          ],
+          "unknowns": [
+            "External provider status is not verified by merchant-local events.",
+            "The deterministic contribution calculation does not prove causality."
+          ],
+          "verified_attributions": [
+            {
+              "baseline_attempts": 199,
+              "baseline_failures": 0,
+              "confidence_ppm": 1000000,
+              "contribution_ppm": 763553,
+              "current_attempts": 17,
+              "current_failures": 9,
+              "dimension": "method",
+              "evidence_event_ids": [
+                "evt_v2_dev_03509_failed",
+                "evt_v2_dev_03514_failed",
+                "evt_v2_dev_03515_failed",
+                "evt_v2_dev_03529_failed",
+                "evt_v2_dev_03531_failed",
+                "evt_v2_dev_03540_failed",
+                "evt_v2_dev_03541_failed",
+                "evt_v2_dev_03547_failed",
+                "evt_v2_dev_03554_failed"
+              ],
+              "evidence_kind": "verified_observation",
+              "excess_failures_milli": 9000,
+              "expected_failures_milli": 0,
+              "rank": 1,
+              "value": "upi"
+            },
+            {
+              "baseline_attempts": 94,
+              "baseline_failures": 6,
+              "confidence_ppm": 979985,
+              "contribution_ppm": 236447,
+              "current_attempts": 19,
+              "current_failures": 4,
+              "dimension": "method",
+              "evidence_event_ids": [
+                "evt_v2_dev_03524_failed",
+                "evt_v2_dev_03525_failed",
+                "evt_v2_dev_03536_failed",
+                "evt_v2_dev_03559_failed"
+              ],
+              "evidence_kind": "verified_observation",
+              "excess_failures_milli": 2787,
+              "expected_failures_milli": 1213,
+              "rank": 2,
+              "value": "netbanking"
+            },
+            {
+              "baseline_attempts": 88,
+              "baseline_failures": 0,
+              "confidence_ppm": 1000000,
+              "contribution_ppm": 444444,
+              "current_attempts": 8,
+              "current_failures": 4,
+              "dimension": "issuer",
+              "evidence_event_ids": [
+                "evt_v2_dev_03509_failed",
+                "evt_v2_dev_03515_failed",
+                "evt_v2_dev_03531_failed",
+                "evt_v2_dev_03541_failed"
+              ],
+              "evidence_kind": "verified_observation",
+              "excess_failures_milli": 4000,
+              "expected_failures_milli": 0,
+              "rank": 1,
+              "value": "issuer_synthetic_alpha"
+            },
+            {
+              "baseline_attempts": 73,
+              "baseline_failures": 0,
+              "confidence_ppm": 1000000,
+              "contribution_ppm": 333333,
+              "current_attempts": 6,
+              "current_failures": 3,
+              "dimension": "issuer",
+              "evidence_event_ids": [
+                "evt_v2_dev_03514_failed",
+                "evt_v2_dev_03529_failed",
+                "evt_v2_dev_03554_failed"
+              ],
+              "evidence_kind": "verified_observation",
+              "excess_failures_milli": 3000,
+              "expected_failures_milli": 0,
+              "rank": 2,
+              "value": "issuer_synthetic_beta"
+            },
+            {
+              "baseline_attempts": 38,
+              "baseline_failures": 0,
+              "confidence_ppm": 1000000,
+              "contribution_ppm": 222222,
+              "current_attempts": 3,
+              "current_failures": 2,
+              "dimension": "issuer",
+              "evidence_event_ids": [
+                "evt_v2_dev_03540_failed",
+                "evt_v2_dev_03547_failed"
+              ],
+              "evidence_kind": "verified_observation",
+              "excess_failures_milli": 2000,
+              "expected_failures_milli": 0,
+              "rank": 3,
+              "value": "issuer_synthetic_gamma"
+            },
+            {
+              "baseline_attempts": 199,
+              "baseline_failures": 0,
+              "confidence_ppm": 1000000,
+              "contribution_ppm": 1000000,
+              "current_attempts": 17,
+              "current_failures": 9,
+              "dimension": "error_source",
+              "evidence_event_ids": [
+                "evt_v2_dev_03509_failed",
+                "evt_v2_dev_03514_failed",
+                "evt_v2_dev_03515_failed",
+                "evt_v2_dev_03529_failed",
+                "evt_v2_dev_03531_failed",
+                "evt_v2_dev_03540_failed",
+                "evt_v2_dev_03541_failed",
+                "evt_v2_dev_03547_failed",
+                "evt_v2_dev_03554_failed"
+              ],
+              "evidence_kind": "verified_observation",
+              "excess_failures_milli": 9000,
+              "expected_failures_milli": 0,
+              "rank": 1,
+              "value": "bank"
+            },
+            {
+              "baseline_attempts": 199,
+              "baseline_failures": 0,
+              "confidence_ppm": 1000000,
+              "contribution_ppm": 1000000,
+              "current_attempts": 17,
+              "current_failures": 9,
+              "dimension": "error_step",
+              "evidence_event_ids": [
+                "evt_v2_dev_03509_failed",
+                "evt_v2_dev_03514_failed",
+                "evt_v2_dev_03515_failed",
+                "evt_v2_dev_03529_failed",
+                "evt_v2_dev_03531_failed",
+                "evt_v2_dev_03540_failed",
+                "evt_v2_dev_03541_failed",
+                "evt_v2_dev_03547_failed",
+                "evt_v2_dev_03554_failed"
+              ],
+              "evidence_kind": "verified_observation",
+              "excess_failures_milli": 9000,
+              "expected_failures_milli": 0,
+              "rank": 1,
+              "value": "payment_authentication"
+            },
+            {
+              "baseline_attempts": 199,
+              "baseline_failures": 0,
+              "confidence_ppm": 1000000,
+              "contribution_ppm": 1000000,
+              "current_attempts": 17,
+              "current_failures": 9,
+              "dimension": "error_reason",
+              "evidence_event_ids": [
+                "evt_v2_dev_03509_failed",
+                "evt_v2_dev_03514_failed",
+                "evt_v2_dev_03515_failed",
+                "evt_v2_dev_03529_failed",
+                "evt_v2_dev_03531_failed",
+                "evt_v2_dev_03540_failed",
+                "evt_v2_dev_03541_failed",
+                "evt_v2_dev_03547_failed",
+                "evt_v2_dev_03554_failed"
+              ],
+              "evidence_kind": "verified_observation",
+              "excess_failures_milli": 9000,
+              "expected_failures_milli": 0,
+              "rank": 1,
+              "value": "issuer_unavailable"
+            }
+          ]
+        },
+        "incident_id": "inc_9f6f0d19565772ed10c823ed",
+        "last_observed_at": "2026-09-16T06:20:00Z",
+        "observation_count": 27,
+        "opened_at": "2026-09-16T04:10:00Z",
+        "peak_statistics": {
+          "actionable_rate_drop_bps": 5294,
+          "at_risk_gmv_subunits": 2349100,
+          "baseline_actionable_failure_rate_bps": 0,
+          "baseline_actionable_failures": 0,
+          "baseline_attempts": 199,
+          "baseline_ended_at": "2026-09-16T03:10:00Z",
+          "baseline_failures": 18,
+          "baseline_minimum_attempts": 50,
+          "baseline_started_at": "2026-09-15T23:10:00Z",
+          "cohort": [
+            {
+              "dimension": "method",
+              "value": "upi"
+            }
+          ],
+          "cohort_level": "method",
+          "confidence_ppm": 1000000,
+          "confidence_threshold_ppm": 950000,
+          "currency": "INR",
+          "current_actionable_failure_rate_bps": 5294,
+          "current_actionable_failures": 9,
+          "current_attempts": 17,
+          "current_failures": 9,
+          "current_non_actionable_failures": 0,
+          "current_started_at": "2026-09-16T05:10:00Z",
+          "current_window_minutes": 30,
+          "evaluated_at": "2026-09-16T05:40:00Z",
+          "excess_actionable_failures": 9,
+          "gate_reason": "statistical_and_business_gates_pass",
+          "minimum_actionable_failures": 2,
+          "minimum_actionable_rate_drop_bps": 1500,
+          "minimum_at_risk_gmv_subunits": 50000,
+          "minimum_current_attempts": 10,
+          "minimum_excess_actionable_failures": 2,
+          "recent_actionable_failures": 1
+        },
+        "resolved_at": "2026-09-16T07:20:00Z",
+        "runtime_action_eligible": false,
+        "status": "resolved",
+        "synthetic": true
+      },
+      {
+        "affected_cohort": [
+          {
+            "dimension": "method",
+            "value": "upi"
+          },
+          {
+            "dimension": "issuer",
+            "value": "issuer_synthetic_beta"
+          }
+        ],
+        "confirmation_evidence_steps": 23,
+        "confirmation_unique_actionable_failures": 39,
+        "confirmed_at": "2026-09-16T12:35:00Z",
+        "detector_cohort": [
+          {
+            "dimension": "method",
+            "value": "upi"
+          },
+          {
+            "dimension": "issuer",
+            "value": "issuer_synthetic_beta"
+          }
+        ],
+        "diagnosis": {
+          "hypotheses": [
+            {
+              "confidence_ppm": 1000000,
+              "evidence_event_ids": [
+                "evt_v2_dev_04420_failed",
+                "evt_v2_dev_04428_failed",
+                "evt_v2_dev_04434_failed",
+                "evt_v2_dev_04437_failed",
+                "evt_v2_dev_04440_failed"
+              ],
+              "evidence_kind": "inferred_hypothesis",
+              "statement": "Merchant-local provider-actionable evidence is consistent with elevated issuer_unavailable failures from bank during payment_authentication; external provider state is unverified."
+            }
+          ],
+          "likely_causes": [
+            "issuer_unavailable",
+            "bank",
+            "payment_authentication"
+          ],
+          "unknowns": [
+            "External provider status is not verified by merchant-local events.",
+            "The deterministic contribution calculation does not prove causality."
+          ],
+          "verified_attributions": [
+            {
+              "baseline_attempts": 183,
+              "baseline_failures": 0,
+              "confidence_ppm": 1000000,
+              "contribution_ppm": 1000000,
+              "current_attempts": 15,
+              "current_failures": 5,
+              "dimension": "method",
+              "evidence_event_ids": [
+                "evt_v2_dev_04420_failed",
+                "evt_v2_dev_04428_failed",
+                "evt_v2_dev_04434_failed",
+                "evt_v2_dev_04437_failed",
+                "evt_v2_dev_04440_failed"
+              ],
+              "evidence_kind": "verified_observation",
+              "excess_failures_milli": 5000,
+              "expected_failures_milli": 0,
+              "rank": 1,
+              "value": "upi"
+            },
+            {
+              "baseline_attempts": 64,
+              "baseline_failures": 0,
+              "confidence_ppm": 1000000,
+              "contribution_ppm": 1000000,
+              "current_attempts": 7,
+              "current_failures": 5,
+              "dimension": "issuer",
+              "evidence_event_ids": [
+                "evt_v2_dev_04420_failed",
+                "evt_v2_dev_04428_failed",
+                "evt_v2_dev_04434_failed",
+                "evt_v2_dev_04437_failed",
+                "evt_v2_dev_04440_failed"
+              ],
+              "evidence_kind": "verified_observation",
+              "excess_failures_milli": 5000,
+              "expected_failures_milli": 0,
+              "rank": 1,
+              "value": "issuer_synthetic_beta"
+            },
+            {
+              "baseline_attempts": 64,
+              "baseline_failures": 0,
+              "confidence_ppm": 1000000,
+              "contribution_ppm": 1000000,
+              "current_attempts": 7,
+              "current_failures": 5,
+              "dimension": "error_source",
+              "evidence_event_ids": [
+                "evt_v2_dev_04420_failed",
+                "evt_v2_dev_04428_failed",
+                "evt_v2_dev_04434_failed",
+                "evt_v2_dev_04437_failed",
+                "evt_v2_dev_04440_failed"
+              ],
+              "evidence_kind": "verified_observation",
+              "excess_failures_milli": 5000,
+              "expected_failures_milli": 0,
+              "rank": 1,
+              "value": "bank"
+            },
+            {
+              "baseline_attempts": 64,
+              "baseline_failures": 0,
+              "confidence_ppm": 1000000,
+              "contribution_ppm": 1000000,
+              "current_attempts": 7,
+              "current_failures": 5,
+              "dimension": "error_step",
+              "evidence_event_ids": [
+                "evt_v2_dev_04420_failed",
+                "evt_v2_dev_04428_failed",
+                "evt_v2_dev_04434_failed",
+                "evt_v2_dev_04437_failed",
+                "evt_v2_dev_04440_failed"
+              ],
+              "evidence_kind": "verified_observation",
+              "excess_failures_milli": 5000,
+              "expected_failures_milli": 0,
+              "rank": 1,
+              "value": "payment_authentication"
+            },
+            {
+              "baseline_attempts": 64,
+              "baseline_failures": 0,
+              "confidence_ppm": 1000000,
+              "contribution_ppm": 1000000,
+              "current_attempts": 7,
+              "current_failures": 5,
+              "dimension": "error_reason",
+              "evidence_event_ids": [
+                "evt_v2_dev_04420_failed",
+                "evt_v2_dev_04428_failed",
+                "evt_v2_dev_04434_failed",
+                "evt_v2_dev_04437_failed",
+                "evt_v2_dev_04440_failed"
+              ],
+              "evidence_kind": "verified_observation",
+              "excess_failures_milli": 5000,
+              "expected_failures_milli": 0,
+              "rank": 1,
+              "value": "issuer_unavailable"
+            }
+          ]
+        },
+        "incident_id": "inc_42f0c6732285c915aacbedd9",
+        "last_observed_at": "2026-09-16T15:05:00Z",
+        "observation_count": 31,
+        "opened_at": "2026-09-16T12:15:00Z",
+        "peak_statistics": {
+          "actionable_rate_drop_bps": 7143,
+          "at_risk_gmv_subunits": 1149500,
+          "baseline_actionable_failure_rate_bps": 0,
+          "baseline_actionable_failures": 0,
+          "baseline_attempts": 64,
+          "baseline_ended_at": "2026-09-16T11:15:00Z",
+          "baseline_failures": 9,
+          "baseline_minimum_attempts": 10,
+          "baseline_started_at": "2026-09-16T07:15:00Z",
+          "cohort": [
+            {
+              "dimension": "method",
+              "value": "upi"
+            },
+            {
+              "dimension": "issuer",
+              "value": "issuer_synthetic_beta"
+            }
+          ],
+          "cohort_level": "method_issuer",
+          "confidence_ppm": 1000000,
+          "confidence_threshold_ppm": 900000,
+          "currency": "INR",
+          "current_actionable_failure_rate_bps": 7143,
+          "current_actionable_failures": 5,
+          "current_attempts": 7,
+          "current_failures": 5,
+          "current_non_actionable_failures": 0,
+          "current_started_at": "2026-09-16T12:50:00Z",
+          "current_window_minutes": 15,
+          "evaluated_at": "2026-09-16T13:05:00Z",
+          "excess_actionable_failures": 5,
+          "gate_reason": "statistical_and_business_gates_pass",
+          "minimum_actionable_failures": 2,
+          "minimum_actionable_rate_drop_bps": 2500,
+          "minimum_at_risk_gmv_subunits": 50000,
+          "minimum_current_attempts": 2,
+          "minimum_excess_actionable_failures": 2,
+          "recent_actionable_failures": 1
+        },
+        "resolved_at": "2026-09-16T16:10:00Z",
+        "runtime_action_eligible": false,
+        "status": "resolved",
+        "synthetic": true
+      },
+      {
+        "affected_cohort": [
+          {
+            "dimension": "method",
+            "value": "netbanking"
+          },
+          {
+            "dimension": "issuer",
+            "value": "issuer_synthetic_alpha"
+          }
+        ],
+        "confirmation_evidence_steps": 3,
+        "confirmation_unique_actionable_failures": 4,
+        "confirmed_at": "2026-09-16T17:55:00Z",
+        "detector_cohort": [
+          {
+            "dimension": "method",
+            "value": "netbanking"
+          },
+          {
+            "dimension": "issuer",
+            "value": "issuer_synthetic_alpha"
+          }
+        ],
+        "diagnosis": {
+          "hypotheses": [
+            {
+              "confidence_ppm": 992390,
+              "evidence_event_ids": [
+                "evt_v2_dev_05012_failed",
+                "evt_v2_dev_05020_failed"
+              ],
+              "evidence_kind": "inferred_hypothesis",
+              "statement": "Merchant-local provider-actionable evidence is consistent with elevated issuer_unavailable failures from bank during payment_authentication; external provider state is unverified."
+            }
+          ],
+          "likely_causes": [
+            "issuer_unavailable",
+            "bank",
+            "payment_authentication"
+          ],
+          "unknowns": [
+            "External provider status is not verified by merchant-local events.",
+            "The deterministic contribution calculation does not prove causality."
+          ],
+          "verified_attributions": [
+            {
+              "baseline_attempts": 78,
+              "baseline_failures": 10,
+              "confidence_ppm": 999950,
+              "contribution_ppm": 1000000,
+              "current_attempts": 5,
+              "current_failures": 4,
+              "dimension": "method",
+              "evidence_event_ids": [
+                "evt_v2_dev_05000_failed",
+                "evt_v2_dev_05012_failed",
+                "evt_v2_dev_05020_failed",
+                "evt_v2_dev_05022_failed"
+              ],
+              "evidence_kind": "verified_observation",
+              "excess_failures_milli": 3359,
+              "expected_failures_milli": 641,
+              "rank": 1,
+              "value": "netbanking"
+            },
+            {
+              "baseline_attempts": 36,
+              "baseline_failures": 4,
+              "confidence_ppm": 999604,
+              "contribution_ppm": 520797,
+              "current_attempts": 2,
+              "current_failures": 2,
+              "dimension": "issuer",
+              "evidence_event_ids": [
+                "evt_v2_dev_05000_failed",
+                "evt_v2_dev_05022_failed"
+              ],
+              "evidence_kind": "verified_observation",
+              "excess_failures_milli": 1778,
+              "expected_failures_milli": 222,
+              "rank": 1,
+              "value": "issuer_synthetic_beta"
+            },
+            {
+              "baseline_attempts": 33,
+              "baseline_failures": 4,
+              "confidence_ppm": 992390,
+              "contribution_ppm": 479203,
+              "current_attempts": 3,
+              "current_failures": 2,
+              "dimension": "issuer",
+              "evidence_event_ids": [
+                "evt_v2_dev_05012_failed",
+                "evt_v2_dev_05020_failed"
+              ],
+              "evidence_kind": "verified_observation",
+              "excess_failures_milli": 1636,
+              "expected_failures_milli": 364,
+              "rank": 2,
+              "value": "issuer_synthetic_alpha"
+            },
+            {
+              "baseline_attempts": 33,
+              "baseline_failures": 4,
+              "confidence_ppm": 992390,
+              "contribution_ppm": 1000000,
+              "current_attempts": 3,
+              "current_failures": 2,
+              "dimension": "error_source",
+              "evidence_event_ids": [
+                "evt_v2_dev_05012_failed",
+                "evt_v2_dev_05020_failed"
+              ],
+              "evidence_kind": "verified_observation",
+              "excess_failures_milli": 1636,
+              "expected_failures_milli": 364,
+              "rank": 1,
+              "value": "bank"
+            },
+            {
+              "baseline_attempts": 33,
+              "baseline_failures": 0,
+              "confidence_ppm": 999999,
+              "contribution_ppm": 1000000,
+              "current_attempts": 3,
+              "current_failures": 2,
+              "dimension": "error_step",
+              "evidence_event_ids": [
+                "evt_v2_dev_05012_failed",
+                "evt_v2_dev_05020_failed"
+              ],
+              "evidence_kind": "verified_observation",
+              "excess_failures_milli": 2000,
+              "expected_failures_milli": 0,
+              "rank": 1,
+              "value": "payment_authentication"
+            },
+            {
+              "baseline_attempts": 33,
+              "baseline_failures": 0,
+              "confidence_ppm": 999999,
+              "contribution_ppm": 1000000,
+              "current_attempts": 3,
+              "current_failures": 2,
+              "dimension": "error_reason",
+              "evidence_event_ids": [
+                "evt_v2_dev_05012_failed",
+                "evt_v2_dev_05020_failed"
+              ],
+              "evidence_kind": "verified_observation",
+              "excess_failures_milli": 2000,
+              "expected_failures_milli": 0,
+              "rank": 1,
+              "value": "issuer_unavailable"
+            }
+          ]
+        },
+        "incident_id": "inc_7d9da95de6b5d56b16a0da1b",
+        "last_observed_at": "2026-09-16T19:00:00Z",
+        "observation_count": 6,
+        "opened_at": "2026-09-16T17:15:00Z",
+        "peak_statistics": {
+          "actionable_rate_drop_bps": 5455,
+          "at_risk_gmv_subunits": 471048,
+          "baseline_actionable_failure_rate_bps": 1212,
+          "baseline_actionable_failures": 4,
+          "baseline_attempts": 33,
+          "baseline_ended_at": "2026-09-16T16:15:00Z",
+          "baseline_failures": 4,
+          "baseline_minimum_attempts": 10,
+          "baseline_started_at": "2026-09-16T12:15:00Z",
+          "cohort": [
+            {
+              "dimension": "method",
+              "value": "netbanking"
+            },
+            {
+              "dimension": "issuer",
+              "value": "issuer_synthetic_alpha"
+            }
+          ],
+          "cohort_level": "method_issuer",
+          "confidence_ppm": 992390,
+          "confidence_threshold_ppm": 900000,
+          "currency": "INR",
+          "current_actionable_failure_rate_bps": 6667,
+          "current_actionable_failures": 2,
+          "current_attempts": 3,
+          "current_failures": 2,
+          "current_non_actionable_failures": 0,
+          "current_started_at": "2026-09-16T17:40:00Z",
+          "current_window_minutes": 15,
+          "evaluated_at": "2026-09-16T17:55:00Z",
+          "excess_actionable_failures": 2,
+          "gate_reason": "statistical_and_business_gates_pass",
+          "minimum_actionable_failures": 2,
+          "minimum_actionable_rate_drop_bps": 2500,
+          "minimum_at_risk_gmv_subunits": 50000,
+          "minimum_current_attempts": 2,
+          "minimum_excess_actionable_failures": 2,
+          "recent_actionable_failures": 1
+        },
+        "resolved_at": "2026-09-16T20:05:00Z",
+        "runtime_action_eligible": false,
+        "status": "resolved",
+        "synthetic": true
+      }
+    ],
+    "maximum_confirmation_delay_seconds": 3300,
+    "maximum_detection_delay_seconds": 900,
+    "median_confirmation_delay_seconds": 2100,
+    "median_detection_delay_seconds": 600,
+    "payment_attempts": 5760,
+    "precision_ppm": 1000000,
+    "predicted_incidents": 6,
+    "raw_normalized_events": 10751,
+    "recall_ppm": 1000000,
+    "suppressed_candidates": 9,
+    "targets": {
+      "baseline_leakage_violations_passed": true,
+      "baseline_leakage_violations_target": 0,
+      "evidence_reconciliation_violations_passed": true,
+      "evidence_reconciliation_violations_target": 0,
+      "hard_negative_action_eligible_incidents_passed": true,
+      "hard_negative_action_eligible_incidents_target": 0,
+      "median_detection_delay_passed": true,
+      "median_detection_delay_target_seconds": 600,
+      "precision_passed": true,
+      "precision_target_ppm": 900000,
+      "recall_passed": true,
+      "recall_target_ppm": 850000,
+      "top_1_attribution_passed": true,
+      "top_1_attribution_target_ppm": 800000
+    },
+    "top_1_attribution_ppm": 1000000,
+    "top_3_attribution_ppm": 1000000,
+    "true_positives": 6
+  },
+  "official_blind_evaluated": false,
+  "prediction_artifact_sha256": "d17929d8d52cd8f56da51b90be8e34a57aa10782031bdc7c80eeeb890a22dcfc",
+  "protocol_id": "detector_v3_protocol_v1",
+  "release_qualified": false,
+  "report_id": "detector_v3_development_prior_development",
+  "runtime_action_eligible": false,
+  "schema_version": "3.0.0",
+  "source_dataset_id": "retryrail_detector_v2_development_v1",
+  "source_dataset_role": "development",
+  "source_manifest_sha256": "09ea61ca4ae08b8bcef7771358478f20896133d4a1e88bde7b06450c5dd9de37",
+  "synthetic": true,
+  "truth_artifact_sha256": "cbbea9d9df62d64adf613e9d7f278beed456ffcfddefe9d8e0160803e5214201"
+}
