@@ -59,6 +59,7 @@ jobs:
         run: |
           uv run retryrail-eval --check
           uv run retryrail-v2-candidate --check
+          uv run retryrail-v2-blind --check
 
   web-quality:
     name: Web quality and production build

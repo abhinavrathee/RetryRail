@@ -1,6 +1,6 @@
 .DEFAULT_GOAL := help
 
-.PHONY: help bootstrap dev migrate seed v2-data-check v2-candidate-check replay detect demo lint typecheck test test-contract test-e2e build eval security-check check
+.PHONY: help bootstrap dev migrate seed v2-data-check v2-candidate-check v2-blind-check replay detect demo lint typecheck test test-contract test-e2e build eval security-check check
 
 help:
 	@echo "RetryRail commands"
@@ -10,6 +10,7 @@ help:
 	@echo "  seed            Regenerate deterministic synthetic truth data"
 	@echo "  v2-data-check   Verify the pre-blind v2 protocol and development data"
 	@echo "  v2-candidate-check Verify the frozen v2 candidate and development evidence"
+	@echo "  v2-blind-check  Verify the frozen blind procedure and append-only evidence"
 	@echo "  replay          Run the protected M2 reliability-case replay"
 	@echo "  detect          Refresh deterministic aggregates and incidents once"
 	@echo "  eval            Verify frozen detector reports and release decision"
@@ -35,6 +36,9 @@ v2-data-check:
 
 v2-candidate-check:
 	uv run retryrail-v2-candidate --check
+
+v2-blind-check:
+	uv run retryrail-v2-blind --check
 
 replay:
 	uv run retryrail-replay --mode required_cases
@@ -73,6 +77,7 @@ build:
 eval:
 	uv run retryrail-eval --check
 	uv run retryrail-v2-candidate --check
+	uv run retryrail-v2-blind --check
 
 security-check:
 	uv run bandit -c pyproject.toml -r services/api/app
