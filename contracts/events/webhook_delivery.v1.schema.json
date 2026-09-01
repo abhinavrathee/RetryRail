@@ -1,0 +1,134 @@
+{
+  "$defs": {
+    "BodyMode": {
+      "description": "Whether the body is changed after signature calculation.",
+      "enum": [
+        "unmodified",
+        "modified_after_signing"
+      ],
+      "title": "BodyMode",
+      "type": "string"
+    },
+    "ExpectedDeliveryDisposition": {
+      "description": "Expected ingress decision, not a persisted business label.",
+      "enum": [
+        "accepted",
+        "duplicate",
+        "rejected_signature"
+      ],
+      "title": "ExpectedDeliveryDisposition",
+      "type": "string"
+    },
+    "ReliabilityCase": {
+      "description": "Delivery anomalies represented independently from event truth.",
+      "enum": [
+        "duplicate",
+        "delayed",
+        "invalid_signature",
+        "missing_signature",
+        "modified_body",
+        "out_of_order"
+      ],
+      "title": "ReliabilityCase",
+      "type": "string"
+    },
+    "SignatureMode": {
+      "description": "Signature condition applied by the future replay boundary.",
+      "enum": [
+        "valid",
+        "invalid",
+        "missing"
+      ],
+      "title": "SignatureMode",
+      "type": "string"
+    }
+  },
+  "$id": "https://retryrail.dev/contracts/events/webhook-delivery/v1",
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "additionalProperties": false,
+  "description": "One deterministic webhook delivery attempt for M2 replay.",
+  "properties": {
+    "body_mode": {
+      "$ref": "#/$defs/BodyMode"
+    },
+    "delivered_at": {
+      "format": "date-time",
+      "title": "Delivered At",
+      "type": "string"
+    },
+    "delivery_attempt": {
+      "exclusiveMinimum": 0,
+      "maximum": 10,
+      "title": "Delivery Attempt",
+      "type": "integer"
+    },
+    "delivery_id": {
+      "maxLength": 80,
+      "minLength": 3,
+      "pattern": "^[A-Za-z0-9_-]+$",
+      "title": "Delivery Id",
+      "type": "string"
+    },
+    "expected_disposition": {
+      "$ref": "#/$defs/ExpectedDeliveryDisposition"
+    },
+    "merchant_id": {
+      "maxLength": 80,
+      "minLength": 3,
+      "pattern": "^[A-Za-z0-9_-]+$",
+      "title": "Merchant Id",
+      "type": "string"
+    },
+    "razorpay_event_id": {
+      "maxLength": 80,
+      "minLength": 3,
+      "pattern": "^[A-Za-z0-9_-]+$",
+      "title": "Razorpay Event Id",
+      "type": "string"
+    },
+    "reliability_case": {
+      "anyOf": [
+        {
+          "$ref": "#/$defs/ReliabilityCase"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null
+    },
+    "schema_version": {
+      "const": "1.0.0",
+      "default": "1.0.0",
+      "title": "Schema Version",
+      "type": "string"
+    },
+    "sequence": {
+      "exclusiveMinimum": 0,
+      "title": "Sequence",
+      "type": "integer"
+    },
+    "signature_mode": {
+      "$ref": "#/$defs/SignatureMode"
+    },
+    "synthetic": {
+      "const": true,
+      "default": true,
+      "title": "Synthetic",
+      "type": "boolean"
+    }
+  },
+  "required": [
+    "sequence",
+    "delivery_id",
+    "merchant_id",
+    "razorpay_event_id",
+    "delivery_attempt",
+    "delivered_at",
+    "signature_mode",
+    "body_mode",
+    "expected_disposition"
+  ],
+  "title": "RetryRail Webhook Delivery Instruction v1",
+  "type": "object"
+}

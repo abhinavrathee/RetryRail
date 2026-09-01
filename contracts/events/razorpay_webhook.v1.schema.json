@@ -1,0 +1,258 @@
+{
+  "$defs": {
+    "PaymentEventType": {
+      "description": "Razorpay payment events accepted by the P0 normalized contract.",
+      "enum": [
+        "payment.failed",
+        "payment.authorized",
+        "payment.captured"
+      ],
+      "title": "PaymentEventType",
+      "type": "string"
+    },
+    "PaymentMethod": {
+      "description": "Bounded method dimensions used by the deterministic truth set.",
+      "enum": [
+        "card",
+        "netbanking",
+        "upi",
+        "wallet"
+      ],
+      "title": "PaymentMethod",
+      "type": "string"
+    },
+    "PaymentStatus": {
+      "description": "Monotonic payment states represented by P0 fixtures.",
+      "enum": [
+        "failed",
+        "authorized",
+        "captured"
+      ],
+      "title": "PaymentStatus",
+      "type": "string"
+    },
+    "SanitizedRazorpayPayloadEntities": {
+      "additionalProperties": false,
+      "description": "Strict persisted entity collection.",
+      "properties": {
+        "payment": {
+          "$ref": "#/$defs/SanitizedRazorpayPaymentPayload"
+        }
+      },
+      "required": [
+        "payment"
+      ],
+      "title": "SanitizedRazorpayPayloadEntities",
+      "type": "object"
+    },
+    "SanitizedRazorpayPaymentEntity": {
+      "additionalProperties": false,
+      "description": "Persistable payment entity that rejects any field outside the allowlist.",
+      "properties": {
+        "amount": {
+          "exclusiveMinimum": 0,
+          "maximum": 100000000000,
+          "title": "Amount",
+          "type": "integer"
+        },
+        "bank": {
+          "anyOf": [
+            {
+              "maxLength": 80,
+              "minLength": 1,
+              "pattern": "^[A-Za-z0-9_.:-]+$",
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Bank"
+        },
+        "created_at": {
+          "maximum": 4102444800,
+          "minimum": 0,
+          "title": "Created At",
+          "type": "integer"
+        },
+        "currency": {
+          "maxLength": 3,
+          "minLength": 3,
+          "pattern": "^[A-Z]{3}$",
+          "title": "Currency",
+          "type": "string"
+        },
+        "entity": {
+          "const": "payment",
+          "default": "payment",
+          "title": "Entity",
+          "type": "string"
+        },
+        "error_code": {
+          "anyOf": [
+            {
+              "maxLength": 80,
+              "minLength": 1,
+              "pattern": "^[A-Za-z0-9_.:-]+$",
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Error Code"
+        },
+        "error_reason": {
+          "anyOf": [
+            {
+              "maxLength": 80,
+              "minLength": 1,
+              "pattern": "^[A-Za-z0-9_.:-]+$",
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Error Reason"
+        },
+        "error_source": {
+          "anyOf": [
+            {
+              "maxLength": 80,
+              "minLength": 1,
+              "pattern": "^[A-Za-z0-9_.:-]+$",
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Error Source"
+        },
+        "error_step": {
+          "anyOf": [
+            {
+              "maxLength": 80,
+              "minLength": 1,
+              "pattern": "^[A-Za-z0-9_.:-]+$",
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Error Step"
+        },
+        "id": {
+          "maxLength": 80,
+          "minLength": 3,
+          "pattern": "^[A-Za-z0-9_-]+$",
+          "title": "Id",
+          "type": "string"
+        },
+        "method": {
+          "$ref": "#/$defs/PaymentMethod"
+        },
+        "status": {
+          "$ref": "#/$defs/PaymentStatus"
+        },
+        "wallet": {
+          "anyOf": [
+            {
+              "maxLength": 80,
+              "minLength": 1,
+              "pattern": "^[A-Za-z0-9_.:-]+$",
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Wallet"
+        }
+      },
+      "required": [
+        "id",
+        "amount",
+        "currency",
+        "status",
+        "method",
+        "created_at"
+      ],
+      "title": "SanitizedRazorpayPaymentEntity",
+      "type": "object"
+    },
+    "SanitizedRazorpayPaymentPayload": {
+      "additionalProperties": false,
+      "description": "Strict persisted payment wrapper.",
+      "properties": {
+        "entity": {
+          "$ref": "#/$defs/SanitizedRazorpayPaymentEntity"
+        }
+      },
+      "required": [
+        "entity"
+      ],
+      "title": "SanitizedRazorpayPaymentPayload",
+      "type": "object"
+    }
+  },
+  "$id": "https://retryrail.dev/contracts/events/razorpay-webhook/v1",
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "additionalProperties": false,
+  "description": "Exact PII-free representation permitted in fixtures and durable storage.",
+  "properties": {
+    "contains": {
+      "default": [
+        "payment"
+      ],
+      "maxItems": 1,
+      "minItems": 1,
+      "prefixItems": [
+        {
+          "const": "payment",
+          "type": "string"
+        }
+      ],
+      "title": "Contains",
+      "type": "array"
+    },
+    "created_at": {
+      "maximum": 4102444800,
+      "minimum": 0,
+      "title": "Created At",
+      "type": "integer"
+    },
+    "entity": {
+      "const": "event",
+      "default": "event",
+      "title": "Entity",
+      "type": "string"
+    },
+    "event": {
+      "$ref": "#/$defs/PaymentEventType"
+    },
+    "payload": {
+      "$ref": "#/$defs/SanitizedRazorpayPayloadEntities"
+    },
+    "retryrail_synthetic": {
+      "default": false,
+      "title": "Retryrail Synthetic",
+      "type": "boolean"
+    }
+  },
+  "required": [
+    "event",
+    "payload",
+    "created_at"
+  ],
+  "title": "RetryRail Sanitized Razorpay Webhook v1",
+  "type": "object"
+}

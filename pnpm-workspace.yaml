@@ -1,0 +1,34 @@
+packages:
+  - apps/*
+
+packageImportMethod: copy
+autoInstallPeers: false
+strictPeerDependencies: false
+
+overrides:
+  # Blade 12.121.0 pins vulnerable ts-deepmerge 6.2.0. Its default-export API
+  # is unchanged in 8.0.0; build and browser tests verify this override.
+  ts-deepmerge: 8.0.0
+
+peerDependencyRules:
+  # Blade's package advertises native-only peers from its universal build.
+  # RetryRail imports the web conditional export; these packages must not be
+  # pulled into the browser workspace.
+  ignoreMissing:
+    - "@floating-ui/react-native"
+    - "@gorhom/bottom-sheet"
+    - "@gorhom/portal"
+    - "react-native-gesture-handler"
+    - "react-native-pager-view"
+    - "react-native-svg"
+    # Type-only peer inherited through React Aria; Blade's web build does not
+    # import the Spectrum provider and production bundling verifies that fact.
+    - "@react-spectrum/provider"
+
+# Blade publishes one universal web/native package. RetryRail imports only its
+# web export, so React Native peers are deliberately not auto-installed.
+allowBuilds:
+  # Required to select the correct prebuilt bundler binary for this platform.
+  esbuild: true
+  # Generates styled-components' static error map; it has no network access.
+  styled-components: true

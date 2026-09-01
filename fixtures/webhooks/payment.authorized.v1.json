@@ -1,0 +1,23 @@
+{
+  "contains": [
+    "payment"
+  ],
+  "created_at": 1788220861,
+  "entity": "event",
+  "event": "payment.authorized",
+  "payload": {
+    "payment": {
+      "entity": {
+        "amount": 249900,
+        "bank": "issuer_synthetic_beta",
+        "created_at": 1788220860,
+        "currency": "INR",
+        "entity": "payment",
+        "id": "pay_fixture_authorized_001",
+        "method": "netbanking",
+        "status": "authorized"
+      }
+    }
+  },
+  "retryrail_synthetic": true
+}

@@ -1,0 +1,234 @@
+{
+  "$defs": {
+    "CohortDimension": {
+      "description": "Allowlisted dimensions that can define a detector cohort.",
+      "enum": [
+        "method",
+        "issuer",
+        "error_source",
+        "error_step",
+        "error_reason"
+      ],
+      "title": "CohortDimension",
+      "type": "string"
+    },
+    "CohortPredicate": {
+      "additionalProperties": false,
+      "description": "One exact, reviewable cohort condition.",
+      "properties": {
+        "dimension": {
+          "$ref": "#/$defs/CohortDimension"
+        },
+        "value": {
+          "maxLength": 80,
+          "minLength": 1,
+          "pattern": "^[A-Za-z0-9_.:-]+$",
+          "title": "Value",
+          "type": "string"
+        }
+      },
+      "required": [
+        "dimension",
+        "value"
+      ],
+      "title": "CohortPredicate",
+      "type": "object"
+    },
+    "IncidentEvidence": {
+      "additionalProperties": false,
+      "description": "Counts and confidence required to justify a degradation incident.",
+      "properties": {
+        "baseline_attempts": {
+          "exclusiveMinimum": 0,
+          "title": "Baseline Attempts",
+          "type": "integer"
+        },
+        "baseline_successes": {
+          "minimum": 0,
+          "title": "Baseline Successes",
+          "type": "integer"
+        },
+        "confidence_ppm": {
+          "maximum": 1000000,
+          "minimum": 0,
+          "title": "Confidence Ppm",
+          "type": "integer"
+        },
+        "current_attempts": {
+          "exclusiveMinimum": 0,
+          "title": "Current Attempts",
+          "type": "integer"
+        },
+        "current_successes": {
+          "minimum": 0,
+          "title": "Current Successes",
+          "type": "integer"
+        },
+        "excess_failures": {
+          "minimum": 0,
+          "title": "Excess Failures",
+          "type": "integer"
+        },
+        "minimum_attempts": {
+          "exclusiveMinimum": 0,
+          "title": "Minimum Attempts",
+          "type": "integer"
+        },
+        "observed_success_rate_drop_bps": {
+          "exclusiveMinimum": 0,
+          "maximum": 10000,
+          "title": "Observed Success Rate Drop Bps",
+          "type": "integer"
+        }
+      },
+      "required": [
+        "baseline_attempts",
+        "baseline_successes",
+        "current_attempts",
+        "current_successes",
+        "minimum_attempts",
+        "observed_success_rate_drop_bps",
+        "confidence_ppm",
+        "excess_failures"
+      ],
+      "title": "IncidentEvidence",
+      "type": "object"
+    },
+    "IncidentStatus": {
+      "description": "States exposed by the incident contract in P0.",
+      "enum": [
+        "open",
+        "resolved"
+      ],
+      "title": "IncidentStatus",
+      "type": "string"
+    }
+  },
+  "$id": "https://retryrail.dev/contracts/domain/incident/v1",
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "additionalProperties": false,
+  "description": "Durable evidence-bearing degradation incident boundary.",
+  "properties": {
+    "affected_cohort": {
+      "items": {
+        "$ref": "#/$defs/CohortPredicate"
+      },
+      "maxItems": 8,
+      "minItems": 1,
+      "title": "Affected Cohort",
+      "type": "array"
+    },
+    "currency": {
+      "maxLength": 3,
+      "minLength": 3,
+      "pattern": "^[A-Z]{3}$",
+      "title": "Currency",
+      "type": "string"
+    },
+    "detector_version": {
+      "maxLength": 80,
+      "minLength": 3,
+      "pattern": "^[A-Za-z0-9_-]+$",
+      "title": "Detector Version",
+      "type": "string"
+    },
+    "evidence": {
+      "$ref": "#/$defs/IncidentEvidence"
+    },
+    "evidence_event_ids": {
+      "items": {
+        "maxLength": 80,
+        "minLength": 3,
+        "pattern": "^[A-Za-z0-9_-]+$",
+        "type": "string"
+      },
+      "minItems": 1,
+      "title": "Evidence Event Ids",
+      "type": "array"
+    },
+    "gmv_at_risk_subunits": {
+      "minimum": 0,
+      "title": "Gmv At Risk Subunits",
+      "type": "integer"
+    },
+    "incident_id": {
+      "maxLength": 80,
+      "minLength": 3,
+      "pattern": "^[A-Za-z0-9_-]+$",
+      "title": "Incident Id",
+      "type": "string"
+    },
+    "last_observed_at": {
+      "format": "date-time",
+      "title": "Last Observed At",
+      "type": "string"
+    },
+    "likely_error_sources": {
+      "items": {
+        "maxLength": 80,
+        "minLength": 1,
+        "pattern": "^[A-Za-z0-9_.:-]+$",
+        "type": "string"
+      },
+      "maxItems": 3,
+      "minItems": 1,
+      "title": "Likely Error Sources",
+      "type": "array"
+    },
+    "merchant_id": {
+      "maxLength": 80,
+      "minLength": 3,
+      "pattern": "^[A-Za-z0-9_-]+$",
+      "title": "Merchant Id",
+      "type": "string"
+    },
+    "opened_at": {
+      "format": "date-time",
+      "title": "Opened At",
+      "type": "string"
+    },
+    "resolved_at": {
+      "anyOf": [
+        {
+          "format": "date-time",
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "title": "Resolved At"
+    },
+    "schema_version": {
+      "const": "1.0.0",
+      "default": "1.0.0",
+      "title": "Schema Version",
+      "type": "string"
+    },
+    "status": {
+      "$ref": "#/$defs/IncidentStatus"
+    },
+    "synthetic": {
+      "title": "Synthetic",
+      "type": "boolean"
+    }
+  },
+  "required": [
+    "incident_id",
+    "merchant_id",
+    "status",
+    "detector_version",
+    "opened_at",
+    "last_observed_at",
+    "affected_cohort",
+    "evidence_event_ids",
+    "evidence",
+    "likely_error_sources",
+    "gmv_at_risk_subunits",
+    "currency",
+    "synthetic"
+  ],
+  "title": "RetryRail Incident v1",
+  "type": "object"
+}

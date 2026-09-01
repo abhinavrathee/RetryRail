@@ -1,0 +1,257 @@
+{
+  "$defs": {
+    "OperatingMode": {
+      "description": "Merchant control modes accepted by the recovery boundary.",
+      "enum": [
+        "analyze_only",
+        "review_first"
+      ],
+      "title": "OperatingMode",
+      "type": "string"
+    },
+    "PaymentMethod": {
+      "description": "Bounded method dimensions used by the deterministic truth set.",
+      "enum": [
+        "card",
+        "netbanking",
+        "upi",
+        "wallet"
+      ],
+      "title": "PaymentMethod",
+      "type": "string"
+    },
+    "RecoveryEligibility": {
+      "additionalProperties": false,
+      "description": "Frozen selection rules evaluated before treatment assignment.",
+      "properties": {
+        "currency": {
+          "maxLength": 3,
+          "minLength": 3,
+          "pattern": "^[A-Z]{3}$",
+          "title": "Currency",
+          "type": "string"
+        },
+        "exclude_already_recovered": {
+          "const": true,
+          "default": true,
+          "title": "Exclude Already Recovered",
+          "type": "boolean"
+        },
+        "exclude_opt_outs": {
+          "const": true,
+          "default": true,
+          "title": "Exclude Opt Outs",
+          "type": "boolean"
+        },
+        "failed_payments_only": {
+          "const": true,
+          "default": true,
+          "title": "Failed Payments Only",
+          "type": "boolean"
+        },
+        "incident_members_only": {
+          "const": true,
+          "default": true,
+          "title": "Incident Members Only",
+          "type": "boolean"
+        },
+        "maximum_amount_subunits": {
+          "exclusiveMinimum": 0,
+          "title": "Maximum Amount Subunits",
+          "type": "integer"
+        },
+        "methods": {
+          "items": {
+            "$ref": "#/$defs/PaymentMethod"
+          },
+          "minItems": 1,
+          "title": "Methods",
+          "type": "array"
+        },
+        "minimum_amount_subunits": {
+          "exclusiveMinimum": 0,
+          "title": "Minimum Amount Subunits",
+          "type": "integer"
+        },
+        "original_amount_required": {
+          "const": true,
+          "default": true,
+          "title": "Original Amount Required",
+          "type": "boolean"
+        },
+        "verified_consent_required_for_contact": {
+          "const": true,
+          "default": true,
+          "title": "Verified Consent Required For Contact",
+          "type": "boolean"
+        }
+      },
+      "required": [
+        "currency",
+        "methods",
+        "minimum_amount_subunits",
+        "maximum_amount_subunits"
+      ],
+      "title": "RecoveryEligibility",
+      "type": "object"
+    },
+    "RecoveryStoppingRules": {
+      "additionalProperties": false,
+      "description": "Mandatory bounded-execution controls attached to every plan.",
+      "properties": {
+        "cooldown_seconds": {
+          "maximum": 604800,
+          "minimum": 0,
+          "title": "Cooldown Seconds",
+          "type": "integer"
+        },
+        "expires_at": {
+          "format": "date-time",
+          "title": "Expires At",
+          "type": "string"
+        },
+        "maximum_actions": {
+          "exclusiveMinimum": 0,
+          "maximum": 10000,
+          "title": "Maximum Actions",
+          "type": "integer"
+        },
+        "maximum_attempts_per_payment": {
+          "exclusiveMinimum": 0,
+          "maximum": 3,
+          "title": "Maximum Attempts Per Payment",
+          "type": "integer"
+        },
+        "merchant_kill_switch_enforced": {
+          "const": true,
+          "default": true,
+          "title": "Merchant Kill Switch Enforced",
+          "type": "boolean"
+        },
+        "stop_after_recovery": {
+          "const": true,
+          "default": true,
+          "title": "Stop After Recovery",
+          "type": "boolean"
+        }
+      },
+      "required": [
+        "maximum_actions",
+        "maximum_attempts_per_payment",
+        "cooldown_seconds",
+        "expires_at"
+      ],
+      "title": "RecoveryStoppingRules",
+      "type": "object"
+    },
+    "RecoveryTemplate": {
+      "description": "Pre-authorized P0 intervention templates.",
+      "enum": [
+        "standard_payment_link"
+      ],
+      "title": "RecoveryTemplate",
+      "type": "string"
+    }
+  },
+  "$id": "https://retryrail.dev/contracts/domain/recovery-plan/v1",
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "additionalProperties": false,
+  "description": "Policy-reviewable proposal that has no authority to execute itself.",
+  "properties": {
+    "created_at": {
+      "format": "date-time",
+      "title": "Created At",
+      "type": "string"
+    },
+    "currency": {
+      "maxLength": 3,
+      "minLength": 3,
+      "pattern": "^[A-Z]{3}$",
+      "title": "Currency",
+      "type": "string"
+    },
+    "eligibility": {
+      "$ref": "#/$defs/RecoveryEligibility"
+    },
+    "eligible_gmv_subunits": {
+      "minimum": 0,
+      "title": "Eligible Gmv Subunits",
+      "type": "integer"
+    },
+    "eligible_payment_count": {
+      "minimum": 0,
+      "title": "Eligible Payment Count",
+      "type": "integer"
+    },
+    "incident_id": {
+      "maxLength": 80,
+      "minLength": 3,
+      "pattern": "^[A-Za-z0-9_-]+$",
+      "title": "Incident Id",
+      "type": "string"
+    },
+    "merchant_id": {
+      "maxLength": 80,
+      "minLength": 3,
+      "pattern": "^[A-Za-z0-9_-]+$",
+      "title": "Merchant Id",
+      "type": "string"
+    },
+    "mode": {
+      "$ref": "#/$defs/OperatingMode"
+    },
+    "plan_id": {
+      "maxLength": 80,
+      "minLength": 3,
+      "pattern": "^[A-Za-z0-9_-]+$",
+      "title": "Plan Id",
+      "type": "string"
+    },
+    "policy_version": {
+      "maxLength": 80,
+      "minLength": 3,
+      "pattern": "^[A-Za-z0-9_-]+$",
+      "title": "Policy Version",
+      "type": "string"
+    },
+    "requires_external_approval": {
+      "const": true,
+      "default": true,
+      "title": "Requires External Approval",
+      "type": "boolean"
+    },
+    "schema_version": {
+      "const": "1.0.0",
+      "default": "1.0.0",
+      "title": "Schema Version",
+      "type": "string"
+    },
+    "stopping_rules": {
+      "$ref": "#/$defs/RecoveryStoppingRules"
+    },
+    "synthetic": {
+      "title": "Synthetic",
+      "type": "boolean"
+    },
+    "template": {
+      "$ref": "#/$defs/RecoveryTemplate"
+    }
+  },
+  "required": [
+    "plan_id",
+    "incident_id",
+    "merchant_id",
+    "mode",
+    "template",
+    "policy_version",
+    "created_at",
+    "eligibility",
+    "stopping_rules",
+    "eligible_payment_count",
+    "eligible_gmv_subunits",
+    "currency",
+    "synthetic"
+  ],
+  "title": "RetryRail Recovery Plan v1",
+  "type": "object"
+}

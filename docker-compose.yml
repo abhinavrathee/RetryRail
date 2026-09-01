@@ -1,0 +1,99 @@
+name: retryrail
+
+services:
+  postgres:
+    image: postgres:16-alpine
+    environment:
+      POSTGRES_DB: ${POSTGRES_DB:-retryrail}
+      POSTGRES_USER: ${POSTGRES_USER:-retryrail}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-local-only-password}
+    ports:
+      - "127.0.0.1:5432:5432"
+    volumes:
+      - retryrail-postgres:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U $${POSTGRES_USER} -d $${POSTGRES_DB}"]
+      interval: 5s
+      timeout: 3s
+      retries: 10
+    restart: unless-stopped
+
+  api:
+    build:
+      context: .
+      dockerfile: services/api/Dockerfile
+    environment:
+      RETRYRAIL_ENVIRONMENT: development
+      RETRYRAIL_DATABASE_URL: postgresql+psycopg://retryrail:${POSTGRES_PASSWORD:-local-only-password}@postgres:5432/${POSTGRES_DB:-retryrail}
+      RETRYRAIL_MERCHANT_ID: ${RETRYRAIL_MERCHANT_ID:-merchant_synthetic_001}
+      RETRYRAIL_WEBHOOK_SECRET: ${RETRYRAIL_WEBHOOK_SECRET:-replace-with-a-random-local-test-secret}
+      RETRYRAIL_REPLAY_ENABLED: ${RETRYRAIL_REPLAY_ENABLED:-false}
+      RETRYRAIL_REPLAY_TOKEN: ${RETRYRAIL_REPLAY_TOKEN:-replace-with-a-random-local-replay-token}
+      RETRYRAIL_CORS_ORIGINS: '["http://localhost:5173"]'
+    command: ["uvicorn", "retryrail.main:app", "--host", "0.0.0.0", "--port", "8000"]
+    ports:
+      - "127.0.0.1:8000:8000"
+    depends_on:
+      migrate:
+        condition: service_completed_successfully
+    healthcheck:
+      test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://localhost:8000/health/ready', timeout=2)"]
+      interval: 5s
+      timeout: 3s
+      retries: 10
+    restart: unless-stopped
+
+  worker:
+    build:
+      context: .
+      dockerfile: services/api/Dockerfile
+    environment:
+      RETRYRAIL_ENVIRONMENT: development
+      RETRYRAIL_DATABASE_URL: postgresql+psycopg://retryrail:${POSTGRES_PASSWORD:-local-only-password}@postgres:5432/${POSTGRES_DB:-retryrail}
+      RETRYRAIL_MERCHANT_ID: ${RETRYRAIL_MERCHANT_ID:-merchant_synthetic_001}
+      RETRYRAIL_WEBHOOK_SECRET: ${RETRYRAIL_WEBHOOK_SECRET:-replace-with-a-random-local-test-secret}
+      RETRYRAIL_WORKER_METRICS_HOST: 0.0.0.0
+      RETRYRAIL_WORKER_METRICS_PORT: 9101
+    command: ["python", "-m", "retryrail.worker"]
+    expose:
+      - "9101"
+    depends_on:
+      migrate:
+        condition: service_completed_successfully
+    healthcheck:
+      test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://localhost:9101/metrics', timeout=2)"]
+      interval: 5s
+      timeout: 3s
+      retries: 10
+    restart: unless-stopped
+
+  migrate:
+    build:
+      context: .
+      dockerfile: services/api/Dockerfile
+    environment:
+      RETRYRAIL_ENVIRONMENT: development
+      RETRYRAIL_DATABASE_URL: postgresql+psycopg://retryrail:${POSTGRES_PASSWORD:-local-only-password}@postgres:5432/${POSTGRES_DB:-retryrail}
+      RETRYRAIL_WEBHOOK_SECRET: ${RETRYRAIL_WEBHOOK_SECRET:-replace-with-a-random-local-test-secret}
+    command: ["retryrail-db", "upgrade"]
+    depends_on:
+      postgres:
+        condition: service_healthy
+    restart: "no"
+
+  web:
+    build:
+      context: .
+      dockerfile: apps/web/Dockerfile
+    environment:
+      VITE_API_BASE_URL: http://localhost:8000
+    command: ["pnpm", "--filter", "@retryrail/web", "dev", "--host", "0.0.0.0"]
+    ports:
+      - "127.0.0.1:5173:5173"
+    depends_on:
+      api:
+        condition: service_healthy
+    restart: unless-stopped
+
+volumes:
+  retryrail-postgres:

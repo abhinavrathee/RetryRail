@@ -1,0 +1,227 @@
+{
+  "$defs": {
+    "ErrorEvidence": {
+      "additionalProperties": false,
+      "description": "Allowlisted failure evidence; descriptions and customer data are excluded.",
+      "properties": {
+        "code": {
+          "anyOf": [
+            {
+              "maxLength": 80,
+              "minLength": 1,
+              "pattern": "^[A-Za-z0-9_.:-]+$",
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Code"
+        },
+        "reason": {
+          "anyOf": [
+            {
+              "maxLength": 80,
+              "minLength": 1,
+              "pattern": "^[A-Za-z0-9_.:-]+$",
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Reason"
+        },
+        "source": {
+          "anyOf": [
+            {
+              "maxLength": 80,
+              "minLength": 1,
+              "pattern": "^[A-Za-z0-9_.:-]+$",
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Source"
+        },
+        "step": {
+          "anyOf": [
+            {
+              "maxLength": 80,
+              "minLength": 1,
+              "pattern": "^[A-Za-z0-9_.:-]+$",
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Step"
+        }
+      },
+      "title": "ErrorEvidence",
+      "type": "object"
+    },
+    "PaymentEventType": {
+      "description": "Razorpay payment events accepted by the P0 normalized contract.",
+      "enum": [
+        "payment.failed",
+        "payment.authorized",
+        "payment.captured"
+      ],
+      "title": "PaymentEventType",
+      "type": "string"
+    },
+    "PaymentMethod": {
+      "description": "Bounded method dimensions used by the deterministic truth set.",
+      "enum": [
+        "card",
+        "netbanking",
+        "upi",
+        "wallet"
+      ],
+      "title": "PaymentMethod",
+      "type": "string"
+    },
+    "PaymentSnapshot": {
+      "additionalProperties": false,
+      "description": "PII-free payment fields required by detection, policy and measurement.",
+      "properties": {
+        "amount_subunits": {
+          "exclusiveMinimum": 0,
+          "maximum": 100000000000,
+          "title": "Amount Subunits",
+          "type": "integer"
+        },
+        "currency": {
+          "maxLength": 3,
+          "minLength": 3,
+          "pattern": "^[A-Z]{3}$",
+          "title": "Currency",
+          "type": "string"
+        },
+        "error": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/ErrorEvidence"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null
+        },
+        "issuer": {
+          "anyOf": [
+            {
+              "maxLength": 80,
+              "minLength": 1,
+              "pattern": "^[A-Za-z0-9_.:-]+$",
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Issuer"
+        },
+        "method": {
+          "$ref": "#/$defs/PaymentMethod"
+        },
+        "payment_id": {
+          "maxLength": 80,
+          "minLength": 3,
+          "pattern": "^[A-Za-z0-9_-]+$",
+          "title": "Payment Id",
+          "type": "string"
+        },
+        "status": {
+          "$ref": "#/$defs/PaymentStatus"
+        }
+      },
+      "required": [
+        "payment_id",
+        "status",
+        "amount_subunits",
+        "currency",
+        "method"
+      ],
+      "title": "PaymentSnapshot",
+      "type": "object"
+    },
+    "PaymentStatus": {
+      "description": "Monotonic payment states represented by P0 fixtures.",
+      "enum": [
+        "failed",
+        "authorized",
+        "captured"
+      ],
+      "title": "PaymentStatus",
+      "type": "string"
+    }
+  },
+  "$id": "https://retryrail.dev/contracts/events/payment-event/v1",
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "additionalProperties": false,
+  "description": "Immutable versioned event envelope persisted after webhook verification.",
+  "properties": {
+    "event_type": {
+      "$ref": "#/$defs/PaymentEventType"
+    },
+    "merchant_id": {
+      "maxLength": 80,
+      "minLength": 3,
+      "pattern": "^[A-Za-z0-9_-]+$",
+      "title": "Merchant Id",
+      "type": "string"
+    },
+    "occurred_at": {
+      "format": "date-time",
+      "title": "Occurred At",
+      "type": "string"
+    },
+    "payment": {
+      "$ref": "#/$defs/PaymentSnapshot"
+    },
+    "razorpay_event_id": {
+      "maxLength": 80,
+      "minLength": 3,
+      "pattern": "^[A-Za-z0-9_-]+$",
+      "title": "Razorpay Event Id",
+      "type": "string"
+    },
+    "received_at": {
+      "format": "date-time",
+      "title": "Received At",
+      "type": "string"
+    },
+    "schema_version": {
+      "const": "1.0.0",
+      "default": "1.0.0",
+      "title": "Schema Version",
+      "type": "string"
+    },
+    "synthetic": {
+      "title": "Synthetic",
+      "type": "boolean"
+    }
+  },
+  "required": [
+    "merchant_id",
+    "razorpay_event_id",
+    "event_type",
+    "occurred_at",
+    "received_at",
+    "synthetic",
+    "payment"
+  ],
+  "title": "RetryRail Normalized Payment Event v1",
+  "type": "object"
+}

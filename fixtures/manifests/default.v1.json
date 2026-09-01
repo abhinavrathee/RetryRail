@@ -1,0 +1,240 @@
+{
+  "artifacts": [
+    {
+      "bytes": 1098385,
+      "path": "fixtures/generated/tuning.normalized_events.v1.jsonl",
+      "records": 2717,
+      "sha256": "3c78bca61d3b64823c309b5a0852a07314c4b47fe0433af3217be773aad14076"
+    },
+    {
+      "bytes": 580749,
+      "path": "fixtures/generated/tuning.attempt_truth.v1.jsonl",
+      "records": 1440,
+      "sha256": "a3b8c4f45bce5e0dd7e561dcfc901cbd7c46d35f2e1e363beaeeff934656ad18"
+    },
+    {
+      "bytes": 1107289,
+      "path": "fixtures/generated/heldout.normalized_events.v1.jsonl",
+      "records": 2746,
+      "sha256": "a7c6dc8460db5314d7c90e8d608a487a841fcf9130e5ae5e3ca809bb798cd28d"
+    },
+    {
+      "bytes": 579945,
+      "path": "fixtures/generated/heldout.attempt_truth.v1.jsonl",
+      "records": 1440,
+      "sha256": "24e8b4fe509e2024ce5e6e8c20f7a79cb4c088bc11613b7fff70302ae9819383"
+    },
+    {
+      "bytes": 1895225,
+      "path": "fixtures/generated/webhook_deliveries.v1.jsonl",
+      "records": 5469,
+      "sha256": "00e2bfef9c79b3f4cb8a4d93979259917c4580eadb53df60572f7afa65ea2522"
+    }
+  ],
+  "currency": "INR",
+  "dataset_id": "retryrail_default_v1",
+  "delivery_cases": [
+    {
+      "delivery_attempts": 4,
+      "expected_duplicates": 3,
+      "expected_rejections": 0,
+      "reliability_case": "duplicate"
+    },
+    {
+      "delivery_attempts": 1,
+      "expected_duplicates": 0,
+      "expected_rejections": 0,
+      "reliability_case": "delayed"
+    },
+    {
+      "delivery_attempts": 1,
+      "expected_duplicates": 0,
+      "expected_rejections": 1,
+      "reliability_case": "invalid_signature"
+    },
+    {
+      "delivery_attempts": 1,
+      "expected_duplicates": 0,
+      "expected_rejections": 1,
+      "reliability_case": "missing_signature"
+    },
+    {
+      "delivery_attempts": 1,
+      "expected_duplicates": 0,
+      "expected_rejections": 1,
+      "reliability_case": "modified_body"
+    },
+    {
+      "delivery_attempts": 2,
+      "expected_duplicates": 0,
+      "expected_rejections": 0,
+      "reliability_case": "out_of_order"
+    }
+  ],
+  "deterministic_seed": "retryrail_m1_seed_v1",
+  "experiment_design": {
+    "assignment_hash": "sha256",
+    "assignment_namespace": "assignment_v1",
+    "assignment_unit": "payment_id",
+    "attribution_window_seconds": 86400,
+    "control_allocation_bps": 2000,
+    "control_recovery_rate_bps": 1500,
+    "design_id": "experiment_design_v1",
+    "eligibility_frozen_before_assignment": true,
+    "exclude_already_recovered": true,
+    "failed_payments_only": true,
+    "frozen_at": "2026-08-31T00:00:00Z",
+    "incident_members_only": true,
+    "inconclusive_when_interval_crosses_zero": true,
+    "outcome_namespace": "outcome_v1",
+    "schema_version": "1.0.0",
+    "strata": [
+      "method",
+      "issuer",
+      "amount_band"
+    ],
+    "synthetic": true,
+    "treatment_allocation_bps": 8000,
+    "treatment_recovery_rate_bps": 4500
+  },
+  "generator_version": "generator_v1_0_0",
+  "merchant_id": "merchant_synthetic_001",
+  "partitions": [
+    {
+      "ends_at": "2026-09-02T00:00:00Z",
+      "event_artifact": "fixtures/generated/tuning.normalized_events.v1.jsonl",
+      "normalized_events": 2717,
+      "payment_attempts": 1440,
+      "split": "tuning",
+      "starts_at": "2026-09-01T00:00:00Z",
+      "truth_artifact": "fixtures/generated/tuning.attempt_truth.v1.jsonl"
+    },
+    {
+      "ends_at": "2026-09-09T00:00:00Z",
+      "event_artifact": "fixtures/generated/heldout.normalized_events.v1.jsonl",
+      "normalized_events": 2746,
+      "payment_attempts": 1440,
+      "split": "heldout",
+      "starts_at": "2026-09-08T00:00:00Z",
+      "truth_artifact": "fixtures/generated/heldout.attempt_truth.v1.jsonl"
+    }
+  ],
+  "scenarios": [
+    {
+      "actual_attempt_count": 34,
+      "actual_failure_count": 20,
+      "affected_cohort": [
+        {
+          "dimension": "method",
+          "value": "card"
+        },
+        {
+          "dimension": "issuer",
+          "value": "issuer_synthetic_alpha"
+        }
+      ],
+      "baseline_failure_rate_bps": 700,
+      "ends_at": "2026-09-01T07:00:00Z",
+      "expected_gate_reason": "statistical_and_business_gates_pass",
+      "expected_root_cause": {
+        "code": "GATEWAY_ERROR",
+        "reason": "issuer_unavailable",
+        "source": "bank",
+        "step": "payment_authorization"
+      },
+      "kind": "true_incident",
+      "scenario_id": "incident_tuning_card_issuer_alpha",
+      "seeded_failure_rate_bps": 5800,
+      "severity": "high",
+      "should_open_incident": true,
+      "split": "tuning",
+      "starts_at": "2026-09-01T04:00:00Z"
+    },
+    {
+      "actual_attempt_count": 68,
+      "actual_failure_count": 35,
+      "affected_cohort": [
+        {
+          "dimension": "method",
+          "value": "upi"
+        }
+      ],
+      "baseline_failure_rate_bps": 900,
+      "ends_at": "2026-09-01T13:00:00Z",
+      "expected_gate_reason": "statistical_and_business_gates_pass",
+      "expected_root_cause": {
+        "code": "SERVER_ERROR",
+        "reason": "payment_timed_out",
+        "source": "gateway",
+        "step": "payment_processing"
+      },
+      "kind": "true_incident",
+      "scenario_id": "incident_tuning_upi_gateway",
+      "seeded_failure_rate_bps": 4900,
+      "severity": "medium",
+      "should_open_incident": true,
+      "split": "tuning",
+      "starts_at": "2026-09-01T10:00:00Z"
+    },
+    {
+      "actual_attempt_count": 23,
+      "actual_failure_count": 10,
+      "affected_cohort": [
+        {
+          "dimension": "method",
+          "value": "netbanking"
+        },
+        {
+          "dimension": "issuer",
+          "value": "issuer_synthetic_beta"
+        }
+      ],
+      "baseline_failure_rate_bps": 1100,
+      "ends_at": "2026-09-08T10:00:00Z",
+      "expected_gate_reason": "statistical_and_business_gates_pass",
+      "expected_root_cause": {
+        "code": "GATEWAY_ERROR",
+        "reason": "issuer_unavailable",
+        "source": "bank",
+        "step": "payment_authentication"
+      },
+      "kind": "true_incident",
+      "scenario_id": "incident_heldout_netbanking_beta",
+      "seeded_failure_rate_bps": 6200,
+      "severity": "high",
+      "should_open_incident": true,
+      "split": "heldout",
+      "starts_at": "2026-09-08T04:00:00Z"
+    },
+    {
+      "actual_attempt_count": 2,
+      "actual_failure_count": 2,
+      "affected_cohort": [
+        {
+          "dimension": "method",
+          "value": "wallet"
+        }
+      ],
+      "baseline_failure_rate_bps": 1000,
+      "ends_at": "2026-09-08T14:00:00Z",
+      "expected_gate_reason": "blocked_by_minimum_sample_gate",
+      "expected_root_cause": {
+        "code": "GATEWAY_ERROR",
+        "reason": "payment_timed_out",
+        "source": "wallet",
+        "step": "payment_processing"
+      },
+      "kind": "hard_negative",
+      "scenario_id": "hard_negative_heldout_wallet_low_volume",
+      "seeded_failure_rate_bps": 9000,
+      "severity": "high",
+      "should_open_incident": false,
+      "split": "heldout",
+      "starts_at": "2026-09-08T13:00:00Z"
+    }
+  ],
+  "schema_version": "1.0.0",
+  "synthetic": true,
+  "total_normalized_events": 5463,
+  "total_payment_attempts": 2880
+}

@@ -1,0 +1,176 @@
+{
+  "$defs": {
+    "ActionActor": {
+      "description": "Actors permitted to appear in an action audit chain.",
+      "enum": [
+        "system",
+        "merchant",
+        "worker",
+        "razorpay_test_mode"
+      ],
+      "title": "ActionActor",
+      "type": "string"
+    },
+    "ActionState": {
+      "description": "Auditable recovery action states, including ambiguous outcomes.",
+      "enum": [
+        "previewed",
+        "awaiting_approval",
+        "approved",
+        "rejected",
+        "expired",
+        "executing",
+        "succeeded",
+        "failed",
+        "reconciliation_required"
+      ],
+      "title": "ActionState",
+      "type": "string"
+    },
+    "ActionTransition": {
+      "additionalProperties": false,
+      "description": "One append-only transition in an action receipt.",
+      "properties": {
+        "actor": {
+          "$ref": "#/$defs/ActionActor"
+        },
+        "new_state": {
+          "$ref": "#/$defs/ActionState"
+        },
+        "occurred_at": {
+          "format": "date-time",
+          "title": "Occurred At",
+          "type": "string"
+        },
+        "prior_state": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/ActionState"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "reason_code": {
+          "maxLength": 80,
+          "minLength": 1,
+          "pattern": "^[A-Za-z0-9_.:-]+$",
+          "title": "Reason Code",
+          "type": "string"
+        }
+      },
+      "required": [
+        "prior_state",
+        "new_state",
+        "occurred_at",
+        "actor",
+        "reason_code"
+      ],
+      "title": "ActionTransition",
+      "type": "object"
+    }
+  },
+  "$id": "https://retryrail.dev/contracts/domain/action-receipt/v1",
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "additionalProperties": false,
+  "description": "Execute-once receipt with a complete, internally chained history.",
+  "properties": {
+    "action_id": {
+      "maxLength": 80,
+      "minLength": 3,
+      "pattern": "^[A-Za-z0-9_-]+$",
+      "title": "Action Id",
+      "type": "string"
+    },
+    "external_reference": {
+      "anyOf": [
+        {
+          "maxLength": 80,
+          "minLength": 3,
+          "pattern": "^[A-Za-z0-9_-]+$",
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "title": "External Reference"
+    },
+    "idempotency_key": {
+      "maxLength": 80,
+      "minLength": 3,
+      "pattern": "^[A-Za-z0-9_-]+$",
+      "title": "Idempotency Key",
+      "type": "string"
+    },
+    "incident_id": {
+      "maxLength": 80,
+      "minLength": 3,
+      "pattern": "^[A-Za-z0-9_-]+$",
+      "title": "Incident Id",
+      "type": "string"
+    },
+    "merchant_id": {
+      "maxLength": 80,
+      "minLength": 3,
+      "pattern": "^[A-Za-z0-9_-]+$",
+      "title": "Merchant Id",
+      "type": "string"
+    },
+    "plan_id": {
+      "maxLength": 80,
+      "minLength": 3,
+      "pattern": "^[A-Za-z0-9_-]+$",
+      "title": "Plan Id",
+      "type": "string"
+    },
+    "schema_version": {
+      "const": "1.0.0",
+      "default": "1.0.0",
+      "title": "Schema Version",
+      "type": "string"
+    },
+    "state": {
+      "$ref": "#/$defs/ActionState"
+    },
+    "synthetic": {
+      "title": "Synthetic",
+      "type": "boolean"
+    },
+    "transitions": {
+      "items": {
+        "$ref": "#/$defs/ActionTransition"
+      },
+      "minItems": 1,
+      "title": "Transitions",
+      "type": "array"
+    },
+    "verified_at": {
+      "anyOf": [
+        {
+          "format": "date-time",
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "title": "Verified At"
+    }
+  },
+  "required": [
+    "action_id",
+    "plan_id",
+    "incident_id",
+    "merchant_id",
+    "idempotency_key",
+    "state",
+    "transitions",
+    "synthetic"
+  ],
+  "title": "RetryRail Action Receipt v1",
+  "type": "object"
+}

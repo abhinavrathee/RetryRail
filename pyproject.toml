@@ -1,0 +1,134 @@
+[build-system]
+requires = ["hatchling>=1.27,<2"]
+build-backend = "hatchling.build"
+
+[project]
+name = "retryrail"
+version = "0.1.0"
+description = "Evidence-backed payment degradation detection and bounded revenue recovery"
+readme = "README.md"
+requires-python = ">=3.12,<3.14"
+license = { file = "LICENSE" }
+authors = [{ name = "RetryRail contributors" }]
+dependencies = [
+  "alembic>=1.16,<2",
+  "fastapi>=0.116,<1",
+  "prometheus-client>=0.22,<1",
+  "psycopg[binary]>=3.2,<4",
+  "pydantic-settings>=2.10,<3",
+  "sqlalchemy>=2.0,<3",
+  "structlog>=25.4,<26",
+  "uvicorn[standard]>=0.35,<1",
+]
+
+[project.scripts]
+retryrail-api = "retryrail.main:run"
+retryrail-contracts = "retryrail.contracts.export:main"
+retryrail-db = "retryrail.db.migrate:main"
+retryrail-replay = "retryrail.replay:main"
+retryrail-security-scan = "retryrail.security.repository_scan:main"
+retryrail-seed = "retryrail.synthetic.generator:main"
+
+[dependency-groups]
+dev = [
+  "aiosqlite>=0.21,<1",
+  "bandit>=1.8,<2",
+  "httpx2>=2.12,<3",
+  "hypothesis>=6.138,<7",
+  "jsonschema>=4.25,<5",
+  "mypy>=1.17,<2",
+  "pip-audit>=2.9,<3",
+  "pytest>=9.0.3,<10",
+  "pytest-cov>=6.2,<7",
+  "ruff>=0.12,<1",
+  "types-jsonschema>=4.25,<5",
+]
+
+[tool.hatch.build.targets.wheel]
+packages = ["services/api/app/retryrail"]
+
+[tool.hatch.build.targets.wheel.force-include]
+"services/api/alembic.ini" = "retryrail/db/alembic.ini"
+"services/api/migrations" = "retryrail/db/migrations"
+
+[tool.pytest.ini_options]
+addopts = "--strict-config --strict-markers -ra"
+testpaths = ["services/api/tests"]
+xfail_strict = true
+
+[tool.coverage.run]
+branch = true
+source = ["retryrail"]
+
+[tool.coverage.report]
+fail_under = 85
+show_missing = true
+skip_covered = true
+
+[tool.ruff]
+line-length = 100
+target-version = "py312"
+extend-exclude = ["fixtures/generated"]
+
+[tool.ruff.lint]
+select = [
+  "A",
+  "ANN",
+  "ARG",
+  "ASYNC",
+  "B",
+  "BLE",
+  "C4",
+  "C90",
+  "DTZ",
+  "E",
+  "F",
+  "FAST",
+  "FBT",
+  "FLY",
+  "FURB",
+  "I",
+  "LOG",
+  "N",
+  "PERF",
+  "PIE",
+  "PL",
+  "PT",
+  "PTH",
+  "RET",
+  "RSE",
+  "RUF",
+  "S",
+  "SIM",
+  "SLF",
+  "T20",
+  "TC",
+  "TRY",
+  "UP",
+  "W",
+]
+ignore = [
+  "ANN401",
+  "PLR0913",
+]
+
+[tool.ruff.lint.per-file-ignores]
+"services/api/tests/**/*.py" = ["S101", "S105", "PLR2004"]
+
+[tool.ruff.lint.isort]
+known-first-party = ["retryrail"]
+
+[tool.mypy]
+python_version = "3.12"
+strict = true
+plugins = ["pydantic.mypy"]
+files = ["services/api/app", "services/api/tests"]
+exclude = ["fixtures/generated"]
+
+[[tool.mypy.overrides]]
+module = ["prometheus_client.*"]
+ignore_missing_imports = true
+
+[tool.bandit]
+exclude_dirs = ["services/api/tests"]
+skips = ["B104"]

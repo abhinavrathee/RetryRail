@@ -1,0 +1,27 @@
+{
+  "contains": [
+    "payment"
+  ],
+  "created_at": 1788220801,
+  "entity": "event",
+  "event": "payment.failed",
+  "payload": {
+    "payment": {
+      "entity": {
+        "amount": 149900,
+        "bank": "issuer_synthetic_alpha",
+        "created_at": 1788220800,
+        "currency": "INR",
+        "entity": "payment",
+        "error_code": "GATEWAY_ERROR",
+        "error_reason": "issuer_unavailable",
+        "error_source": "bank",
+        "error_step": "payment_authorization",
+        "id": "pay_fixture_failed_001",
+        "method": "card",
+        "status": "failed"
+      }
+    }
+  },
+  "retryrail_synthetic": true
+}

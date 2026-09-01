@@ -1,0 +1,140 @@
+{
+  "$defs": {
+    "DatasetSplit": {
+      "description": "Leakage boundary between detector development and final evaluation.",
+      "enum": [
+        "tuning",
+        "heldout"
+      ],
+      "title": "DatasetSplit",
+      "type": "string"
+    },
+    "PaymentMethod": {
+      "description": "Bounded method dimensions used by the deterministic truth set.",
+      "enum": [
+        "card",
+        "netbanking",
+        "upi",
+        "wallet"
+      ],
+      "title": "PaymentMethod",
+      "type": "string"
+    }
+  },
+  "$id": "https://retryrail.dev/contracts/domain/attempt-ground-truth/v1",
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "additionalProperties": false,
+  "description": "Evaluation-only label for one synthetic payment attempt.",
+  "properties": {
+    "amount_subunits": {
+      "exclusiveMinimum": 0,
+      "title": "Amount Subunits",
+      "type": "integer"
+    },
+    "attempt_id": {
+      "maxLength": 80,
+      "minLength": 3,
+      "pattern": "^[A-Za-z0-9_-]+$",
+      "title": "Attempt Id",
+      "type": "string"
+    },
+    "currency": {
+      "maxLength": 3,
+      "minLength": 3,
+      "pattern": "^[A-Z]{3}$",
+      "title": "Currency",
+      "type": "string"
+    },
+    "expected_incident_member": {
+      "title": "Expected Incident Member",
+      "type": "boolean"
+    },
+    "final_status": {
+      "enum": [
+        "failed",
+        "captured"
+      ],
+      "title": "Final Status",
+      "type": "string"
+    },
+    "issuer": {
+      "maxLength": 80,
+      "minLength": 1,
+      "pattern": "^[A-Za-z0-9_.:-]+$",
+      "title": "Issuer",
+      "type": "string"
+    },
+    "method": {
+      "$ref": "#/$defs/PaymentMethod"
+    },
+    "normalized_event_ids": {
+      "items": {
+        "maxLength": 80,
+        "minLength": 3,
+        "pattern": "^[A-Za-z0-9_-]+$",
+        "type": "string"
+      },
+      "maxItems": 2,
+      "minItems": 1,
+      "title": "Normalized Event Ids",
+      "type": "array"
+    },
+    "occurred_at": {
+      "format": "date-time",
+      "title": "Occurred At",
+      "type": "string"
+    },
+    "payment_id": {
+      "maxLength": 80,
+      "minLength": 3,
+      "pattern": "^[A-Za-z0-9_-]+$",
+      "title": "Payment Id",
+      "type": "string"
+    },
+    "scenario_id": {
+      "anyOf": [
+        {
+          "maxLength": 80,
+          "minLength": 3,
+          "pattern": "^[A-Za-z0-9_-]+$",
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "title": "Scenario Id"
+    },
+    "schema_version": {
+      "const": "1.0.0",
+      "default": "1.0.0",
+      "title": "Schema Version",
+      "type": "string"
+    },
+    "split": {
+      "$ref": "#/$defs/DatasetSplit"
+    },
+    "synthetic": {
+      "const": true,
+      "default": true,
+      "title": "Synthetic",
+      "type": "boolean"
+    }
+  },
+  "required": [
+    "attempt_id",
+    "payment_id",
+    "split",
+    "occurred_at",
+    "amount_subunits",
+    "currency",
+    "method",
+    "issuer",
+    "final_status",
+    "normalized_event_ids",
+    "expected_incident_member"
+  ],
+  "title": "RetryRail Attempt Ground Truth v1",
+  "type": "object"
+}

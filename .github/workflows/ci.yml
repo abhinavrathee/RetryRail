@@ -1,0 +1,149 @@
+name: RetryRail release gates
+
+on:
+  pull_request:
+  push:
+    branches: [main]
+
+permissions:
+  contents: read
+
+concurrency:
+  group: retryrail-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  python-quality:
+    name: Python quality and contracts
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    env:
+      RETRYRAIL_TEST_DATABASE_URL: postgresql+psycopg://retryrail:ci-only-password@localhost:5432/retryrail_test
+    services:
+      postgres:
+        image: postgres:16-alpine
+        env:
+          POSTGRES_DB: retryrail_test
+          POSTGRES_USER: retryrail
+          POSTGRES_PASSWORD: ci-only-password
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U retryrail -d retryrail_test"
+          --health-interval 5s
+          --health-timeout 3s
+          --health-retries 10
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
+      - name: Install uv and Python
+        uses: astral-sh/setup-uv@94527f2e458b27549849d47d273a16bec83a01e9 # v7
+        with:
+          version: 0.11.32
+          python-version: "3.12"
+          enable-cache: true
+      - name: Install locked dependencies
+        run: uv sync --all-groups --frozen
+      - name: Lint
+        run: uv run ruff check .
+      - name: Typecheck
+        run: uv run mypy
+      - name: Test with coverage
+        run: uv run pytest --cov=retryrail --cov-report=term-missing
+      - name: Verify generated contracts
+        run: |
+          uv run retryrail-contracts --check
+          uv run retryrail-seed --check
+
+  web-quality:
+    name: Web quality and production build
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
+      - name: Install pnpm
+        uses: pnpm/action-setup@f520eceda224fe1a4aed5a2a27a194379a409996 # v6
+        with:
+          version: 11.9.0
+      - name: Install Node.js
+        uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7
+        with:
+          node-version: "22.19.0"
+          cache: pnpm
+      - name: Install locked dependencies
+        run: pnpm install --frozen-lockfile
+      - name: Lint
+        run: pnpm lint
+      - name: Typecheck
+        run: pnpm typecheck
+      - name: Unit tests
+        run: pnpm test
+      - name: Production build
+        run: pnpm build
+
+  browser-smoke:
+    name: Chromium foundation smoke test
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
+      - name: Install pnpm
+        uses: pnpm/action-setup@f520eceda224fe1a4aed5a2a27a194379a409996 # v6
+        with:
+          version: 11.9.0
+      - name: Install Node.js
+        uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7
+        with:
+          node-version: "22.19.0"
+          cache: pnpm
+      - name: Install locked dependencies
+        run: pnpm install --frozen-lockfile
+      - name: Install Chromium system dependencies
+        run: pnpm --filter @retryrail/web exec playwright install --with-deps chromium
+      - name: Run browser smoke test
+        run: pnpm test:e2e
+
+  security:
+    name: Static and dependency security checks
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
+      - name: Install uv and Python
+        uses: astral-sh/setup-uv@94527f2e458b27549849d47d273a16bec83a01e9 # v7
+        with:
+          version: 0.11.32
+          python-version: "3.12"
+          enable-cache: true
+      - name: Install pnpm
+        uses: pnpm/action-setup@f520eceda224fe1a4aed5a2a27a194379a409996 # v6
+        with:
+          version: 11.9.0
+      - name: Install Node.js
+        uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7
+        with:
+          node-version: "22.19.0"
+          cache: pnpm
+      - name: Install locked dependencies
+        run: |
+          uv sync --all-groups --frozen
+          pnpm install --frozen-lockfile
+      - name: Run security gates
+        run: |
+          uv run bandit -c pyproject.toml -r services/api/app
+          uv run retryrail-security-scan
+          uv run pip-audit
+          pnpm audit --audit-level high
+
+  containers:
+    name: Container build
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
+      - name: Build local service images
+        run: docker compose build api worker web

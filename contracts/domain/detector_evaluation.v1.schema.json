@@ -1,0 +1,167 @@
+{
+  "$defs": {
+    "EvaluationCaseResult": {
+      "additionalProperties": false,
+      "description": "One expected-versus-observed detector decision.",
+      "properties": {
+        "detected_incident": {
+          "title": "Detected Incident",
+          "type": "boolean"
+        },
+        "expected_incident": {
+          "title": "Expected Incident",
+          "type": "boolean"
+        },
+        "expected_top_causes": {
+          "items": {
+            "maxLength": 80,
+            "minLength": 1,
+            "pattern": "^[A-Za-z0-9_.:-]+$",
+            "type": "string"
+          },
+          "maxItems": 3,
+          "title": "Expected Top Causes",
+          "type": "array"
+        },
+        "observed_top_causes": {
+          "items": {
+            "maxLength": 80,
+            "minLength": 1,
+            "pattern": "^[A-Za-z0-9_.:-]+$",
+            "type": "string"
+          },
+          "maxItems": 3,
+          "title": "Observed Top Causes",
+          "type": "array"
+        },
+        "scenario_id": {
+          "maxLength": 80,
+          "minLength": 3,
+          "pattern": "^[A-Za-z0-9_-]+$",
+          "title": "Scenario Id",
+          "type": "string"
+        }
+      },
+      "required": [
+        "scenario_id",
+        "expected_incident",
+        "detected_incident",
+        "expected_top_causes",
+        "observed_top_causes"
+      ],
+      "title": "EvaluationCaseResult",
+      "type": "object"
+    }
+  },
+  "$id": "https://retryrail.dev/contracts/domain/detector-evaluation/v1",
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "additionalProperties": false,
+  "description": "Held-out detector score report with integer-scaled metrics.",
+  "properties": {
+    "cases": {
+      "items": {
+        "$ref": "#/$defs/EvaluationCaseResult"
+      },
+      "minItems": 1,
+      "title": "Cases",
+      "type": "array"
+    },
+    "dataset_manifest_sha256": {
+      "pattern": "^[a-f0-9]{64}$",
+      "title": "Dataset Manifest Sha256",
+      "type": "string"
+    },
+    "dataset_split": {
+      "const": "heldout",
+      "default": "heldout",
+      "title": "Dataset Split",
+      "type": "string"
+    },
+    "detector_version": {
+      "maxLength": 80,
+      "minLength": 3,
+      "pattern": "^[A-Za-z0-9_-]+$",
+      "title": "Detector Version",
+      "type": "string"
+    },
+    "evaluated_at": {
+      "format": "date-time",
+      "title": "Evaluated At",
+      "type": "string"
+    },
+    "evaluation_id": {
+      "maxLength": 80,
+      "minLength": 3,
+      "pattern": "^[A-Za-z0-9_-]+$",
+      "title": "Evaluation Id",
+      "type": "string"
+    },
+    "false_negatives": {
+      "minimum": 0,
+      "title": "False Negatives",
+      "type": "integer"
+    },
+    "false_positives": {
+      "minimum": 0,
+      "title": "False Positives",
+      "type": "integer"
+    },
+    "precision_ppm": {
+      "maximum": 1000000,
+      "minimum": 0,
+      "title": "Precision Ppm",
+      "type": "integer"
+    },
+    "recall_ppm": {
+      "maximum": 1000000,
+      "minimum": 0,
+      "title": "Recall Ppm",
+      "type": "integer"
+    },
+    "schema_version": {
+      "const": "1.0.0",
+      "default": "1.0.0",
+      "title": "Schema Version",
+      "type": "string"
+    },
+    "synthetic": {
+      "const": true,
+      "default": true,
+      "title": "Synthetic",
+      "type": "boolean"
+    },
+    "top_1_attribution_ppm": {
+      "maximum": 1000000,
+      "minimum": 0,
+      "title": "Top 1 Attribution Ppm",
+      "type": "integer"
+    },
+    "top_3_attribution_ppm": {
+      "maximum": 1000000,
+      "minimum": 0,
+      "title": "Top 3 Attribution Ppm",
+      "type": "integer"
+    },
+    "true_positives": {
+      "minimum": 0,
+      "title": "True Positives",
+      "type": "integer"
+    }
+  },
+  "required": [
+    "evaluation_id",
+    "detector_version",
+    "dataset_manifest_sha256",
+    "evaluated_at",
+    "true_positives",
+    "false_positives",
+    "false_negatives",
+    "precision_ppm",
+    "recall_ppm",
+    "top_1_attribution_ppm",
+    "top_3_attribution_ppm",
+    "cases"
+  ],
+  "title": "RetryRail Detector Evaluation v1",
+  "type": "object"
+}

@@ -1,0 +1,15 @@
+{
+  "name": "retryrail",
+  "private": true,
+  "version": "0.1.0",
+  "packageManager": "pnpm@11.9.0",
+  "scripts": {
+    "dev": "pnpm --filter @retryrail/web dev",
+    "build": "pnpm --filter @retryrail/web build",
+    "lint": "pnpm --filter @retryrail/web lint",
+    "typecheck": "pnpm --filter @retryrail/web typecheck",
+    "test": "pnpm --filter @retryrail/web test",
+    "test:e2e": "pnpm --filter @retryrail/web test:e2e",
+    "check:web": "pnpm lint && pnpm typecheck && pnpm test && pnpm build"
+  }
+}

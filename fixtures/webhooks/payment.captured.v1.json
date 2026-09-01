@@ -1,0 +1,23 @@
+{
+  "contains": [
+    "payment"
+  ],
+  "created_at": 1788220921,
+  "entity": "event",
+  "event": "payment.captured",
+  "payload": {
+    "payment": {
+      "entity": {
+        "amount": 99900,
+        "bank": "issuer_synthetic_gamma",
+        "created_at": 1788220920,
+        "currency": "INR",
+        "entity": "payment",
+        "id": "pay_fixture_captured_001",
+        "method": "upi",
+        "status": "captured"
+      }
+    }
+  },
+  "retryrail_synthetic": true
+}

@@ -1,0 +1,143 @@
+{
+  "$id": "https://retryrail.dev/contracts/domain/experiment-design/v1",
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "additionalProperties": false,
+  "description": "Pre-results assignment and outcome rules frozen for later M5 use.",
+  "properties": {
+    "assignment_hash": {
+      "const": "sha256",
+      "default": "sha256",
+      "title": "Assignment Hash",
+      "type": "string"
+    },
+    "assignment_namespace": {
+      "maxLength": 80,
+      "minLength": 3,
+      "pattern": "^[A-Za-z0-9_-]+$",
+      "title": "Assignment Namespace",
+      "type": "string"
+    },
+    "assignment_unit": {
+      "const": "payment_id",
+      "default": "payment_id",
+      "title": "Assignment Unit",
+      "type": "string"
+    },
+    "attribution_window_seconds": {
+      "exclusiveMinimum": 0,
+      "maximum": 604800,
+      "title": "Attribution Window Seconds",
+      "type": "integer"
+    },
+    "control_allocation_bps": {
+      "exclusiveMaximum": 10000,
+      "exclusiveMinimum": 0,
+      "title": "Control Allocation Bps",
+      "type": "integer"
+    },
+    "control_recovery_rate_bps": {
+      "maximum": 10000,
+      "minimum": 0,
+      "title": "Control Recovery Rate Bps",
+      "type": "integer"
+    },
+    "design_id": {
+      "maxLength": 80,
+      "minLength": 3,
+      "pattern": "^[A-Za-z0-9_-]+$",
+      "title": "Design Id",
+      "type": "string"
+    },
+    "eligibility_frozen_before_assignment": {
+      "const": true,
+      "default": true,
+      "title": "Eligibility Frozen Before Assignment",
+      "type": "boolean"
+    },
+    "exclude_already_recovered": {
+      "const": true,
+      "default": true,
+      "title": "Exclude Already Recovered",
+      "type": "boolean"
+    },
+    "failed_payments_only": {
+      "const": true,
+      "default": true,
+      "title": "Failed Payments Only",
+      "type": "boolean"
+    },
+    "frozen_at": {
+      "format": "date-time",
+      "title": "Frozen At",
+      "type": "string"
+    },
+    "incident_members_only": {
+      "const": true,
+      "default": true,
+      "title": "Incident Members Only",
+      "type": "boolean"
+    },
+    "inconclusive_when_interval_crosses_zero": {
+      "const": true,
+      "default": true,
+      "title": "Inconclusive When Interval Crosses Zero",
+      "type": "boolean"
+    },
+    "outcome_namespace": {
+      "maxLength": 80,
+      "minLength": 3,
+      "pattern": "^[A-Za-z0-9_-]+$",
+      "title": "Outcome Namespace",
+      "type": "string"
+    },
+    "schema_version": {
+      "const": "1.0.0",
+      "default": "1.0.0",
+      "title": "Schema Version",
+      "type": "string"
+    },
+    "strata": {
+      "items": {
+        "maxLength": 80,
+        "minLength": 1,
+        "pattern": "^[A-Za-z0-9_.:-]+$",
+        "type": "string"
+      },
+      "minItems": 1,
+      "title": "Strata",
+      "type": "array"
+    },
+    "synthetic": {
+      "const": true,
+      "default": true,
+      "title": "Synthetic",
+      "type": "boolean"
+    },
+    "treatment_allocation_bps": {
+      "exclusiveMaximum": 10000,
+      "exclusiveMinimum": 0,
+      "title": "Treatment Allocation Bps",
+      "type": "integer"
+    },
+    "treatment_recovery_rate_bps": {
+      "maximum": 10000,
+      "minimum": 0,
+      "title": "Treatment Recovery Rate Bps",
+      "type": "integer"
+    }
+  },
+  "required": [
+    "design_id",
+    "frozen_at",
+    "assignment_namespace",
+    "outcome_namespace",
+    "treatment_allocation_bps",
+    "control_allocation_bps",
+    "strata",
+    "control_recovery_rate_bps",
+    "treatment_recovery_rate_bps",
+    "attribution_window_seconds"
+  ],
+  "title": "RetryRail Experiment Design v1",
+  "type": "object"
+}
