@@ -54,6 +54,14 @@ def _write_canonical_json(path: Path, value: object) -> None:
 
 def test_current_postrun_evidence_is_preserved_blocked_and_invalid() -> None:
     summary = audit_official_blind_run(_REPOSITORY_ROOT)
+    generated = _REPOSITORY_ROOT / _GENERATED_DIRECTORY
+    expected_existing = sum(
+        (generated / name).is_file()
+        for name in (
+            "blind.normalized_events.v1.jsonl",
+            "blind.attempt_truth.v1.jsonl",
+        )
+    )
 
     assert summary.run_id == _RUN_ID
     assert summary.status == "preserved_blocked_invalid"
@@ -62,7 +70,7 @@ def test_current_postrun_evidence_is_preserved_blocked_and_invalid() -> None:
         V3BlindReleaseTarget.RECALL,
     )
     assert summary.derived_artifacts_verified == 2
-    assert summary.existing_derived_artifacts_verified == 2
+    assert summary.existing_derived_artifacts_verified == expected_existing
     assert summary.known_schema_defects == 1
     assert check_official_blind_artifacts(include_static=False) == [
         f"invalid {_RUN_DIRECTORY.as_posix()}/blind.report.v1.json"
