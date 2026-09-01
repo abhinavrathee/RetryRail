@@ -454,6 +454,28 @@ begin only after a detector release decision qualifies the integrated version.
 The revealed R3 batch is now development evidence and must never be represented
 as blind again.
 
+#### M3R.4 — Detector-v3 guarded-baseline remediation
+
+M3R.4 is divided into independently reviewable gates so the failed v2 evidence
+cannot be tuned in place or silently reused as held-out evidence:
+
+1. **Complete:** precommit the v3 failure analysis, exact allowed development
+   evidence, unchanged benchmark generator, baseline-safety constraints,
+   unchanged release targets and fresh-nonce procedure;
+2. **Not started:** implement and tune one separately versioned candidate on
+   both approved development partitions, requiring each partition to pass;
+3. **Not started:** run adversarial cases and freeze candidate, matcher,
+   evaluator and append-only runner before nonce creation;
+4. **Not started:** create one fresh public nonce, persist and reproduce
+   predictions, then authorize and load truth exactly once;
+5. **Not started:** preserve the append-only release decision and run all
+   repository, security, clean-checkout and remote CI gates.
+
+The v3 protocol deliberately retains the original nonce-derived benchmark
+distribution after seeing the v2 failure. The v2 official run is permitted
+development evidence now and is explicitly ineligible as future blind
+evidence. M4 remains blocked until R4.4 produces a qualified release decision.
+
 ### M4 — Policy engine and deterministic recovery path
 
 **Estimate:** 8–10 hours  

@@ -1,0 +1,120 @@
+{
+  "allowed_development_evidence": [
+    {
+      "artifacts": [
+        {
+          "path": "fixtures/manifests/detector-v2-development.v1.json",
+          "sha256": "09ea61ca4ae08b8bcef7771358478f20896133d4a1e88bde7b06450c5dd9de37"
+        },
+        {
+          "path": "evals/reports/detector_v2.development.report.json",
+          "sha256": "7029634806c56479389888df38e14801f0cb62a95b29060968ff72bb98c148a9"
+        }
+      ],
+      "eligible_as_future_blind_evidence": false,
+      "evidence_id": "detector_v2_development_v1",
+      "labels_authorized_for_development": true,
+      "origin": "prior_development",
+      "synthetic": true
+    },
+    {
+      "artifacts": [
+        {
+          "path": "evals/blind/detector_v2/runs/detector_v2_official_blind_ef49a16703b1612ef774/blind.dataset_manifest.v1.json",
+          "sha256": "a3f0de6880ea932ae7f8e7655f8e6e57eb99bc6c0ff0342afd205d51048ebb79"
+        },
+        {
+          "path": "evals/blind/detector_v2/runs/detector_v2_official_blind_ef49a16703b1612ef774/blind.predictions.v1.json",
+          "sha256": "b23aaef2ecdb26ff6ef80f71316236d9d309eebde08d91c18b7257eb60697844"
+        },
+        {
+          "path": "evals/blind/detector_v2/runs/detector_v2_official_blind_ef49a16703b1612ef774/blind.report.v1.json",
+          "sha256": "827e518cc717ede22102f2138d09e613102971ee4566d9ba936feaa38a7e3f78"
+        },
+        {
+          "path": "evals/blind/detector_v2/runs/detector_v2_official_blind_ef49a16703b1612ef774/blind.release.v1.json",
+          "sha256": "3f908d680a2bb4615e378d76cfb5ba5d4554138ca69ba39d9d48a68ad0b08845"
+        },
+        {
+          "path": "evals/blind/detector_v2/runs/detector_v2_official_blind_ef49a16703b1612ef774/nonce.reveal.json",
+          "sha256": "e9707a898931bbab4c8fb656f094da68992a5176fb0898b1136add243021c7ef"
+        }
+      ],
+      "eligible_as_future_blind_evidence": false,
+      "evidence_id": "detector_v2_official_blind_ef49a16703b1612ef774",
+      "labels_authorized_for_development": true,
+      "origin": "revealed_blocked_blind",
+      "synthetic": true
+    }
+  ],
+  "benchmark_dataset_id": "retryrail_detector_v2_blind_v1",
+  "benchmark_distribution_unchanged_after_failure": true,
+  "benchmark_generator_bundle_sha256": "a91e12e9945dd9cab9252dbd6f345e99fd52229505baf10a9aafc5dae511a9b9",
+  "benchmark_generator_version": "detector_v2_generator_v1_0_0",
+  "blind_procedure": {
+    "append_only_evidence": true,
+    "configuration_change_requires_new_nonce": true,
+    "nonce_created_after_candidate_and_runner_freeze": true,
+    "nonce_is_public_and_non_secret": true,
+    "nonce_maximum_characters": 256,
+    "nonce_minimum_characters": 16,
+    "official_nonce_required": true,
+    "one_official_run_per_frozen_candidate": true,
+    "prediction_bytes_reproduced_before_truth_access": true,
+    "predictions_persisted_before_truth_access": true,
+    "prior_and_test_nonce_sha256": [
+      "ef49a16703b1612ef774ce54bb84e8ba6aeefacd8ead586d4fd5791615ee84bb",
+      "b55895da52e3e21bf6c9cc95168ad04570d9848de5565a26ec7b0db422d72689",
+      "b468a1162e2662815787768f0a743b0067f92ff73856e3a1ccb7f5e9ea42c1c1",
+      "84661f2743f8a7d76d5d28419e41521e4486ee9b8add0818c1dd64119d76f280",
+      "06d73d9508b57e3b4f58967e3f8dd27218e45698f9e925f3e6fa40ad0a678e0d"
+    ]
+  },
+  "candidate_constraints": {
+    "baseline_and_current_windows_non_overlapping": true,
+    "baseline_frozen_after_first_signal": true,
+    "baseline_guard_covers_maximum_current_window": true,
+    "baseline_guard_is_candidate_configuration": true,
+    "detector_decides_degradation": true,
+    "development_partitions_must_pass_individually": true,
+    "evidence_reconciliation_required": true,
+    "first_signal_and_confirmation_timestamps_separate": true,
+    "hard_negative_confirmation_required": true,
+    "runtime_action_eligible_before_qualification": false,
+    "runtime_truth_labels_forbidden": true
+  },
+  "precommitted_at": "2026-09-01T17:15:00Z",
+  "predecessor_detector_version": "detector_v2_0_0",
+  "predecessor_failed_targets": [
+    "median_detection_delay",
+    "baseline_leakage"
+  ],
+  "predecessor_release_sha256": "3f908d680a2bb4615e378d76cfb5ba5d4554138ca69ba39d9d48a68ad0b08845",
+  "predecessor_run_id": "detector_v2_official_blind_ef49a16703b1612ef774",
+  "protocol_id": "detector_v3_protocol_v1",
+  "release_targets": {
+    "baseline_leakage_violations": 0,
+    "evidence_reconciliation_violations": 0,
+    "hard_negative_action_eligible_incidents": 0,
+    "median_detection_delay_seconds": 600,
+    "precision_ppm": 900000,
+    "recall_ppm": 850000,
+    "top_1_attribution_ppm": 800000
+  },
+  "rules": [
+    "Detector v2 source, configuration and failed evidence remain immutable.",
+    "The revealed v2 official run is development evidence and is never blind again.",
+    "The benchmark generator and scenario distribution remain frozen after failure.",
+    "Only the two identified development partitions may influence v3 tuning.",
+    "Runtime prediction code cannot receive scenario labels or truth membership.",
+    "A guarded pre-incident baseline is frozen after the first passing signal.",
+    "Development targets must pass separately on both permitted partitions.",
+    "The candidate, matcher, evaluator and runner freeze before nonce creation.",
+    "Blind prediction bytes are durable and reproducible before truth access.",
+    "No threshold, algorithm or matching change is allowed after nonce creation.",
+    "Any failed v3 result remains append-only and globally action-ineligible.",
+    "M4 begins only from a qualified v3 release decision and still requires policy."
+  ],
+  "schema_version": "1.0.0",
+  "status": "precommitted_before_candidate"
+}

@@ -130,13 +130,15 @@ locally and against PostgreSQL 16 in the Python CI job.
 
 ## Status
 
-Parts 1–4 / M0–M3 and M3R.1–R.3 are implemented. Detector v1 failed its P0
-held-out targets, and detector v2's official synthetic blind release decision
-is also blocked by detection delay and baseline leakage despite perfect blind
-precision, recall and attribution. GitHub Actions includes PostgreSQL 16
-integration and all three detector evaluation integrity gates. M4 has not
-started and cannot begin until a newly versioned detector passes a separately
-frozen run with a new nonce. See [event pipeline](docs/EVENT_PIPELINE.md),
+Parts 1–4 / M0–M3 and M3R.1–R.3 are implemented. M3R.4 R4.1 now precommits the
+detector-v3 remediation boundary before candidate work. Detector v1 failed its
+P0 held-out targets, and detector v2's official synthetic blind release
+decision is also blocked by detection delay and baseline leakage despite
+perfect blind precision, recall and attribution. GitHub Actions includes
+PostgreSQL 16 integration and all detector evaluation integrity gates. M4 has
+not started and cannot begin until the separately versioned v3 candidate passes
+a frozen run with a new nonce. See [v3 protocol](docs/DETECTOR_V3_PROTOCOL.md),
+[event pipeline](docs/EVENT_PIPELINE.md),
 [detector](docs/DETECTOR.md), [architecture](docs/ARCHITECTURE.md),
 [dataset](docs/DATASET.md), [security](docs/SECURITY.md) and the
 [authoritative build plan](docs/BUILD_PLAN.md).
