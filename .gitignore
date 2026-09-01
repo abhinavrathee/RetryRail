@@ -39,3 +39,6 @@ fixtures/manifests/.*.tmp
 .vscode/
 .DS_Store
 Thumbs.db
+
+# Added by ggshield
+.cache_ggshield

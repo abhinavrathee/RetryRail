@@ -43,6 +43,48 @@ def test_scanner_reports_generic_high_entropy_sensitive_assignment(
     assert "a1b2c3d4e5f60718293a" not in findings[0].render(tmp_path)
 
 
+def test_scanner_exception_is_bound_to_exact_v3_receipt_path_and_value(
+    tmp_path: Path,
+) -> None:
+    run_id = "detector_v3_official_blind_1a1852634945b54e300a"
+    receipt_path = (
+        tmp_path
+        / "evals"
+        / "blind"
+        / "detector_v3"
+        / "runs"
+        / run_id
+        / "truth_access.receipt.json"
+    )
+    receipt_path.parent.mkdir(parents=True)
+    receipt_path.write_text(
+        json.dumps(
+            {
+                "authorization_id": "truth_access_" + "1a1852634945b54e300a",
+                "synthetic": True,
+            }
+        ),
+        encoding="utf-8",
+    )
+
+    assert scan_repository(tmp_path) == []
+
+    receipt_path.write_text(
+        json.dumps(
+            {
+                "authorization_id": "truth_access_" + "1a1852634945b54e300b",
+                "synthetic": True,
+            }
+        ),
+        encoding="utf-8",
+    )
+
+    findings = scan_repository(tmp_path)
+    assert [finding.code for finding in findings] == [
+        "GENERIC_HIGH_ENTROPY_SENSITIVE_ASSIGNMENT"
+    ]
+
+
 def test_scanner_blocks_prohibited_fixture_keys(tmp_path: Path) -> None:
     fixture_directory = tmp_path / "fixtures" / "webhooks"
     fixture_directory.mkdir(parents=True)

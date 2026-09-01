@@ -81,6 +81,16 @@ _KNOWN_NON_SECRET_ASSIGNMENT_DIGESTS = {
             "a2723b705638e53c95abaa54c8d21d9ce876377a720975a80b0cebca18876d07",
         }
     ),
+    (
+        "evals/blind/detector_v3/runs/"
+        "detector_v3_official_blind_1a1852634945b54e300a/"
+        "truth_access.receipt.json"
+    ): frozenset(
+        {
+            # Immutable synthetic receipt identifier from official blind run 1a185263.
+            "4f29624aebcfa32c12e6a2db85316073257df5192fcccb7289cce0f73544fdaa",
+        }
+    ),
 }
 _PROHIBITED_FIXTURE_KEYS = frozenset(
     {
