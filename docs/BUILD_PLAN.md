@@ -496,7 +496,7 @@ now; it cannot qualify a change designed after its result was known:
 1. **Complete:** precommit the exact v3 failure analysis, three allowed
    development partitions, unchanged benchmark and targets, hierarchy-lifecycle
    change envelope, strict report round-trip requirements and fresh-run rules;
-2. **Pending:** implement and tune one separately versioned candidate on all
+2. **Complete:** implement and tune one separately versioned candidate on all
    three approved partitions, requiring every partition to pass independently;
 3. **Pending:** cover hierarchy, overlap, serialization and temporal edge cases,
    then freeze candidate, configuration, matcher, evaluator, contracts and
@@ -515,7 +515,14 @@ also emit required nullable report fields and prove strict model reload plus
 canonical byte reproduction for an open incident before any nonce exists.
 
 The machine boundary is `evals/protocols/detector_v4.protocol.json`. No v4
-candidate, fresh nonce or blind run is part of R5.1. M4 remains blocked.
+candidate, fresh nonce or blind run is part of R5.1. R5.2 now adds
+`detector_v4_0_0`: all three revealed synthetic development partitions score
+6 TP / 0 FP / 0 FN independently, with 1,000,000 ppm top-1 attribution,
+median delays of 600, 600 and 450 seconds, and zero leakage or reconciliation
+violations. Its canonical reports also pass strict reload and exact-byte
+round-trip with an explicit open-incident `resolved_at=null`. This is not blind
+evidence or release qualification. R5.3 adversarial/freeze work is next; no
+fresh nonce or blind run exists and M4 remains blocked.
 
 ### M4 — Policy engine and deterministic recovery path
 

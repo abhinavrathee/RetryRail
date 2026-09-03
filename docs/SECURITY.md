@@ -18,6 +18,8 @@ a payment or customer-facing mutation.
 | Detector threshold changed after blind result | Committed config hash and byte-reproducible reports | `retryrail-eval --check` plus exact-result tests |
 | V2 blind output influences candidate tuning | Generator/protocol precommit, source/config/matcher/runner freeze, post-freeze nonce, event-first prediction receipt and separate truth loader | `retryrail-v2-data --check`, `retryrail-v2-candidate --check`, `retryrail-v2-blind --check` and isolation tests |
 | V3 remediation reuses revealed evidence as blind or retries after failure | Exact development-evidence allowlist, unchanged generator digest, prior/test nonce denylist, separate candidate/runner freezes and one terminal official-run slot | `retryrail-v3-protocol --check`, `retryrail-v3-freeze --check`, `retryrail-v3-blind-postrun` and v3 isolation tests |
+| V4 parent/child state hides evidence or emits duplicate incidents | Canonical-cohort lifecycle, per-cohort cooldown, label-free connected-component arbitration and typed loser dispositions | `retryrail-v4-candidate --check` and v4 lifecycle/arbitration tests |
+| Required nullable report data is silently omitted | Null-preserving canonical writer, strict typed reload, open-incident field inspection and exact byte round-trip | V4 report-contract regression and artifact checks |
 | Concurrent or replayed blind stage opens truth twice | Exclusive create-only stage locks, append-only receipts, byte-for-byte prediction replay and terminal completion/failure state | Blind workflow concurrency, tamper and replay-refusal tests |
 | Clean checkout silently omits ignored blind inputs | V2 public-reveal reproduction is confined, digest-bound and create-only; v3 reproduces both derived inputs in memory and validates any existing bytes without rewriting | `retryrail-v2-blind-reproduce`, `retryrail-v3-blind-postrun` and reproduction tamper tests |
 | Sparse high failure percentage creates an action incident | Current/baseline sample, excess-failure and GMV gates | Held-out wallet hard-negative test |
@@ -148,10 +150,12 @@ pre-nonce freeze rather than adding a general exception.
   approval remain false. The separate post-run audit verifies the one known
   omission and rejects any other schema or digest difference without changing
   official evidence.
-- Detector-v4 R5.1 is only a pre-candidate protocol. It binds both consumed
-  official nonce digests and committed test nonce digests for future reuse
-  rejection, but publishes no raw nonce, fresh v4 nonce digest or run identity.
-  It requires the candidate, matcher, evaluator, contracts and runner to be
-  frozen and pushed before nonce creation. It also requires a plainly
-  non-secret-shaped receipt identifier and strict report round-trip preflight
-  before that freeze; no new GitGuardian exclusion is authorized.
+- Detector-v4 R5.1 precommits the boundary and R5.2 implements the candidate.
+  The three revealed partitions are explicitly development-only, prediction
+  bytes are created before truth loading, and canonical-cohort arbitration uses
+  no labels or model output. The open-incident report emits `resolved_at=null`,
+  strictly reloads and reproduces identical bytes. The protocol binds consumed
+  and test nonce digests for future reuse rejection, but publishes no fresh v4
+  nonce digest or run identity. Candidate, matcher, evaluator, contracts and
+  runner must still be frozen and pushed before nonce creation. No new
+  GitGuardian exclusion is authorized.

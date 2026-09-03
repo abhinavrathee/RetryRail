@@ -136,8 +136,9 @@ held-out evidence. The later v2 official batch is revealed, release-blocked
 development evidence for v3 and must never be called blind for another
 candidate. V3's fresh official batch is also now consumed: its release failed
 precision and recall and its report failed the frozen reload contract. Neither
-batch may be reused as held-out evidence. Detector v4 may use the original v2
-development batch plus both revealed official batches only as three separately
-scored development partitions. Its future qualification partition requires a
-new nonce after freeze. See `DETECTOR_V2_PROTOCOL.md`,
-`DETECTOR_V3_PROTOCOL.md` and `DETECTOR_V4_PROTOCOL.md`.
+batch may be reused as held-out evidence. Detector v4 R5.2 uses the original v2
+development batch plus both revealed official batches as exactly three
+separately scored development partitions; each passes, but none is blind for
+v4. Its future qualification partition requires a new nonce after freeze. See
+`DETECTOR_V2_PROTOCOL.md`, `DETECTOR_V3_PROTOCOL.md`,
+`DETECTOR_V4_PROTOCOL.md` and `DETECTOR_V4_CANDIDATE.md`.

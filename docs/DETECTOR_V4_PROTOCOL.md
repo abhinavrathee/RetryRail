@@ -2,12 +2,14 @@
 
 ## Current status
 
-M3R.5 phase R5.1 is complete: the detector-v4 failure analysis, development
-evidence boundary, allowed change class, unchanged release targets, report
-contract requirements and fresh-run procedure are precommitted. No detector-v4
-candidate, configuration, freeze, official nonce or blind run exists yet.
-Detector v2 and v3 remain immutable failed predecessors, M4 remains blocked,
-and every detector output remains runtime action-ineligible.
+M3R.5 phases R5.1 and R5.2 are complete. The failure analysis, development
+evidence boundary, allowed change class, unchanged targets, report contract and
+fresh-run procedure were precommitted before the separately versioned v4
+candidate was implemented. That candidate now passes every unchanged target
+on all three allowed development partitions and passes the strict open-report
+round-trip preflight. It is not frozen or release-qualified, and no fresh
+official nonce or blind run exists. Detector v2 and v3 remain immutable failed
+predecessors, M4 remains blocked, and every output remains action-ineligible.
 
 The machine-readable boundary is
 `evals/protocols/detector_v4.protocol.json`. The
@@ -125,7 +127,7 @@ a blocked decision, even if its in-memory metrics would otherwise pass.
 | Phase | Work | Status |
 | --- | --- | --- |
 | R5.1 | Bind failure analysis, evidence, change envelope, report contract and release rules | Complete |
-| R5.2 | Implement and tune one separately versioned candidate on all three partitions | Pending |
+| R5.2 | Implement and tune one separately versioned candidate on all three partitions | Complete |
 | R5.3 | Add adversarial cases and freeze candidate, matcher, evaluator, contracts and runner | Pending |
 | R5.4 | Create one fresh public nonce; persist/replay predictions; authorize truth once | Pending |
 | R5.5 | Preserve the result and run all repository, security and remote release gates | Pending |
@@ -133,6 +135,22 @@ a blocked decision, even if its in-memory metrics would otherwise pass.
 Development success in R5.2 is not a release claim. R5.3 cannot create a
 nonce. R5.4 gets one append-only official slot only after the complete freeze
 is committed and pushed.
+
+## R5.2 development result
+
+Detector `detector_v4_0_0` uses canonical-cohort state and deterministic
+confirmed-child-breadth arbitration. The original v2 development partition,
+revealed v2 official partition and revealed v3 official partition each record
+6 true positives, 0 false positives, 0 false negatives and 1,000,000 ppm
+top-1 attribution. Their median first-signal delays are 600, 600 and 450
+seconds. Every partition has zero hard-negative incidents, baseline-leakage
+violations and evidence-reconciliation violations.
+
+The third report contains one open incident with an explicit
+`resolved_at=null`; every prediction and report strictly reloads and
+canonicalizes to its exact bytes. These are revealed synthetic development
+results only. The candidate remains unfrozen and action-ineligible. See
+`DETECTOR_V4_CANDIDATE.md` and `evals/reports/detector_v4.development.json`.
 
 ## Fresh-run rules
 
@@ -166,16 +184,21 @@ These are synthetic benchmark targets, not production-performance claims. A
 qualified v4 result would still require M4 deterministic policy and external
 merchant approval before any recovery action.
 
-## R5.1 verification
+## R5.1 and R5.2 verification
 
 ```bash
 uv run retryrail-v4-protocol --check
+uv run retryrail-v4-candidate --check
 uv run pytest services/api/tests/detection/test_v4_protocol.py
+uv run pytest services/api/tests/detection/test_v4_candidate.py
 make v4-protocol-check
+make v4-candidate-check
 ```
 
-The tests cover artifact drift, exact v3 metrics and case identities, hierarchy
-shape and timeline, development-role isolation, unchanged targets, matcher and
-gate constraints, required-nullable report behavior, consumed/test nonce
-denylisting, absence of fresh v4 nonce state, canonical generation and CLI
-failure paths.
+The protocol tests cover artifact drift, exact v3 metrics and case identities,
+hierarchy shape and timeline, development-role isolation, unchanged targets,
+matcher and gate constraints, consumed/test nonce denylisting and absence of
+fresh v4 nonce state. Candidate tests cover independent cohort lifecycle,
+overlap dispositions, all three partition scores, label-free prediction,
+required-nullable output, strict reload, canonical byte reproduction, artifact
+drift and fail-closed writes.

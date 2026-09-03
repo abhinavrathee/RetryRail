@@ -131,11 +131,14 @@ reproduces the public-nonce inputs and validates the exact failure without
 altering the frozen runner or evidence. M4 therefore remains blocked behind a
 future separately versioned detector release.
 
-M3R.5 R5.1 precommits that separate detector-v4 boundary. Its permitted design
-tracks method and method/issuer candidates by canonical cohort so a parent's
-state or cooldown cannot starve a passing child, then applies deterministic,
-label-free overlap arbitration with explicit dispositions and at most one
-incident. The exact matcher and core evidence gates stay unchanged. A second
-independent gate requires open-incident report bytes to emit required nullable
-fields, strictly reload and canonicalize to the same bytes before a future
-runner may accept a nonce. No v4 runtime or nonce exists yet.
+M3R.5 R5.1 precommitted that separate detector-v4 boundary, and R5.2 now
+implements it. Method and method/issuer candidates use canonical-cohort state,
+so a parent's state or cooldown cannot starve a passing child. Confirmed
+same-method intervals form deterministic overlap components; confirmed breadth
+across at least two child scopes selects a parent, otherwise a child wins, with
+a stable evidence-strength tie-break. Exactly one incident is emitted and every
+loser receives a typed audit disposition. The exact matcher and core evidence
+gates stay unchanged. The development writer emits required nullable fields,
+strictly reloads and canonicalizes the open-incident report to identical bytes.
+The candidate passes all three revealed development partitions but remains
+unfrozen, action-ineligible and unqualified. No v4 nonce exists yet.

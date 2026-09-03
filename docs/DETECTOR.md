@@ -204,14 +204,16 @@ persisted report does not reload under its frozen contract. The run is
 preserved as blocked and procedurally invalid; it cannot be repaired or rerun.
 See `docs/DETECTOR_V3_PROTOCOL.md`.
 
-M3R.5 R5.1 now precommits detector v4 without implementing or tuning it. The
-revealed v3 trace shows an issuer child independently passed nine evaluation
-steps while method-keyed state and cooldown retained only its broad parent;
-that parent later became the unmatched false positive. V4 may remediate
-canonical-cohort lifecycle and deterministic overlap arbitration without
-relaxing the exact matcher or core evidence gates. It must also prove strict
-reload and byte reproduction for an open report containing
-`resolved_at=null`. See `docs/DETECTOR_V4_PROTOCOL.md`.
+M3R.5 R5.1 precommitted detector v4 before implementation or tuning. R5.2 now
+implements canonical-cohort lifecycle and label-free overlap arbitration while
+retaining the exact matcher and every v3 evidence gate. All three allowed
+revealed synthetic development partitions independently score 6 TP / 0 FP /
+0 FN, perfect top-1 attribution, compliant median delay, zero hard-negative
+incidents, zero leakage and zero reconciliation violations. The canonical
+writer emits an explicit `resolved_at=null` for the open-incident fixture,
+strictly reloads and reproduces exact bytes. The candidate is development-only,
+unfrozen and action-ineligible. See `docs/DETECTOR_V4_PROTOCOL.md` and
+`docs/DETECTOR_V4_CANDIDATE.md`.
 
 Committed evidence:
 
@@ -225,6 +227,8 @@ Committed evidence:
 - `evals/blind/detector_v3/runs/detector_v3_official_blind_1a1852634945b54e300a/blind.release.v1.json`
 - `evals/blind/detector_v3/runs/detector_v3_official_blind_1a1852634945b54e300a/postrun.audit.v1.json`
 - `evals/protocols/detector_v4.protocol.json`
+- `evals/golden/detector_v4.candidate.json`
+- `evals/reports/detector_v4.development.json`
 
 ## Verification
 
@@ -232,6 +236,7 @@ Committed evidence:
 uv run pytest services/api/tests/detection
 uv run pytest services/api/tests/integration/test_detection_service.py
 uv run retryrail-eval --check
+uv run retryrail-v4-candidate --check
 make eval
 ```
 

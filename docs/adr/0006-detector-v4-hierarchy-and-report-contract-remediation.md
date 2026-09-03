@@ -1,6 +1,6 @@
 # ADR 0006: Remediate hierarchy starvation and report serialization in v4
 
-- Status: Accepted; R5.1 precommitted before candidate work
+- Status: Accepted; R5.1 precommitted, R5.2 candidate implemented
 - Date: 2026-09-03
 
 ## Context
@@ -25,12 +25,14 @@ immutable. V4 may use exactly three revealed development partitions: the
 original v2 development batch and the consumed v2 and v3 official batches.
 All must pass the unchanged targets independently before freeze.
 
-V4 candidate state will include the canonical cohort identity. Parent and
-child candidates will be observed independently, with deterministic,
-label-free scope arbitration and at most one incident per overlapping method
-episode. A parent state or cooldown cannot suppress child observation, and
-non-selected passing candidates must remain auditable. Core evidence gates,
-the guarded baseline and exact matcher semantics are retained.
+V4 candidate state includes the canonical cohort identity. Parent and child
+candidates are observed independently. Confirmed same-method time intervals
+form connected components; two or more confirmed child scopes select the
+parent when present, otherwise the strongest child is selected using a stable
+evidence-only ordering. At most one incident is emitted per component. A
+parent state or cooldown cannot suppress child observation, and non-selected
+passing candidates remain auditable. Core evidence gates, the guarded baseline
+and exact matcher semantics are retained.
 
 The report contract must also pass an open-incident required-nullable fixture,
 strict reload and canonical byte round-trip before runner freeze. Only after
@@ -50,3 +52,9 @@ failure, so it cannot qualify v4. Qualification still depends on a fresh
 nonce-derived partition generated only after the complete freeze. Any metric,
 contract or procedure failure consumes that run slot and remains append-only.
 M4 stays blocked until a valid v4 release decision passes every target.
+
+R5.2 demonstrates the decision on all three allowed revealed development
+partitions and passes each unchanged target independently. It also proves the
+null-preserving report reload and exact-byte round-trip with an actual open
+incident. These results do not remove the R5.3 adversarial/freeze gate or the
+need for one fresh R5.4 blind run.

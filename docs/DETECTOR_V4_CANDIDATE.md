@@ -1,0 +1,109 @@
+# Detector v4 development candidate
+
+## Status and boundary
+
+M3R.5 R5.2 is complete. Detector `detector_v4_0_0` is implemented and passes
+all unchanged release targets on each of the three development partitions
+allowed by the precommitted v4 protocol. These are revealed synthetic
+development results, not blind evidence and not a release qualification.
+
+The candidate is ready for the R5.3 adversarial and freeze gate. It is not
+frozen, has no official run identity or fresh nonce, remains globally
+action-ineligible, and does not authorize M4 recovery work.
+
+## Lifecycle correction
+
+V4 preserves the v3 statistical, business, confirmation, guarded-baseline,
+resolution and diagnosis rules. It changes only hierarchy lifecycle and
+overlap handling:
+
+1. Every method and method/issuer candidate uses its complete canonical cohort
+   as the state and cooldown key.
+2. Parent and child cohorts are evaluated independently at each event-time
+   step. A parent candidate, incident, resolution or cooldown cannot prevent a
+   child from collecting evidence.
+3. Every candidate freezes its own guarded, non-overlapping opening baseline.
+4. Confirmed candidates are grouped into deterministic connected components
+   when their same-method event-time intervals overlap.
+5. A component with a confirmed parent and at least two distinct confirmed
+   issuer children selects the parent as evidence of breadth. A component with
+   one confirmed child selects that child. Otherwise, the strongest eligible
+   scope is selected lexicographically by excess failures, at-risk GMV, unique
+   confirmation evidence, confidence, opening time and canonical cohort key.
+6. Exactly one incident is emitted per overlap component. Every confirmed
+   loser receives a typed `V4ScopeArbitration` record; every unconfirmed
+   passing candidate retains the existing typed suppression record.
+
+The formula consumes only normalized events and candidate evidence available
+at prediction time. Scenario identities, truth membership and LLM output are
+not accepted by the runtime prediction boundary. Matcher version
+`detector_v2_matcher_v1_0_0` remains unchanged.
+
+## Development evidence
+
+All targets are evaluated separately, so an aggregate score cannot hide a
+failed partition.
+
+| Development evidence | TP / FP / FN | Precision | Recall | Top-1 | Median first signal | Leakage / reconciliation |
+| --- | ---: | ---: | ---: | ---: | ---: | ---: |
+| Original v2 development batch | 6 / 0 / 0 | 1,000,000 ppm | 1,000,000 ppm | 1,000,000 ppm | 600 s | 0 / 0 |
+| Revealed blocked v2 official batch | 6 / 0 / 0 | 1,000,000 ppm | 1,000,000 ppm | 1,000,000 ppm | 600 s | 0 / 0 |
+| Revealed blocked/invalid v3 official batch | 6 / 0 / 0 | 1,000,000 ppm | 1,000,000 ppm | 1,000,000 ppm | 450 s | 0 / 0 |
+
+Every partition also records zero hard-negative incidents. The previously
+missed `netbanking / issuer_synthetic_gamma` case opens at 08:15 UTC, 900
+seconds after its simulated onset. Its early broad parent remains visible as a
+suppressed candidate, and the later broad parent that v3 emitted as a false
+positive is now an explicit non-selected arbitration record pointing to the
+child incident.
+
+V4 records 9, 12 and 11 confirmed losing candidates respectively. Those
+counts are audit evidence, not additional predicted incidents.
+
+## Report-contract remediation
+
+The v4 canonical writer does not omit `None` values. Before any development
+artifact is accepted it:
+
+- emits `resolved_at` for every incident summary, including an explicit
+  `null` for open incidents;
+- strictly reloads prediction, partition-report and suite bytes into their
+  immutable Pydantic contracts;
+- canonicalizes each reloaded model and requires byte-for-byte equality;
+- checks that typed open-incident identities equal the JSON objects carrying
+  `status="open"` and `resolved_at=null`.
+
+The revealed v3 development partition supplies one real open incident for this
+preflight. Removing its required nullable field makes model validation fail.
+Historical v3 bytes remain unchanged.
+
+## Committed evidence
+
+- `evals/golden/detector_v4.candidate.json`
+- `evals/reports/detector_v4.development.json`
+- `evals/reports/detector_v4.prior_development.predictions.json`
+- `evals/reports/detector_v4.prior_development.report.json`
+- `evals/reports/detector_v4.revealed_v2_predecessor.predictions.json`
+- `evals/reports/detector_v4.revealed_v2_predecessor.report.json`
+- `evals/reports/detector_v4.revealed_v3_predecessor.predictions.json`
+- `evals/reports/detector_v4.revealed_v3_predecessor.report.json`
+
+Prediction artifacts are label-free. Reports load truth only after all three
+prediction byte sequences exist. Each artifact is canonical and digest-bound;
+the suite keeps `candidate_frozen=false`, both official nonce/run fields null,
+and all runtime/release flags false.
+
+## Verification
+
+```bash
+uv run retryrail-v4-protocol --check
+uv run retryrail-v4-candidate --check
+uv run pytest services/api/tests/detection/test_v4_candidate.py
+make v4-candidate-check
+```
+
+R5.3 must add independent hierarchy, overlap, ordering, sparse-data,
+serialization and path-safety adversarial cases, then freeze the candidate,
+configuration, matcher, evaluator, contracts and append-only runner. It still
+must not create a nonce. A fresh public, non-sensitive nonce is reserved for
+R5.4 after the complete freeze is committed and pushed.
