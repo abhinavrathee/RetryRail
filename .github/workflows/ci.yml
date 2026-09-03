@@ -70,6 +70,7 @@ jobs:
           uv run retryrail-v3-adversarial --check
           uv run retryrail-v3-freeze --check
           uv run retryrail-v3-blind-postrun
+          uv run retryrail-v4-candidate --check
 
   web-quality:
     name: Web quality and production build
