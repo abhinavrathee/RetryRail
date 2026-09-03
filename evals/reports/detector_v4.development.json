@@ -1,6 +1,6 @@
 {
   "all_development_partitions_passed": true,
-  "candidate_bundle_sha256": "a34a52a07fe2c9d5b389e0a59d9df304f08ae63c4d1305ebcedeb0273883bf34",
+  "candidate_bundle_sha256": "f13ec717279ae2d40b217fb5a3804d2de7191c5c141e0240ef5650e5a99ec27b",
   "candidate_frozen": false,
   "candidate_ready_for_adversarial_freeze": true,
   "detector_config_sha256": "c94c10e257599ec59e323bfbc9ba9a1084bf0607c18d0ebdcdfba5a602f9527b",
@@ -22,9 +22,9 @@
       "median_detection_delay_seconds": 600,
       "open_incident_count": 0,
       "precision_ppm": 1000000,
-      "prediction_artifact_sha256": "3eef17f907f8078d249ae7a81a9eecacc554725fa92e5f3d0544762d3fce3b2b",
+      "prediction_artifact_sha256": "b9d400fea61fe65dbcbaf3bef48f0f40198f4e01b5e9e9a886d2046e305c41ab",
       "recall_ppm": 1000000,
-      "report_artifact_sha256": "8cbb00baa494e8ce9e4dfae5d1863c6ca25437d57a3e23a4eb53233db0b473c2",
+      "report_artifact_sha256": "715c8f7dab4c368c19868c969be4d4e9c19de84869712b9f5f68048f1ff20684",
       "report_contract_passed": true,
       "top_1_attribution_ppm": 1000000
     },
@@ -38,9 +38,9 @@
       "median_detection_delay_seconds": 600,
       "open_incident_count": 0,
       "precision_ppm": 1000000,
-      "prediction_artifact_sha256": "7f466081bf26fc71631400b36911e65bae86815a7db3e1ea13b074e68ba6c543",
+      "prediction_artifact_sha256": "fbe74bfc7492bbfc4f51ead3b552f6a27ceb4ec3c3ae9142e6773ab5540c16c0",
       "recall_ppm": 1000000,
-      "report_artifact_sha256": "e6c3a6fd927260a59aef742c7c40595bad9dc19c67a52376433e2a658b9a15dc",
+      "report_artifact_sha256": "4f584864d43c7ad7d90af4d0310bd8784ff69b157f090eaca8637cc74cf998bb",
       "report_contract_passed": true,
       "top_1_attribution_ppm": 1000000
     },
@@ -54,9 +54,9 @@
       "median_detection_delay_seconds": 450,
       "open_incident_count": 1,
       "precision_ppm": 1000000,
-      "prediction_artifact_sha256": "5d2d3d4b8803e0ea6882acf40ecc600364f32780138a32d74052e5ac3ac0f5f3",
+      "prediction_artifact_sha256": "7947a74654d74eabd7ccffaf3b7b34e9a411a4f88f1c5ea368f4f745777ba874",
       "recall_ppm": 1000000,
-      "report_artifact_sha256": "627a058fb68d34bff18b44b755a6fe258e2315e73700310bab5b29873d634bb7",
+      "report_artifact_sha256": "95a39e2a948b89bfb774737501562d18d27fb8b769b95790334b1fa63f2d9848",
       "report_contract_passed": true,
       "top_1_attribution_ppm": 1000000
     }

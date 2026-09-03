@@ -1,5 +1,5 @@
 {
-  "candidate_bundle_sha256": "a34a52a07fe2c9d5b389e0a59d9df304f08ae63c4d1305ebcedeb0273883bf34",
+  "candidate_bundle_sha256": "f13ec717279ae2d40b217fb5a3804d2de7191c5c141e0240ef5650e5a99ec27b",
   "detector_config_sha256": "c94c10e257599ec59e323bfbc9ba9a1084bf0607c18d0ebdcdfba5a602f9527b",
   "detector_version": "detector_v4_0_0",
   "development_evidence_id": "detector_v2_official_blind_ef49a16703b1612ef774",
@@ -1816,7 +1816,7 @@
     "true_positives": 6
   },
   "official_blind_evaluated": false,
-  "prediction_artifact_sha256": "7f466081bf26fc71631400b36911e65bae86815a7db3e1ea13b074e68ba6c543",
+  "prediction_artifact_sha256": "fbe74bfc7492bbfc4f51ead3b552f6a27ceb4ec3c3ae9142e6773ab5540c16c0",
   "protocol_id": "detector_v4_protocol_v1",
   "release_qualified": false,
   "report_contract": {

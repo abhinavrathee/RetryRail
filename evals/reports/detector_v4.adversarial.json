@@ -1,0 +1,144 @@
+{
+  "all_cases_passed": true,
+  "candidate_bundle_sha256": "f13ec717279ae2d40b217fb5a3804d2de7191c5c141e0240ef5650e5a99ec27b",
+  "cases": [
+    {
+      "case_id": "guard_covers_every_window",
+      "category": "temporal_safety",
+      "observations": [
+        "configured_windows=15,30,60",
+        "selected_gap_minutes=0"
+      ],
+      "passed": true
+    },
+    {
+      "case_id": "opening_baseline_freezes",
+      "category": "temporal_safety",
+      "observations": [
+        "baseline_ended_at=2026-09-15T03:05:00+00:00"
+      ],
+      "passed": true
+    },
+    {
+      "case_id": "gate_and_strategy_weakening_rejected",
+      "category": "input_validation",
+      "observations": [
+        "mutations_rejected=5"
+      ],
+      "passed": true
+    },
+    {
+      "case_id": "naive_time_rejected",
+      "category": "input_validation",
+      "observations": [
+        "timezone_requirement=aware"
+      ],
+      "passed": true
+    },
+    {
+      "case_id": "out_of_order_input_invariant",
+      "category": "ordering",
+      "observations": [
+        "event_records=464"
+      ],
+      "passed": true
+    },
+    {
+      "case_id": "canonical_child_survives_parent_lifecycle",
+      "category": "lifecycle",
+      "observations": [
+        "child_opened_at=2026-10-01T08:15:00+00:00",
+        "late_parent_audited=True"
+      ],
+      "passed": true
+    },
+    {
+      "case_id": "single_child_selects_child",
+      "category": "hierarchy",
+      "observations": [
+        "parent_loser_records=10"
+      ],
+      "passed": true
+    },
+    {
+      "case_id": "multi_child_breadth_selects_parent",
+      "category": "hierarchy",
+      "observations": [
+        "child_loser_records=22"
+      ],
+      "passed": true
+    },
+    {
+      "case_id": "arbitration_receipts_reconcile",
+      "category": "overlap",
+      "observations": [
+        "arbitration_records=32"
+      ],
+      "passed": true
+    },
+    {
+      "case_id": "same_method_incidents_do_not_overlap",
+      "category": "overlap",
+      "observations": [
+        "partitions=3"
+      ],
+      "passed": true
+    },
+    {
+      "case_id": "all_hard_negatives_suppressed",
+      "category": "hard_negative",
+      "observations": [
+        "hard_negative_cases=12"
+      ],
+      "passed": true
+    },
+    {
+      "case_id": "evidence_reconciles_without_leakage",
+      "category": "temporal_safety",
+      "observations": [
+        "partitions=3",
+        "leakage_violations=0",
+        "reconciliation_violations=0"
+      ],
+      "passed": true
+    },
+    {
+      "case_id": "prediction_artifacts_are_label_free",
+      "category": "provenance",
+      "observations": [
+        "prediction_artifacts=3"
+      ],
+      "passed": true
+    },
+    {
+      "case_id": "required_nullable_reports_round_trip",
+      "category": "serialization",
+      "observations": [
+        "report_artifacts=3",
+        "open_incidents=1"
+      ],
+      "passed": true
+    },
+    {
+      "case_id": "development_evidence_remains_nonce_free",
+      "category": "provenance",
+      "observations": [
+        "official_blind_evaluated=false",
+        "runtime_action_eligible=false"
+      ],
+      "passed": true
+    }
+  ],
+  "detector_config_sha256": "c94c10e257599ec59e323bfbc9ba9a1084bf0607c18d0ebdcdfba5a602f9527b",
+  "detector_version": "detector_v4_0_0",
+  "evaluated_at": "2026-10-03T00:15:00Z",
+  "official_blind_evaluated": false,
+  "official_blind_nonce_sha256": null,
+  "official_blind_run_id": null,
+  "protocol_id": "detector_v4_protocol_v1",
+  "release_qualified": false,
+  "report_id": "detector_v4_adversarial_v1",
+  "runtime_action_eligible": false,
+  "schema_version": "1.0.0",
+  "synthetic": true
+}
