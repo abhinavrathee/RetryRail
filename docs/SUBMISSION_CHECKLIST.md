@@ -194,7 +194,7 @@ Recommended timing:
 
 | Claim | Evidence location |
 | --- | --- |
-| Detector precision/recall | V1 remains failed; v2 remains blocked on delay/leakage; v3 official synthetic evidence records 833,333 ppm precision and recall and is blocked plus procedurally invalid. None may be presented as a qualified release |
+| Detector precision/recall | V1 remains failed; v2 remains blocked on delay/leakage; v3 official synthetic evidence records 833,333 ppm precision and recall and is blocked plus procedurally invalid. V4 has only a pre-candidate protocol. None may be presented as a qualified release |
 | Root-cause accuracy | V1 held-out remains unscorable after the miss; v2 and v3 official synthetic top-1 attribution are 1,000,000 ppm, but both overall releases are blocked |
 | Agent grounding/safety | `evals/reports/agent-golden.json` |
 | No duplicate action | Integration test plus demo audit receipt |
@@ -208,4 +208,5 @@ Later-milestone paths remain required targets. M3 detector evidence now exists,
 but none of v1, v2 or v3 has a qualifying release. If any strong component
 metric is used in the application, its synthetic limitation and full blocked
 release context must appear beside it. V3's report-contract defect must also be
-disclosed wherever its official metrics appear.
+disclosed wherever its official metrics appear. The v4 precommit cannot be
+presented as detector performance or a completed remediation.

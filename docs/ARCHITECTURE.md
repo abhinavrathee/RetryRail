@@ -130,3 +130,12 @@ preserved as blocked and procedurally invalid. An independent post-run audit
 reproduces the public-nonce inputs and validates the exact failure without
 altering the frozen runner or evidence. M4 therefore remains blocked behind a
 future separately versioned detector release.
+
+M3R.5 R5.1 precommits that separate detector-v4 boundary. Its permitted design
+tracks method and method/issuer candidates by canonical cohort so a parent's
+state or cooldown cannot starve a passing child, then applies deterministic,
+label-free overlap arbitration with explicit dispositions and at most one
+incident. The exact matcher and core evidence gates stay unchanged. A second
+independent gate requires open-incident report bytes to emit required nullable
+fields, strictly reload and canonicalize to the same bytes before a future
+runner may accept a nonce. No v4 runtime or nonce exists yet.

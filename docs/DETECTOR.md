@@ -204,6 +204,15 @@ persisted report does not reload under its frozen contract. The run is
 preserved as blocked and procedurally invalid; it cannot be repaired or rerun.
 See `docs/DETECTOR_V3_PROTOCOL.md`.
 
+M3R.5 R5.1 now precommits detector v4 without implementing or tuning it. The
+revealed v3 trace shows an issuer child independently passed nine evaluation
+steps while method-keyed state and cooldown retained only its broad parent;
+that parent later became the unmatched false positive. V4 may remediate
+canonical-cohort lifecycle and deterministic overlap arbitration without
+relaxing the exact matcher or core evidence gates. It must also prove strict
+reload and byte reproduction for an open report containing
+`resolved_at=null`. See `docs/DETECTOR_V4_PROTOCOL.md`.
+
 Committed evidence:
 
 - `evals/reports/tuning.detector_report.v1.json`
@@ -215,6 +224,7 @@ Committed evidence:
 - `evals/blind/detector_v3/runs/detector_v3_official_blind_1a1852634945b54e300a/blind.report.v1.json`
 - `evals/blind/detector_v3/runs/detector_v3_official_blind_1a1852634945b54e300a/blind.release.v1.json`
 - `evals/blind/detector_v3/runs/detector_v3_official_blind_1a1852634945b54e300a/postrun.audit.v1.json`
+- `evals/protocols/detector_v4.protocol.json`
 
 ## Verification
 

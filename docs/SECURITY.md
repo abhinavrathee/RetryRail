@@ -148,3 +148,10 @@ pre-nonce freeze rather than adding a general exception.
   approval remain false. The separate post-run audit verifies the one known
   omission and rejects any other schema or digest difference without changing
   official evidence.
+- Detector-v4 R5.1 is only a pre-candidate protocol. It binds both consumed
+  official nonce digests and committed test nonce digests for future reuse
+  rejection, but publishes no raw nonce, fresh v4 nonce digest or run identity.
+  It requires the candidate, matcher, evaluator, contracts and runner to be
+  frozen and pushed before nonce creation. It also requires a plainly
+  non-secret-shaped receipt identifier and strict report round-trip preflight
+  before that freeze; no new GitGuardian exclusion is authorized.

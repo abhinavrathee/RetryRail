@@ -32,6 +32,7 @@ loop:
 - [Deterministic truth set](docs/DATASET.md)
 - [Authenticated event pipeline](docs/EVENT_PIPELINE.md)
 - [Deterministic detector and honest evaluation](docs/DETECTOR.md)
+- [Detector-v4 remediation boundary](docs/DETECTOR_V4_PROTOCOL.md)
 - [Razorpay submission checklist](docs/SUBMISSION_CHECKLIST.md)
 - [Repository instructions](AGENTS.md)
 
@@ -61,6 +62,15 @@ top-1 attribution, but the generated release decision is still blocked: its
 incident baselines crossed their scenario start when the target was zero.
 Detector v2 therefore has no runtime authority and M4 remains blocked; see the
 [protocol and complete result](docs/DETECTOR_V2_PROTOCOL.md).
+
+Detector v3 later passed both approved development partitions but its only
+official synthetic blind run recorded 5 true positives, 1 false positive and
+1 false negative, missing both precision and recall targets at 833,333 ppm.
+Its frozen writer also omitted one required nullable report field. The exact
+run is preserved as blocked and procedurally invalid. M3R.5 R5.1 now
+precommits a detector-v4 hierarchy-lifecycle and report-contract remediation;
+it contains no v4 candidate, nonce or release claim. See the
+[v4 protocol](docs/DETECTOR_V4_PROTOCOL.md).
 
 ## Run through Part 4 locally
 
@@ -103,6 +113,8 @@ make eval       # verify reports and the generated detector release decision
 make v2-data-check # verify the pre-blind v2 protocol and development identity
 make v2-candidate-check # verify the frozen v2 candidate and development report
 make v2-blind-check # verify the frozen blind runner and append-only run state
+make v3-blind-check # verify the preserved blocked/invalid v3 run
+make v4-protocol-check # verify the pre-candidate v4 remediation boundary
 make check      # run every implemented release gate
 ```
 
@@ -130,16 +142,17 @@ locally and against PostgreSQL 16 in the Python CI job.
 
 ## Status
 
-Parts 1–4 / M0–M3 and M3R.1–R.3 are implemented. M3R.4 R4.1–R4.3 now
-precommit the detector-v3 boundary, qualify the candidate independently on both
-approved development partitions, and freeze its adversarial evidence plus the
-append-only blind runner. This is not a release claim: no new blind nonce
-exists and every output remains action-ineligible.
-Detector v1 failed its P0 held-out targets, and detector v2's official synthetic
-blind release decision remains blocked by detection delay and baseline leakage.
-GitHub Actions includes PostgreSQL 16 integration and all detector evaluation
-integrity gates. M4 has not started and cannot begin until v3 passes a frozen
-run with a new nonce. See [v3 protocol](docs/DETECTOR_V3_PROTOCOL.md),
+Parts 1–4 / M0–M3, M3R.1–R.3 and M3R.4 are implemented. M3R.4 is complete only
+as preservation of detector v3's blocked and procedurally invalid official
+result. M3R.5 R5.1 now binds the exact hierarchy failure, three revealed
+development partitions, unchanged release targets, strict report round-trip
+requirements and a fresh-run procedure before any v4 candidate work.
+
+No detector version is release-qualified, no v4 nonce exists, every output is
+action-ineligible, and M4 remains blocked. GitHub Actions includes PostgreSQL
+16 integration and all implemented detector integrity gates. See
+[v3 result](docs/DETECTOR_V3_PROTOCOL.md),
+[v4 precommit](docs/DETECTOR_V4_PROTOCOL.md),
 [event pipeline](docs/EVENT_PIPELINE.md),
 [detector](docs/DETECTOR.md), [architecture](docs/ARCHITECTURE.md),
 [dataset](docs/DATASET.md), [security](docs/SECURITY.md) and the

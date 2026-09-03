@@ -488,6 +488,35 @@ as blind evidence again. It must not be rerun or repaired in place. M4 remains
 blocked; a future attempt requires a separately versioned candidate, runner
 and fresh nonce after a new precommit boundary.
 
+#### M3R.5 — Detector-v4 hierarchy and report-contract remediation
+
+M3R.5 is split into five reviewable gates. The v3 batch is development evidence
+now; it cannot qualify a change designed after its result was known:
+
+1. **Complete:** precommit the exact v3 failure analysis, three allowed
+   development partitions, unchanged benchmark and targets, hierarchy-lifecycle
+   change envelope, strict report round-trip requirements and fresh-run rules;
+2. **Pending:** implement and tune one separately versioned candidate on all
+   three approved partitions, requiring every partition to pass independently;
+3. **Pending:** cover hierarchy, overlap, serialization and temporal edge cases,
+   then freeze candidate, configuration, matcher, evaluator, contracts and
+   append-only runner before nonce creation;
+4. **Pending:** create one fresh public, non-sensitive nonce, persist and
+   reproduce predictions before authorizing and loading truth exactly once;
+5. **Pending:** preserve the append-only result and run all local, security,
+   clean-checkout and remote release gates.
+
+R5.1 binds the v3 false negative and unmatched broad parent incident to a
+single hierarchy-starvation class: v3's method-keyed active state and cooldown
+discarded independently passing child observations. V4 may introduce
+canonical-cohort state and deterministic label-free overlap arbitration, but
+cannot relax the exact matcher or core statistical/business gates. It must
+also emit required nullable report fields and prove strict model reload plus
+canonical byte reproduction for an open incident before any nonce exists.
+
+The machine boundary is `evals/protocols/detector_v4.protocol.json`. No v4
+candidate, fresh nonce or blind run is part of R5.1. M4 remains blocked.
+
 ### M4 — Policy engine and deterministic recovery path
 
 **Estimate:** 8–10 hours  
