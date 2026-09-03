@@ -59,6 +59,7 @@ jobs:
           uv run retryrail-seed --check
           uv run retryrail-v2-data --check
           uv run retryrail-v3-protocol --check
+          uv run retryrail-v4-protocol --check
       - name: Verify frozen detector evaluation
         run: |
           uv run retryrail-eval --check
