@@ -131,7 +131,7 @@ reproduces the public-nonce inputs and validates the exact failure without
 altering the frozen runner or evidence. M4 therefore remains blocked behind a
 future separately versioned detector release.
 
-M3R.5 R5.1 precommitted that separate detector-v4 boundary, and R5.2 now
+M3R.5 R5.1 precommitted that separate detector-v4 boundary, and R5.2
 implements it. Method and method/issuer candidates use canonical-cohort state,
 so a parent's state or cooldown cannot starve a passing child. Confirmed
 same-method intervals form deterministic overlap components; confirmed breadth
@@ -140,5 +140,10 @@ a stable evidence-strength tie-break. Exactly one incident is emitted and every
 loser receives a typed audit disposition. The exact matcher and core evidence
 gates stay unchanged. The development writer emits required nullable fields,
 strictly reloads and canonicalizes the open-incident report to identical bytes.
-The candidate passes all three revealed development partitions but remains
-unfrozen, action-ineligible and unqualified. No v4 nonce exists yet.
+R5.3 binds 15 adversarial cases, all development artifacts and candidate source
+paths into a nonce-free candidate freeze. A separate runner freeze binds typed
+append-only evidence contracts, repository-confined create-only paths,
+prediction reproduction before truth authorization, redacted terminal failure
+receipts, strict report read-back before completion and receipt-bound
+clean-checkout reproduction after public nonce reveal. No v4 nonce or official
+run exists yet; the frozen candidate remains action-ineligible and unqualified.

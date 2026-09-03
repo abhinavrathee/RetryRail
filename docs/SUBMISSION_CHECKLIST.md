@@ -194,7 +194,7 @@ Recommended timing:
 
 | Claim | Evidence location |
 | --- | --- |
-| Detector precision/recall | V1 remains failed; v2 remains blocked on delay/leakage; v3 official synthetic evidence records 833,333 ppm precision and recall and is blocked plus procedurally invalid. V4 passes three revealed development partitions at 1,000,000 ppm precision/recall but is not frozen or blindly qualified. None may be presented as a qualified release |
+| Detector precision/recall | V1 remains failed; v2 remains blocked on delay/leakage; v3 official synthetic evidence records 833,333 ppm precision and recall and is blocked plus procedurally invalid. V4 is frozen after passing three revealed development partitions at 1,000,000 ppm precision/recall but has not run its blind qualification. None may be presented as a qualified release |
 | Root-cause accuracy | V1 held-out remains unscorable after the miss; v2/v3 official and v4 revealed development synthetic reports record 1,000,000 ppm top-1 attribution, but no overall detector release is qualified |
 | Agent grounding/safety | `evals/reports/agent-golden.json` |
 | No duplicate action | Integration test plus demo audit receipt |
@@ -209,5 +209,5 @@ but none of v1, v2, v3 or v4 has a qualifying release. If any strong component
 metric is used in the application, its synthetic limitation and full blocked
 release context must appear beside it. V3's report-contract defect must also be
 disclosed wherever its official metrics appear. V4 R5.2 results must be labelled
-revealed development evidence; they cannot be presented as blind performance or
-a completed detector release.
+revealed development evidence; the R5.3 freeze adds no performance evidence and
+cannot be presented as blind performance or a completed detector release.

@@ -69,12 +69,14 @@ official synthetic blind run recorded 5 true positives, 1 false positive and
 1 false negative, missing both precision and recall targets at 833,333 ppm.
 Its frozen writer also omitted one required nullable report field. The exact
 run is preserved as blocked and procedurally invalid. M3R.5 R5.1 precommitted
-a detector-v4 hierarchy-lifecycle and report-contract remediation. R5.2 now
+a detector-v4 hierarchy-lifecycle and report-contract remediation. R5.2
 implements that separately versioned candidate and passes all unchanged
 targets independently on all three revealed synthetic development partitions,
-including strict open-report byte reproduction. This is development evidence,
-not release qualification. See the [v4 protocol](docs/DETECTOR_V4_PROTOCOL.md)
-and [v4 candidate](docs/DETECTOR_V4_CANDIDATE.md).
+including strict open-report byte reproduction. R5.3 adds 15 passing
+adversarial cases and freezes the candidate plus the append-only blind runner.
+No v4 nonce or blind result exists yet, so this is not release qualification.
+See the [v4 protocol](docs/DETECTOR_V4_PROTOCOL.md) and
+[v4 candidate](docs/DETECTOR_V4_CANDIDATE.md).
 
 ## Run through Part 4 locally
 
@@ -120,6 +122,9 @@ make v2-blind-check # verify the frozen blind runner and append-only run state
 make v3-blind-check # verify the preserved blocked/invalid v3 run
 make v4-protocol-check # verify the pre-candidate v4 remediation boundary
 make v4-candidate-check # verify all three v4 development partitions
+make v4-adversarial-check # verify v4 hierarchy, overlap and contract edge cases
+make v4-freeze-check # verify the complete nonce-free v4 candidate freeze
+make v4-blind-check # reproduce revealed inputs, then verify append-only v4 evidence
 make check      # run every implemented release gate
 ```
 
@@ -153,12 +158,15 @@ result. M3R.5 R5.1 binds the exact hierarchy failure, three revealed
 development partitions, unchanged release targets, strict report round-trip
 requirements and a fresh-run procedure. R5.2 implements the canonical-cohort
 candidate, records every overlap decision, passes each development partition
-and fixes required-nullable canonical report output.
+and fixes required-nullable canonical report output. R5.3 records 15 passing
+adversarial cases, freezes all candidate identities and freezes an append-only,
+prediction-first runner with strict report read-back and receipt-bound
+clean-checkout reproduction after the public nonce is revealed.
 
-The v4 candidate is not frozen or release-qualified, no v4 nonce exists, every
-output is action-ineligible, and M4 remains blocked. R5.3 adversarial coverage
-and freeze is next. GitHub Actions includes PostgreSQL 16 integration and all
-implemented detector integrity gates. See
+The v4 candidate and runner are frozen but not release-qualified. No v4 nonce
+or official run exists, every output is action-ineligible, and M4 remains
+blocked. The one-time R5.4 blind run is next. GitHub Actions includes
+PostgreSQL 16 integration and all implemented detector integrity gates. See
 [v3 result](docs/DETECTOR_V3_PROTOCOL.md),
 [v4 protocol](docs/DETECTOR_V4_PROTOCOL.md),
 [v4 candidate](docs/DETECTOR_V4_CANDIDATE.md),

@@ -150,12 +150,21 @@ pre-nonce freeze rather than adding a general exception.
   approval remain false. The separate post-run audit verifies the one known
   omission and rejects any other schema or digest difference without changing
   official evidence.
-- Detector-v4 R5.1 precommits the boundary and R5.2 implements the candidate.
+- Detector-v4 R5.1 precommits the boundary, R5.2 implements the candidate and
+  R5.3 freezes the candidate plus blind runner.
   The three revealed partitions are explicitly development-only, prediction
   bytes are created before truth loading, and canonical-cohort arbitration uses
   no labels or model output. The open-incident report emits `resolved_at=null`,
   strictly reloads and reproduces identical bytes. The protocol binds consumed
   and test nonce digests for future reuse rejection, but publishes no fresh v4
-  nonce digest or run identity. Candidate, matcher, evaluator, contracts and
-  runner must still be frozen and pushed before nonce creation. No new
-  GitGuardian exclusion is authorized.
+  nonce digest or run identity. Fifteen adversarial cases cover temporal,
+  hierarchy, overlap, ordering, hard-negative, provenance and serialization
+  boundaries. The runner uses repository-confined create-only writes, exclusive
+  stage locks, redacted failure receipts and prediction reproduction before
+  truth authorization. Its truth-access marker uses a fixed, typed `receipt_id`
+  instead of a nonce-derived value under a credential-like key, preventing the
+  earlier false-positive pattern by design. A report must strictly reload and
+  reproduce exact bytes before completion. After a successful terminal run,
+  the public-nonce reproducer creates only missing derived inputs, rejects
+  symlinks and refuses to overwrite differing bytes. No new GitGuardian
+  exclusion is authorized.

@@ -1,6 +1,6 @@
 # ADR 0006: Remediate hierarchy starvation and report serialization in v4
 
-- Status: Accepted; R5.1 precommitted, R5.2 candidate implemented
+- Status: Accepted; R5.1–R5.3 complete, candidate and runner frozen
 - Date: 2026-09-03
 
 ## Context
@@ -56,5 +56,9 @@ M4 stays blocked until a valid v4 release decision passes every target.
 R5.2 demonstrates the decision on all three allowed revealed development
 partitions and passes each unchanged target independently. It also proves the
 null-preserving report reload and exact-byte round-trip with an actual open
-incident. These results do not remove the R5.3 adversarial/freeze gate or the
-need for one fresh R5.4 blind run.
+incident. R5.3 then records 15 passing adversarial cases and binds candidate,
+configuration, matcher, evaluator, contracts, development evidence and the
+append-only runner into two nonce-free freezes. The runner boundary includes a
+receipt-bound clean-checkout reproducer for git-ignored inputs after public
+nonce reveal. This does not qualify the detector; one fresh R5.4 blind run is
+still required.

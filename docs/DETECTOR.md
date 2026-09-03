@@ -211,8 +211,10 @@ revealed synthetic development partitions independently score 6 TP / 0 FP /
 0 FN, perfect top-1 attribution, compliant median delay, zero hard-negative
 incidents, zero leakage and zero reconciliation violations. The canonical
 writer emits an explicit `resolved_at=null` for the open-incident fixture,
-strictly reloads and reproduces exact bytes. The candidate is development-only,
-unfrozen and action-ineligible. See `docs/DETECTOR_V4_PROTOCOL.md` and
+strictly reloads and reproduces exact bytes. R5.3 adds 15 passing adversarial
+cases and freezes the candidate and append-only blind runner. No nonce or
+official result exists, so the candidate remains action-ineligible and
+unqualified. See `docs/DETECTOR_V4_PROTOCOL.md` and
 `docs/DETECTOR_V4_CANDIDATE.md`.
 
 Committed evidence:
@@ -228,7 +230,10 @@ Committed evidence:
 - `evals/blind/detector_v3/runs/detector_v3_official_blind_1a1852634945b54e300a/postrun.audit.v1.json`
 - `evals/protocols/detector_v4.protocol.json`
 - `evals/golden/detector_v4.candidate.json`
+- `evals/golden/detector_v4.freeze.json`
+- `evals/golden/detector_v4.blind_procedure.freeze.json`
 - `evals/reports/detector_v4.development.json`
+- `evals/reports/detector_v4.adversarial.json`
 
 ## Verification
 
@@ -237,6 +242,10 @@ uv run pytest services/api/tests/detection
 uv run pytest services/api/tests/integration/test_detection_service.py
 uv run retryrail-eval --check
 uv run retryrail-v4-candidate --check
+uv run retryrail-v4-adversarial --check
+uv run retryrail-v4-freeze --check
+uv run retryrail-v4-blind-reproduce
+uv run retryrail-v4-blind --check
 make eval
 ```
 

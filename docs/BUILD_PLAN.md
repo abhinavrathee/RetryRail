@@ -498,9 +498,9 @@ now; it cannot qualify a change designed after its result was known:
    change envelope, strict report round-trip requirements and fresh-run rules;
 2. **Complete:** implement and tune one separately versioned candidate on all
    three approved partitions, requiring every partition to pass independently;
-3. **Pending:** cover hierarchy, overlap, serialization and temporal edge cases,
-   then freeze candidate, configuration, matcher, evaluator, contracts and
-   append-only runner before nonce creation;
+3. **Complete:** hierarchy, overlap, serialization and temporal edge cases are
+   covered; candidate, configuration, matcher, evaluator, contracts and the
+   append-only runner are frozen before nonce creation;
 4. **Pending:** create one fresh public, non-sensitive nonce, persist and
    reproduce predictions before authorizing and loading truth exactly once;
 5. **Pending:** preserve the append-only result and run all local, security,
@@ -520,9 +520,14 @@ candidate, fresh nonce or blind run is part of R5.1. R5.2 now adds
 6 TP / 0 FP / 0 FN independently, with 1,000,000 ppm top-1 attribution,
 median delays of 600, 600 and 450 seconds, and zero leakage or reconciliation
 violations. Its canonical reports also pass strict reload and exact-byte
-round-trip with an explicit open-incident `resolved_at=null`. This is not blind
-evidence or release qualification. R5.3 adversarial/freeze work is next; no
-fresh nonce or blind run exists and M4 remains blocked.
+round-trip with an explicit open-incident `resolved_at=null`. R5.3 records 15
+passing adversarial cases and freezes the candidate evidence plus a
+prediction-first, append-only runner. The runner verifies persisted prediction
+reproduction before truth authorization and requires strict report reload and
+canonical byte equality before completion. Its frozen reproducer restores only
+receipt-bound git-ignored inputs after public nonce reveal and refuses
+mismatched existing bytes. This is not blind evidence or release qualification.
+No fresh nonce or blind run exists; R5.4 is next and M4 remains blocked.
 
 ### M4 — Policy engine and deterministic recovery path
 

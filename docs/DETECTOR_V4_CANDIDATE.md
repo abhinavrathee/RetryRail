@@ -2,14 +2,15 @@
 
 ## Status and boundary
 
-M3R.5 R5.2 is complete. Detector `detector_v4_0_0` is implemented and passes
+M3R.5 R5.2 and R5.3 are complete. Detector `detector_v4_0_0` is implemented and passes
 all unchanged release targets on each of the three development partitions
 allowed by the precommitted v4 protocol. These are revealed synthetic
 development results, not blind evidence and not a release qualification.
 
-The candidate is ready for the R5.3 adversarial and freeze gate. It is not
-frozen, has no official run identity or fresh nonce, remains globally
-action-ineligible, and does not authorize M4 recovery work.
+The candidate, exact matcher/evaluator/contracts and append-only blind runner
+are now frozen. Fifteen deterministic adversarial cases pass. There is no
+official run identity or fresh nonce, the candidate remains globally
+action-ineligible, and it does not authorize M4 recovery work.
 
 ## Lifecycle correction
 
@@ -80,7 +81,10 @@ Historical v3 bytes remain unchanged.
 ## Committed evidence
 
 - `evals/golden/detector_v4.candidate.json`
+- `evals/golden/detector_v4.freeze.json`
+- `evals/golden/detector_v4.blind_procedure.freeze.json`
 - `evals/reports/detector_v4.development.json`
+- `evals/reports/detector_v4.adversarial.json`
 - `evals/reports/detector_v4.prior_development.predictions.json`
 - `evals/reports/detector_v4.prior_development.report.json`
 - `evals/reports/detector_v4.revealed_v2_predecessor.predictions.json`
@@ -89,21 +93,51 @@ Historical v3 bytes remain unchanged.
 - `evals/reports/detector_v4.revealed_v3_predecessor.report.json`
 
 Prediction artifacts are label-free. Reports load truth only after all three
-prediction byte sequences exist. Each artifact is canonical and digest-bound;
-the suite keeps `candidate_frozen=false`, both official nonce/run fields null,
-and all runtime/release flags false.
+prediction byte sequences exist. Each artifact is canonical and digest-bound.
+The historical R5.2 suite correctly retains `candidate_frozen=false` because
+it predates the freeze; the R5.3 freeze is the authoritative frozen identity.
+Both official nonce/run fields remain null and all runtime/release flags remain
+false.
+
+## R5.3 adversarial and runner freeze
+
+The committed adversarial report passes 15 cases spanning guarded/frozen time
+windows, invalid timestamps and gate changes, event ordering, the reproduced
+v3 hierarchy starvation, both breadth arbitration branches, overlap and audit
+reconciliation, hard negatives, label isolation, required-nullable report
+serialization and the pre-nonce action boundary.
+
+`detector_v4.freeze.json` binds the protocol, generator, candidate config,
+candidate source bundle, exact matcher, all seven development artifacts and
+the adversarial report. `detector_v4.blind_procedure.freeze.json` separately
+binds the candidate freeze to the runner, evidence-contract and clean-checkout
+reproducer sources. The runner accepts no nonce argument, writes a digest
+commitment before generation, uses
+repository-confined create-only paths and exclusive stage locks, reproduces
+persisted predictions before authorizing truth, and writes only redacted
+terminal failures. It must strictly reload and byte-reproduce its report before
+writing a completion receipt. Its separately frozen reproduction entry point
+can recreate only the two git-ignored inputs for a completed run, verifies them
+against the append-only receipt chain and refuses to overwrite mismatched bytes.
 
 ## Verification
 
 ```bash
 uv run retryrail-v4-protocol --check
 uv run retryrail-v4-candidate --check
+uv run retryrail-v4-adversarial --check
+uv run retryrail-v4-freeze --check
+uv run retryrail-v4-blind-reproduce
+uv run retryrail-v4-blind --check
 uv run pytest services/api/tests/detection/test_v4_candidate.py
+uv run pytest services/api/tests/detection/test_v4_freeze.py
+uv run pytest services/api/tests/detection/test_v4_blind.py
 make v4-candidate-check
+make v4-adversarial-check
+make v4-freeze-check
+make v4-blind-check
 ```
 
-R5.3 must add independent hierarchy, overlap, ordering, sparse-data,
-serialization and path-safety adversarial cases, then freeze the candidate,
-configuration, matcher, evaluator, contracts and append-only runner. It still
-must not create a nonce. A fresh public, non-sensitive nonce is reserved for
-R5.4 after the complete freeze is committed and pushed.
+R5.4 may create one fresh public, non-sensitive nonce only after this complete
+freeze is committed, pushed and remotely verified. That single run is
+append-only; any prediction, scoring or serialization failure consumes it.

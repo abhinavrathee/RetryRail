@@ -2,12 +2,13 @@
 
 ## Current status
 
-M3R.5 phases R5.1 and R5.2 are complete. The failure analysis, development
+M3R.5 phases R5.1 through R5.3 are complete. The failure analysis, development
 evidence boundary, allowed change class, unchanged targets, report contract and
 fresh-run procedure were precommitted before the separately versioned v4
 candidate was implemented. That candidate now passes every unchanged target
 on all three allowed development partitions and passes the strict open-report
-round-trip preflight. It is not frozen or release-qualified, and no fresh
+round-trip preflight. Fifteen adversarial cases pass, and the candidate plus
+append-only runner are frozen. It is not release-qualified, and no fresh
 official nonce or blind run exists. Detector v2 and v3 remain immutable failed
 predecessors, M4 remains blocked, and every output remains action-ineligible.
 
@@ -128,13 +129,13 @@ a blocked decision, even if its in-memory metrics would otherwise pass.
 | --- | --- | --- |
 | R5.1 | Bind failure analysis, evidence, change envelope, report contract and release rules | Complete |
 | R5.2 | Implement and tune one separately versioned candidate on all three partitions | Complete |
-| R5.3 | Add adversarial cases and freeze candidate, matcher, evaluator, contracts and runner | Pending |
+| R5.3 | Add adversarial cases and freeze candidate, matcher, evaluator, contracts and runner | Complete |
 | R5.4 | Create one fresh public nonce; persist/replay predictions; authorize truth once | Pending |
 | R5.5 | Preserve the result and run all repository, security and remote release gates | Pending |
 
-Development success in R5.2 is not a release claim. R5.3 cannot create a
+Development and adversarial success are not release claims. R5.3 creates no
 nonce. R5.4 gets one append-only official slot only after the complete freeze
-is committed and pushed.
+is committed, pushed and remotely verified.
 
 ## R5.2 development result
 
@@ -152,6 +153,28 @@ canonicalizes to its exact bytes. These are revealed synthetic development
 results only. The candidate remains unfrozen and action-ineligible. See
 `DETECTOR_V4_CANDIDATE.md` and `evals/reports/detector_v4.development.json`.
 
+## R5.3 adversarial and freeze result
+
+`evals/reports/detector_v4.adversarial.json` contains 15 deterministic passing
+cases. They cover the guarded/frozen baseline, invalid time and configuration
+inputs, out-of-order events, canonical child lifecycle isolation, both scope
+arbitration branches, overlap uniqueness, arbitration reconciliation, hard
+negatives, evidence reconciliation, label isolation, strict nullable report
+serialization and the pre-nonce action boundary.
+
+`evals/golden/detector_v4.freeze.json` binds the exact protocol, generator,
+configuration, candidate/matcher/evaluator/contract sources, all seven
+development artifacts and the adversarial report. The separate
+`evals/golden/detector_v4.blind_procedure.freeze.json` binds that candidate
+freeze to the append-only runner and its strict evidence contracts. Runner
+tests cover create-only paths, exclusive stages, replay refusal, known-nonce
+rejection, byte tampering, prediction/truth isolation, redacted terminal
+failure and report-contract failure after truth authorization. A completion
+receipt is impossible unless persisted report bytes strictly reload and
+canonicalize identically. Once a completed run publishes its nonce, the frozen
+reproducer can restore only the two git-ignored deterministic input artifacts,
+verify their receipt-bound bytes and refuse any mismatched existing file.
+
 ## Fresh-run rules
 
 The future v4 blind procedure must:
@@ -167,8 +190,8 @@ The future v4 blind procedure must:
 9. use create-only, repository-confined, append-only evidence paths;
 10. keep every failed or invalid result permanently action-ineligible.
 
-The R5.1 protocol explicitly records that no fresh v4 nonce digest or run
-identity exists. R5.2 must not create either.
+The R5.1 protocol and R5.3 freeze explicitly record that no fresh v4 nonce
+digest or run identity exists. R5.2 and R5.3 create neither.
 
 ## Unchanged release targets
 
@@ -184,15 +207,24 @@ These are synthetic benchmark targets, not production-performance claims. A
 qualified v4 result would still require M4 deterministic policy and external
 merchant approval before any recovery action.
 
-## R5.1 and R5.2 verification
+## R5.1 through R5.3 verification
 
 ```bash
 uv run retryrail-v4-protocol --check
 uv run retryrail-v4-candidate --check
+uv run retryrail-v4-adversarial --check
+uv run retryrail-v4-freeze --check
+uv run retryrail-v4-blind-reproduce
+uv run retryrail-v4-blind --check
 uv run pytest services/api/tests/detection/test_v4_protocol.py
 uv run pytest services/api/tests/detection/test_v4_candidate.py
+uv run pytest services/api/tests/detection/test_v4_freeze.py
+uv run pytest services/api/tests/detection/test_v4_blind.py
 make v4-protocol-check
 make v4-candidate-check
+make v4-adversarial-check
+make v4-freeze-check
+make v4-blind-check
 ```
 
 The protocol tests cover artifact drift, exact v3 metrics and case identities,
@@ -201,4 +233,7 @@ matcher and gate constraints, consumed/test nonce denylisting and absence of
 fresh v4 nonce state. Candidate tests cover independent cohort lifecycle,
 overlap dispositions, all three partition scores, label-free prediction,
 required-nullable output, strict reload, canonical byte reproduction, artifact
-drift and fail-closed writes.
+drift and fail-closed writes. R5.3 tests add hierarchy/overlap evidence,
+candidate and runner source freezes, nonce absence, path confinement,
+prediction-first ordering, tamper and concurrency handling, append-only
+terminal states and report-contract failure behavior.
