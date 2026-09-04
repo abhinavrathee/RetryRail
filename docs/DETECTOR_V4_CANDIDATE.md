@@ -13,9 +13,9 @@ The candidate, exact matcher/evaluator/contracts and append-only blind runner
 were frozen before the official nonce existed. Fifteen deterministic
 adversarial cases pass. Run
 `detector_v4_official_blind_5497598109b06d21c625` is terminally complete and
-append-only. The qualified decision does not authorize runtime recovery:
-R5.5 remains pending and every output stays action-ineligible until M4's
-deterministic policy and external approval boundaries exist.
+append-only. R5.5 release verification is complete, but the qualified decision
+does not authorize runtime recovery: every output stays action-ineligible until
+M4's deterministic policy and external approval boundaries exist.
 
 ## Lifecycle correction
 
@@ -170,4 +170,5 @@ make v4-blind-check
 
 R5.4 created its one fresh public, non-sensitive nonce only after the complete
 freeze was committed, pushed and remotely verified. That run is now consumed
-and append-only. R5.5 preservation and release verification remain next.
+and append-only. R5.5 preservation and release verification subsequently
+passed; M4 implementation is next.

@@ -181,5 +181,6 @@ pre-nonce freeze rather than adding a general exception.
   exclusion is authorized. R5.4 run
   `detector_v4_official_blind_5497598109b06d21c625` passes every unchanged
   target and its strict report contract. The public reveal was scanned as
-  non-secret, the typed release is qualified for integration review, and all
-  runtime action flags remain false pending R5.5 and M4.
+  non-secret, the typed release is qualified for integration review, and R5.5
+  release verification passed. All runtime action flags remain false pending
+  M4's deterministic policy and external approval implementation.

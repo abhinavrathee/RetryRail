@@ -11,8 +11,9 @@ round-trip preflight. Fifteen adversarial cases pass, and the candidate plus
 append-only runner were frozen before the fresh nonce existed. The one official
 synthetic blind run is now complete and passes every unchanged release target.
 Detector v2 and v3 remain immutable failed predecessors. R5.5 release
-verification remains pending, M4 implementation remains blocked behind it, and
-every output remains runtime action-ineligible.
+verification is complete, so M4 implementation may begin. Every detector
+output remains runtime action-ineligible until M4's deterministic policy and
+external approval boundaries independently authorize an action.
 
 The machine-readable boundary is
 `evals/protocols/detector_v4.protocol.json`. The
@@ -133,7 +134,7 @@ a blocked decision, even if its in-memory metrics would otherwise pass.
 | R5.2 | Implement and tune one separately versioned candidate on all three partitions | Complete |
 | R5.3 | Add adversarial cases and freeze candidate, matcher, evaluator, contracts and runner | Complete |
 | R5.4 | Create one fresh public nonce; persist/replay predictions; authorize truth once | Complete — qualified |
-| R5.5 | Preserve the result and run all repository, security and remote release gates | Pending |
+| R5.5 | Preserve the result and run all repository, security and remote release gates | Complete |
 
 Development and adversarial success are not release claims. R5.3 created no
 nonce. R5.4 received its one append-only official slot only after the complete
@@ -207,8 +208,8 @@ canonical byte reproduction both passed. The typed release decision is
 `qualified` and permits M4 integration review, but it does not activate a
 recovery path: report, decision, receipt and every incident retain
 `runtime_action_eligible=false`. These are synthetic benchmark results, not a
-production-performance claim. R5.5 must still complete the clean-checkout,
-repository, security and remote release gates.
+production-performance claim. R5.5 subsequently completed the clean-checkout,
+repository, security, container and remote release gates described below.
 
 ## Fresh-run rules and execution
 
@@ -244,7 +245,7 @@ These are synthetic benchmark targets, not production-performance claims. The
 qualified v4 result still requires M4 deterministic policy and external
 merchant approval before any recovery action.
 
-## R5.1 through R5.4 verification
+## R5.1 through R5.5 verification
 
 ```bash
 uv run retryrail-v4-protocol --check
@@ -262,6 +263,7 @@ make v4-candidate-check
 make v4-adversarial-check
 make v4-freeze-check
 make v4-blind-check
+make check
 ```
 
 The protocol tests cover artifact drift, exact v3 metrics and case identities,
@@ -278,3 +280,41 @@ also validates the completed digest chain, public reveal, exact prediction
 reproduction, strict report bytes, qualified decision and disabled runtime
 action boundary. The reproducer verifies both deterministic git-ignored inputs
 against that chain.
+
+## R5.5 preservation and release verification
+
+R5.5 found and closed one real release issue instead of waiving it. A local
+resolution of the mutable `python:3.12-slim` container tag produced a damaged
+layer with zero-byte Python executables. Commit `2dd6cc0` pins explicit Python,
+Node and PostgreSQL versions to immutable multi-architecture manifest digests.
+The repository scanner now rejects any unpinned external image in Dockerfiles,
+Compose files or GitHub workflows; tests cover mutable images, digest pins,
+`scratch` and named multi-stage references.
+
+The hardened working tree passed `make check` with 327 Python tests and 85.66%
+branch-aware coverage, three web unit tests, 31 focused contract tests, the
+production bundle budget, Chromium smoke coverage, every v1-v4 evaluation and
+reproduction command, Bandit, repository scanning, and Python and JavaScript
+dependency audits. A no-cache build then produced the API, worker and web
+images from the pinned bases. An isolated Compose project applied migration
+`0002_m3_detection_incidents`; API live/readiness, web HTTP, and worker metrics
+checks passed, and all application containers ran as UID 10001.
+
+A new clone fetched exact remote commit
+`2dd6cc0bb5f58bedd1fa48eee7bef163d81ea5a3` with no ignored files. From that
+state, `make bootstrap` and `make check` passed. The clean suite recorded 327
+Python tests and 85.63% coverage. The v2 and v4 reproducers each created their
+two missing receipt-bound inputs (`created=2`, `existing=0`); the v3 post-run
+audit derived its two missing inputs in memory (`derived=2`, `existing=0`) and
+retained `preserved_blocked_invalid`.
+
+GitGuardian 1.54.0 reported a healthy authenticated workspace and no detected
+repository secret. The two already-reviewed historical synthetic receipt
+values remain narrowly ignored by exact controls; no new exclusion was added.
+[GitHub Actions run 30](https://github.com/abhinavrathee/RetryRail/actions/runs/33869599558)
+passed all five jobs on `2dd6cc0`: Python quality/contracts, web quality/build,
+Chromium smoke, static/dependency security, and container build.
+
+M3R.5 is therefore complete. This qualifies detector v4 only for M4 integration
+work. It does not make a production-performance claim, enable a Razorpay call,
+or change any `runtime_action_eligible=false` value.

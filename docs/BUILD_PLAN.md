@@ -505,7 +505,7 @@ now; it cannot qualify a change designed after its result was known:
    `detector_v4_official_blind_5497598109b06d21c625`; prediction evidence was
    committed before truth access, its bytes reproduced exactly, and truth was
    then authorized and loaded once. All unchanged release targets passed;
-5. **Pending:** preserve the append-only result and run all local, security,
+5. **Complete:** preserve the append-only result and run all local, security,
    clean-checkout and remote release gates.
 
 R5.1 binds the v3 false negative and unmatched broad parent incident to a
@@ -534,8 +534,10 @@ Run `detector_v4_official_blind_5497598109b06d21c625` records 6 TP / 0 FP /
 median simulated detection delay, and zero hard-negative, baseline-leakage or
 evidence-reconciliation violations. Strict report reload and canonical byte
 reproduction passed. Its release decision is qualified for M4 integration
-review, while every runtime action remains disabled. R5.5 release verification
-is next, so M4 implementation remains blocked until that gate closes.
+review, while every runtime action remains disabled. R5.5 then passed the full
+working-tree and remote-clone release suites, security scans, container build
+and runtime smoke checks, and all five remote CI jobs. M3R.5 is complete and M4
+implementation may begin; no recovery action is enabled by this transition.
 
 ### M4 — Policy engine and deterministic recovery path
 
@@ -553,6 +555,26 @@ Tasks:
 - Implement action state machine and append-only audit transitions.
 - Implement the rules-based incident brief and plan fallback.
 - Add fake Razorpay adapter for deterministic integration tests.
+
+Sequential review gates:
+
+1. **M4.1 — contracts and threat boundary:** freeze typed recovery-template,
+   plan, policy-result, approval and action contracts, their side effects and
+   the allowed state transitions. No mutating endpoint is introduced.
+2. **M4.2 — deterministic policy:** implement `ANALYZE_ONLY` and
+   `REVIEW_FIRST` plus amount, currency, consent, opt-out, attempt, cooldown,
+   expiry and kill-switch rules with allow and deny tests.
+3. **M4.3 — preview and approval:** implement plan preview and hashed,
+   short-lived, single-use approval tokens. Approval remains outside the model.
+4. **M4.4 — execution state machine:** implement append-only audit transitions,
+   idempotent receipts and the fake Razorpay adapter, including ambiguous,
+   duplicate, expired and concurrent request paths.
+5. **M4.5 — fallback and release gate:** add the rules-based incident brief and
+   plan fallback, then run the complete model-unavailable integration, misuse
+   and audit matrix plus all repository release gates.
+
+Each gate must pass before the next begins. M4.4 uses only the deterministic
+fake adapter; a real Razorpay Test Mode call remains M5 work.
 
 Exit gate:
 

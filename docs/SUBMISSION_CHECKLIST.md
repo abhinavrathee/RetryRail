@@ -204,11 +204,12 @@ Recommended timing:
 | Complete audit | Automated audit-completeness test and UI timeline |
 | Clean release | Public CI run for tagged commit |
 
-Later-milestone paths remain required targets. V4 now has a qualifying
-synthetic detector decision, but R5.5 verification, M4 deterministic policy,
-external merchant approval and the recovery/experiment milestones remain
-incomplete. If any strong component metric is used in the application, its
-synthetic limitation and relevant blocked predecessor context must appear
-beside it. V3's report-contract defect must still be disclosed wherever its
-official metrics appear. V4 R5.2 results remain revealed development evidence;
+Later-milestone paths remain required targets. V4's qualifying synthetic
+detector decision and R5.5 verification are complete, but M4
+deterministic policy, external merchant approval and the recovery/experiment
+milestones remain incomplete. If any strong component metric is used in the
+application, its synthetic limitation and relevant blocked predecessor context
+must appear beside it. V3's report-contract defect must still be disclosed
+wherever its official metrics appear. V4 R5.2 results remain revealed
+development evidence;
 only the append-only R5.4 run may be described as v4 blind qualification.

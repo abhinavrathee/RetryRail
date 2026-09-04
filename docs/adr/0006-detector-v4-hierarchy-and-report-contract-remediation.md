@@ -66,5 +66,5 @@ terminal commits preserve prediction-first ordering. The run records 6 TP /
 0 FP / 0 FN, passes every unchanged metric and safety target, strictly reloads
 its report and reproduces identical canonical bytes. The qualified decision
 permits M4 integration review but leaves all runtime actions disabled. R5.5
-repository, security, clean-checkout and remote release verification remains
-required before M4 implementation starts.
+repository, security, clean-checkout, container and remote release verification
+subsequently passed, so M4 implementation may start without enabling an action.

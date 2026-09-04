@@ -149,6 +149,7 @@ clean-checkout reproduction after public nonce reveal. No v4 nonce or official
 run existed in that freeze. R5.4 later consumed one public-nonce synthetic blind
 slot. Its prediction-only commit precedes truth authorization, exact prediction
 reproduction and the terminal report in history. The run passes every unchanged
-detector target and strict serialization check. Its release decision permits M4
-integration review, but all runtime actions remain disabled and M4 stays behind
-the pending R5.5 release-verification gate.
+detector target and strict serialization check. R5.5 then passed working-tree,
+clean-checkout, security, container-runtime and remote CI gates. Its release
+decision permits M4 integration work, but all runtime actions remain disabled
+until deterministic policy and external approval are implemented.

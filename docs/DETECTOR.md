@@ -218,9 +218,10 @@ verification. Its 5,760-attempt synthetic blind report records 6 TP / 0 FP /
 0 FN, perfect precision, recall and top-1 attribution, a compliant 600-second
 median delay, and zero hard-negative, leakage or reconciliation violations.
 Strict report reload and canonical byte reproduction pass, so the decision is
-qualified for M4 integration review. Runtime actions remain disabled and R5.5
-release verification is still pending. See `docs/DETECTOR_V4_PROTOCOL.md` and
-`docs/DETECTOR_V4_CANDIDATE.md`.
+qualified for M4 integration review. R5.5 release verification subsequently
+passed. Runtime actions remain disabled until M4 independently implements and
+tests deterministic policy and external approval. See
+`docs/DETECTOR_V4_PROTOCOL.md` and `docs/DETECTOR_V4_CANDIDATE.md`.
 
 Committed evidence:
 

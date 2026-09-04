@@ -61,7 +61,7 @@ all six incidents with zero false positives or false negatives and perfect
 top-1 attribution, but the generated release decision is still blocked: its
 900-second median first-signal delay missed the 600-second target, and two
 incident baselines crossed their scenario start when the target was zero.
-Detector v2 therefore has no runtime authority and M4 remains blocked; see the
+Detector v2 therefore has no runtime authority and did not unblock M4; see the
 [protocol and complete result](docs/DETECTOR_V2_PROTOCOL.md).
 
 Detector v3 later passed both approved development partitions but its only
@@ -78,8 +78,9 @@ R5.4 then consumes one fresh public-nonce official synthetic blind run after
 the freeze passed all five remote jobs. The report records 6 TP / 0 FP / 0 FN,
 perfect precision, recall and top-1 attribution, a 600-second median simulated
 delay, and zero safety or reconciliation violations. Its detector decision is
-qualified for M4 integration review, while runtime actions remain disabled and
-R5.5 release verification remains pending.
+qualified for M4 integration review. R5.5 subsequently passed working-tree,
+clean-checkout, security, container and all five remote CI gates. M3R.5 is now
+complete and M4 is next, while runtime actions remain disabled.
 See the [v4 protocol](docs/DETECTOR_V4_PROTOCOL.md) and
 [v4 candidate](docs/DETECTOR_V4_CANDIDATE.md).
 
@@ -172,10 +173,12 @@ the one official synthetic blind slot only after that freeze was remotely
 verified. The committed prediction bytes precede truth access, reproduce
 exactly and lead to a qualified decision that passes every unchanged target.
 
-The v4 detector is qualified for M4 integration review, but every output remains
-action-ineligible and M4 stays blocked until R5.5 closes the repository,
-security, clean-checkout and remote release gates. GitHub Actions includes
-PostgreSQL 16 integration and all implemented detector integrity gates. See
+The v4 detector is qualified for M4 integration review and R5.5 has closed the
+repository, security, clean-checkout, container and remote release gates. Every
+output remains action-ineligible; M4 policy work is next and no recovery path
+exists yet. GitHub Actions includes PostgreSQL 16 integration and all
+implemented detector integrity gates. See the current
+[project status and next-chat handoff](docs/PROJECT_STATUS.md),
 [v3 result](docs/DETECTOR_V3_PROTOCOL.md),
 [v4 protocol](docs/DETECTOR_V4_PROTOCOL.md),
 [v4 candidate](docs/DETECTOR_V4_CANDIDATE.md),
