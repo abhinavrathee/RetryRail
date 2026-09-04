@@ -104,3 +104,46 @@ def test_scanner_rejects_malformed_json_fixtures(tmp_path: Path) -> None:
     findings = scan_repository(tmp_path)
 
     assert [finding.code for finding in findings] == ["FIXTURE_NOT_VALID_JSON"]
+
+
+def test_scanner_reports_mutable_container_images(tmp_path: Path) -> None:
+    dockerfile = tmp_path / "Dockerfile"
+    dockerfile.write_text("FROM python:3.12-slim AS runtime\n", encoding="utf-8")
+    workflow = tmp_path / ".github" / "workflows" / "ci.yml"
+    workflow.parent.mkdir(parents=True)
+    workflow.write_text(
+        "services:\n  postgres:\n    image: postgres:16-alpine\n",
+        encoding="utf-8",
+    )
+
+    findings = scan_repository(tmp_path)
+
+    assert [(finding.code, finding.line) for finding in findings] == [
+        ("UNPINNED_CONTAINER_IMAGE", 3),
+        ("UNPINNED_CONTAINER_IMAGE", 1),
+    ]
+
+
+def test_scanner_accepts_digest_pins_scratch_and_internal_stages(
+    tmp_path: Path,
+) -> None:
+    digest = "a" * 64
+    dockerfile = tmp_path / "Dockerfile"
+    dockerfile.write_text(
+        "\n".join(
+            (
+                f"FROM python:3.12.11-slim@sha256:{digest} AS build",
+                "FROM build AS runtime",
+                "FROM scratch AS export",
+            )
+        )
+        + "\n",
+        encoding="utf-8",
+    )
+    compose = tmp_path / "docker-compose.yml"
+    compose.write_text(
+        f"services:\n  database:\n    image: postgres:16@sha256:{digest}\n",
+        encoding="utf-8",
+    )
+
+    assert scan_repository(tmp_path) == []

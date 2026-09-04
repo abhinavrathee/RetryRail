@@ -38,6 +38,7 @@ a payment or customer-facing mutation.
 | Vulnerable dependency | Locked dependency audits and high-severity CI gate | `pip-audit`, `retryrail-pnpm-audit` |
 | Supply-chain script execution | pnpm runs scripts only for reviewed `esbuild` and `styled-components` packages | `pnpm-workspace.yaml` allowlist |
 | CI action substitution | Third-party actions pinned to full commit SHAs | `.github/workflows/ci.yml` review |
+| Mutable container image substitution | Python, Node and PostgreSQL images use explicit versions plus immutable multi-architecture SHA-256 manifest pins | `retryrail-security-scan`, pin-policy regression tests and the CI container build |
 
 ## Secret handling
 
@@ -75,9 +76,12 @@ results at most three times. A high or critical vulnerability report fails
 immediately; abnormal exits, repeated timeouts and registry errors fail closed.
 
 The repository scan is intentionally first-party: it prunes `.git`, virtual
-environments, dependency stores and build output, then scans source/config text
-and parses JSON/JSONL fixtures structurally. CI dependency audits cover the
-pruned third-party trees.
+environments, dependency stores and build output, then scans source/config text,
+parses JSON/JSONL fixtures structurally, and rejects mutable container images in
+Dockerfiles, Compose files and GitHub workflows. Multi-stage Dockerfiles may
+refer to an earlier named stage or `scratch`; every external image must carry an
+immutable SHA-256 digest. CI dependency audits cover the pruned third-party
+trees.
 
 ## Protected pushes
 

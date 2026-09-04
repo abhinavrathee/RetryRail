@@ -69,6 +69,21 @@ _SENSITIVE_ASSIGNMENT_PATTERN = re.compile(
     """,
     re.IGNORECASE | re.VERBOSE,
 )
+_DOCKERFILE_FROM_PATTERN = re.compile(
+    r"^\s*FROM(?:\s+--platform=\S+)?\s+(?P<image>\S+)"
+    r"(?:\s+AS\s+(?P<alias>[A-Za-z0-9_.-]+))?\s*(?:#.*)?$",
+    re.IGNORECASE,
+)
+_YAML_IMAGE_PATTERN = re.compile(
+    r"^\s*image:\s*(?P<image>[^\s#]+)\s*(?:#.*)?$",
+    re.IGNORECASE,
+)
+_DIGEST_PINNED_IMAGE_PATTERN = re.compile(
+    r"^[^\s@]+@sha256:[0-9a-f]{64}$",
+)
+_COMPOSE_FILE_NAMES = frozenset(
+    {"compose.yaml", "compose.yml", "docker-compose.yaml", "docker-compose.yml"}
+)
 _MINIMUM_GENERIC_ENTROPY_BITS = 3.5
 _KNOWN_NON_SECRET_ASSIGNMENT_DIGESTS = {
     (
@@ -227,6 +242,52 @@ def _scan_fixture(path: Path) -> list[Finding]:
     ]
 
 
+def _scan_dockerfile_image_pins(path: Path) -> list[Finding]:
+    aliases: set[str] = set()
+    findings: list[Finding] = []
+    for line_number, line in enumerate(path.read_text(encoding="utf-8").splitlines(), 1):
+        match = _DOCKERFILE_FROM_PATTERN.fullmatch(line)
+        if match is None:
+            continue
+        image = match.group("image")
+        if (
+            image.lower() != "scratch"
+            and image.lower() not in aliases
+            and _DIGEST_PINNED_IMAGE_PATTERN.fullmatch(image) is None
+        ):
+            findings.append(
+                Finding(path=path, code="UNPINNED_CONTAINER_IMAGE", line=line_number)
+            )
+        alias = match.group("alias")
+        if alias is not None:
+            aliases.add(alias.lower())
+    return findings
+
+
+def _scan_yaml_image_pins(path: Path, root: Path) -> list[Finding]:
+    relative_path = path.relative_to(root).as_posix()
+    if path.name not in _COMPOSE_FILE_NAMES and not relative_path.startswith(
+        ".github/workflows/"
+    ):
+        return []
+    findings: list[Finding] = []
+    for line_number, line in enumerate(path.read_text(encoding="utf-8").splitlines(), 1):
+        match = _YAML_IMAGE_PATTERN.fullmatch(line)
+        if match is not None and _DIGEST_PINNED_IMAGE_PATTERN.fullmatch(
+            match.group("image")
+        ) is None:
+            findings.append(
+                Finding(path=path, code="UNPINNED_CONTAINER_IMAGE", line=line_number)
+            )
+    return findings
+
+
+def _scan_container_image_pins(path: Path, root: Path) -> list[Finding]:
+    if path.name == "Dockerfile":
+        return _scan_dockerfile_image_pins(path)
+    return _scan_yaml_image_pins(path, root)
+
+
 def scan_repository(root: Path) -> list[Finding]:
     """Scan first-party text and fixture structure without printing secret values."""
 
@@ -235,6 +296,7 @@ def scan_repository(root: Path) -> list[Finding]:
     for path in _iter_text_files(resolved_root):
         findings.extend(_scan_text(path, resolved_root))
         findings.extend(_scan_fixture(path))
+        findings.extend(_scan_container_image_pins(path, resolved_root))
     return findings
 
 

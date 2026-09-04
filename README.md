@@ -85,7 +85,8 @@ See the [v4 protocol](docs/DETECTOR_V4_PROTOCOL.md) and
 
 ## Run through Part 4 locally
 
-Required tools are Python 3.12 or 3.13, `uv`, Node.js 22, pnpm 11 and Docker.
+Required tools are Python 3.12 or 3.13, `uv`, Node.js 22, pnpm 11, GNU Make
+and Docker with Compose.
 No cloud account or Razorpay credential is needed for M0–M3.
 
 ```bash
