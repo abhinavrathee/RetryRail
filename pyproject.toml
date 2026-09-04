@@ -13,6 +13,7 @@ authors = [{ name = "RetryRail contributors" }]
 dependencies = [
   "alembic>=1.16,<2",
   "fastapi>=0.116,<1",
+  "httpx>=0.28,<1",
   "prometheus-client>=0.22,<1",
   "psycopg[binary]>=3.2,<4",
   "pydantic-settings>=2.10,<3",
@@ -27,6 +28,7 @@ retryrail-contracts = "retryrail.contracts.export:main"
 retryrail-db = "retryrail.db.migrate:main"
 retryrail-detect = "retryrail.detect:main"
 retryrail-eval = "retryrail.detection.evaluation:main"
+retryrail-experiment = "retryrail.experiments.evaluation:main"
 retryrail-replay = "retryrail.replay:main"
 retryrail-pre-push = "retryrail.security.pre_push:main"
 retryrail-pnpm-audit = "retryrail.security.dependency_audit:main"

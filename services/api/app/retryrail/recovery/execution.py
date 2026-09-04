@@ -1,6 +1,7 @@
-"""M4.4 execute-once recovery state machine and append-only receipt ledger."""
+"""Crash-safe execute-once recovery state machine and append-only receipt ledger."""
 
 import asyncio
+import hashlib
 import hmac
 from collections.abc import Callable
 from dataclasses import dataclass
@@ -42,6 +43,8 @@ from retryrail.db.tables import (
     RecoveryActionRecord,
     RecoveryActionTransitionRecord,
     RecoveryPlanRecord,
+    RecoveryProviderDispatchRecord,
+    RecoveryProviderReceiptRecord,
     RecoveryReconciliationRecord,
 )
 from retryrail.detection.runtime_activation import load_detector_v4_activation
@@ -58,9 +61,11 @@ from retryrail.recovery.adapter import (
 from retryrail.recovery.integrity import canonical_sha256, stable_identifier
 from retryrail.recovery.models import (
     ApprovalTokenBinding,
+    ProviderVerificationSource,
     RecoveryExecutionDisposition,
     RecoveryExecutionResponse,
     RecoveryPlanPreview,
+    RecoveryProviderReceipt,
     RecoveryReconciliationResponse,
 )
 from retryrail.recovery.workflow import (
@@ -102,6 +107,18 @@ class RecoveryFakeTargetRequiresSyntheticError(RecoveryWorkflowError):
     reason_code = "RECOVERY_FAKE_TARGET_REQUIRES_SYNTHETIC_PAYMENT"
 
 
+class RecoveryExecutionRequiresSyntheticError(RecoveryWorkflowError):
+    """P0 provider execution is limited to explicitly synthetic Test Mode evidence."""
+
+    reason_code = "RECOVERY_EXECUTION_REQUIRES_SYNTHETIC_PAYMENT"
+
+
+class RecoveryProviderLookupUnavailableError(RecoveryWorkflowError):
+    """A lookup failed safely and the action remains eligible for reconciliation."""
+
+    reason_code = "RECOVERY_PROVIDER_LOOKUP_UNAVAILABLE"
+
+
 @dataclass(frozen=True, slots=True)
 class _ExecutionResources:
     plan_record: RecoveryPlanRecord
@@ -111,14 +128,21 @@ class _ExecutionResources:
 
 
 @dataclass(frozen=True, slots=True)
-class _ExecutionResult:
-    response: RecoveryExecutionResponse
+class _PreparedExecution:
+    response: RecoveryExecutionResponse | None
+    action_id: str | None
+    request: PaymentLinkCreateRequest | None
     approval_consumed: bool
-    provider_called: bool
+
+
+@dataclass(frozen=True, slots=True)
+class _PreparedReconciliation:
+    response: RecoveryReconciliationResponse | None
+    reference_id: str | None
 
 
 class RecoveryExecutionService:
-    """Join fresh deterministic authority and fake-provider mutation atomically."""
+    """Join fresh authority to one durable provider dispatch and verified outcome."""
 
     def __init__(
         self,
@@ -148,15 +172,15 @@ class RecoveryExecutionService:
         raw_approval_token: str | None,
         idempotency_key: str,
     ) -> RecoveryExecutionResponse:
-        """Revalidate, consume approval and create at most one logical fake action."""
+        """Revalidate, durably dispatch and create at most one logical action."""
 
         self._require_merchant(merchant_id)
         token_hash = self._workflow.validated_token_hash(raw_approval_token)
-        try:
-            async with self._operation_lock(f"execute:{merchant_id}:{plan_id}"):
+        async with self._operation_lock(f"execute:{merchant_id}:{plan_id}"):
+            try:
                 now = self._clock_utc()
                 async with self._database.sessions() as session, session.begin():
-                    result = await self._execute_in_session(
+                    prepared = await self._prepare_execution_in_session(
                         session,
                         merchant_id=merchant_id,
                         plan_id=plan_id,
@@ -164,31 +188,68 @@ class RecoveryExecutionService:
                         idempotency_key=idempotency_key,
                         now=now,
                     )
-        except SQLAlchemyError as error:
-            LOGGER.warning(
-                "recovery_execution_persistence_failed",
-                merchant_id=merchant_id,
-                plan_id=plan_id,
-                reason_code=RecoveryPersistenceError.reason_code,
-            )
-            raise RecoveryPersistenceError from error
+            except SQLAlchemyError as error:
+                self._log_execution_persistence_failure(merchant_id, plan_id)
+                raise RecoveryPersistenceError from error
 
-        if result.approval_consumed:
+            if prepared.response is not None:
+                response = prepared.response
+                provider_called = False
+            else:
+                if prepared.action_id is None or prepared.request is None:
+                    raise RecoveryEvidenceInvalidError
+                provider_called = True
+                provider_target = self._settings.recovery_execution_target
+                self._metrics.recovery_provider_dispatches.labels(
+                    target=provider_target
+                ).inc()
+                provider_result: PaymentLinkResult | None = None
+                provider_error: ProviderError | None = None
+                try:
+                    provider_result = await self._provider.create_standard_payment_link(
+                        prepared.request
+                    )
+                except ProviderError as error:
+                    provider_error = error
+                provider_result_label = "succeeded"
+                if isinstance(provider_error, ProviderOutcomeAmbiguousError):
+                    provider_result_label = "ambiguous"
+                elif provider_error is not None:
+                    provider_result_label = "known_failure"
+                self._metrics.recovery_provider_outcomes.labels(
+                    target=provider_target,
+                    result=provider_result_label,
+                ).inc()
+                try:
+                    async with self._database.sessions() as session, session.begin():
+                        response = await self._record_provider_outcome_in_session(
+                            session,
+                            merchant_id=merchant_id,
+                            action_id=prepared.action_id,
+                            request=prepared.request,
+                            result=provider_result,
+                            error=provider_error,
+                        )
+                except SQLAlchemyError as error:
+                    self._log_execution_persistence_failure(merchant_id, plan_id)
+                    raise RecoveryPersistenceError from error
+
+        if prepared.approval_consumed:
             self._metrics.approval_token_consumptions.labels(result="consumed").inc()
         self._metrics.recovery_action_executions.labels(
-            result=result.response.disposition.value,
-            state=(result.response.receipt.state.value if result.response.receipt else "blocked"),
+            result=response.disposition.value,
+            state=(response.receipt.state.value if response.receipt else "blocked"),
         ).inc()
         LOGGER.info(
             "recovery_execution_completed",
-            disposition=result.response.disposition.value,
+            disposition=response.disposition.value,
             merchant_id=merchant_id,
             plan_id=plan_id,
-            action_id=(result.response.receipt.action_id if result.response.receipt else None),
-            state=(result.response.receipt.state.value if result.response.receipt else "blocked"),
-            provider_called=result.provider_called,
+            action_id=(response.receipt.action_id if response.receipt else None),
+            state=(response.receipt.state.value if response.receipt else "blocked"),
+            provider_called=provider_called,
         )
-        return result.response
+        return response
 
     async def reconcile(
         self,
@@ -197,28 +258,60 @@ class RecoveryExecutionService:
         action_id: str,
         idempotency_key: str,
     ) -> RecoveryReconciliationResponse:
-        """Resolve one ambiguous fake result by reference without retrying creation."""
+        """Resolve one ambiguous result by reference without retrying creation."""
 
         self._require_merchant(merchant_id)
-        try:
-            async with self._operation_lock(f"reconcile:{merchant_id}:{action_id}"):
+        async with self._operation_lock(f"reconcile:{merchant_id}:{action_id}"):
+            try:
                 now = self._clock_utc()
                 async with self._database.sessions() as session, session.begin():
-                    response = await self._reconcile_in_session(
+                    prepared = await self._prepare_reconciliation_in_session(
                         session,
                         merchant_id=merchant_id,
                         action_id=action_id,
                         idempotency_key=idempotency_key,
-                        now=now,
                     )
-        except SQLAlchemyError as error:
-            LOGGER.warning(
-                "recovery_reconciliation_persistence_failed",
-                merchant_id=merchant_id,
-                action_id=action_id,
-                reason_code=RecoveryPersistenceError.reason_code,
-            )
-            raise RecoveryPersistenceError from error
+            except SQLAlchemyError as error:
+                self._log_reconciliation_persistence_failure(merchant_id, action_id)
+                raise RecoveryPersistenceError from error
+
+            if prepared.response is not None:
+                response = prepared.response
+            else:
+                if prepared.reference_id is None:
+                    raise RecoveryEvidenceInvalidError
+                try:
+                    provider_result = await self._provider.reconcile(prepared.reference_id)
+                except ProviderError as error:
+                    self._metrics.recovery_provider_lookups.labels(
+                        target=self._settings.recovery_execution_target,
+                        result="unavailable",
+                    ).inc()
+                    LOGGER.warning(
+                        "recovery_provider_lookup_unavailable",
+                        merchant_id=merchant_id,
+                        action_id=action_id,
+                        reason_code=RecoveryProviderLookupUnavailableError.reason_code,
+                        provider_reason_code=error.error.reason_code,
+                    )
+                    raise RecoveryProviderLookupUnavailableError from error
+                self._metrics.recovery_provider_lookups.labels(
+                    target=self._settings.recovery_execution_target,
+                    result="found" if provider_result is not None else "absent",
+                ).inc()
+                try:
+                    async with self._database.sessions() as session, session.begin():
+                        response = await self._record_reconciliation_in_session(
+                            session,
+                            merchant_id=merchant_id,
+                            action_id=action_id,
+                            idempotency_key=idempotency_key,
+                            now=now,
+                            provider_result=provider_result,
+                        )
+                except SQLAlchemyError as error:
+                    self._log_reconciliation_persistence_failure(merchant_id, action_id)
+                    raise RecoveryPersistenceError from error
 
         self._metrics.recovery_action_reconciliations.labels(
             result=response.disposition,
@@ -249,7 +342,7 @@ class RecoveryExecutionService:
         except SQLAlchemyError as error:
             raise RecoveryPersistenceError from error
 
-    async def _execute_in_session(
+    async def _prepare_execution_in_session(
         self,
         session: AsyncSession,
         *,
@@ -258,7 +351,7 @@ class RecoveryExecutionService:
         token_hash: str,
         idempotency_key: str,
         now: datetime,
-    ) -> _ExecutionResult:
+    ) -> _PreparedExecution:
         resources = await self._load_execution_resources(
             session,
             merchant_id=merchant_id,
@@ -280,10 +373,11 @@ class RecoveryExecutionService:
                 request=request,
                 idempotency_key=idempotency_key,
             )
-            return _ExecutionResult(
+            return _PreparedExecution(
                 response=response,
+                action_id=None,
+                request=None,
                 approval_consumed=False,
-                provider_called=False,
             )
 
         binding = self._approval_binding(resources, idempotency_key=idempotency_key)
@@ -302,10 +396,11 @@ class RecoveryExecutionService:
                 action,
                 disposition=RecoveryExecutionDisposition.CREATED,
             )
-            return _ExecutionResult(
+            return _PreparedExecution(
                 response=response,
+                action_id=None,
+                request=None,
                 approval_consumed=False,
-                provider_called=False,
             )
 
         prior_consumption = await session.scalar(
@@ -322,15 +417,16 @@ class RecoveryExecutionService:
             now=now,
         )
         if execution_policy.decision is PolicyDecision.DENY:
-            return _ExecutionResult(
+            return _PreparedExecution(
                 response=RecoveryExecutionResponse(
                     disposition=RecoveryExecutionDisposition.BLOCKED,
                     execution_policy_result=execution_policy,
                     execution_policy_result_sha256=canonical_sha256(execution_policy),
                     synthetic=execution_policy.synthetic,
                 ),
+                action_id=None,
+                request=None,
                 approval_consumed=False,
-                provider_called=False,
             )
 
         await self._workflow.consume_approval_token_in_session(
@@ -348,16 +444,17 @@ class RecoveryExecutionService:
             now=now,
         )
         await self._record_provider_attempt(session, resources=resources, now=now)
-        await self._call_provider_and_record(session, action=action, request=request)
-        response = await self._execution_response(
+        await self._persist_provider_dispatch(
             session,
-            action,
-            disposition=RecoveryExecutionDisposition.CREATED,
+            action=action,
+            request=request,
+            prepared_at=now,
         )
-        return _ExecutionResult(
-            response=response,
+        return _PreparedExecution(
+            response=None,
+            action_id=action.action_id,
+            request=request,
             approval_consumed=True,
-            provider_called=True,
         )
 
     async def _load_execution_resources(
@@ -586,7 +683,7 @@ class RecoveryExecutionService:
             already_recovered=(
                 controls.already_recovered or payment.status != PaymentStatus.FAILED.value
             ),
-            execution_target=RecoveryExecutionTarget.DETERMINISTIC_FAKE,
+            execution_target=preview.execution_target,
             synthetic=preview.synthetic,
         )
 
@@ -602,7 +699,9 @@ class RecoveryExecutionService:
         preview = resources.preview
         evidence = preview.source_evidence
         if not preview.synthetic:
-            raise RecoveryFakeTargetRequiresSyntheticError
+            if preview.execution_target is RecoveryExecutionTarget.DETERMINISTIC_FAKE:
+                raise RecoveryFakeTargetRequiresSyntheticError
+            raise RecoveryExecutionRequiresSyntheticError
         if (
             incident.detector_version != evidence.detector_version
             or incident.detector_config_sha256 != evidence.detector_config_sha256
@@ -639,8 +738,6 @@ class RecoveryExecutionService:
 
     def _provider_request(self, resources: _ExecutionResources) -> PaymentLinkCreateRequest:
         preview = resources.preview
-        if preview.execution_target is not RecoveryExecutionTarget.DETERMINISTIC_FAKE:
-            raise RecoveryEvidenceInvalidError
         return PaymentLinkCreateRequest(
             amount_subunits=preview.amount_subunits,
             currency=preview.currency,
@@ -649,6 +746,7 @@ class RecoveryExecutionService:
                 preview.payment_id,
                 preview.plan.plan_id,
             ),
+            expires_at=preview.plan.stopping_rules.expires_at,
             external_notifications_enabled=False,
             synthetic=preview.synthetic,
         )
@@ -737,8 +835,12 @@ class RecoveryExecutionService:
             plan_sha256=preview.plan_sha256,
             template=RecoveryTemplate.STANDARD_PAYMENT_LINK.value,
             template_version="standard_payment_link_v1",
-            execution_target=RecoveryExecutionTarget.DETERMINISTIC_FAKE.value,
-            execution_side_effect=SideEffectClass.SIMULATED_EXTERNAL_MUTATION.value,
+            execution_target=preview.execution_target.value,
+            execution_side_effect=(
+                SideEffectClass.SIMULATED_EXTERNAL_MUTATION.value
+                if preview.execution_target is RecoveryExecutionTarget.DETERMINISTIC_FAKE
+                else SideEffectClass.RAZORPAY_TEST_MODE_MUTATION.value
+            ),
             amount_subunits=request.amount_subunits,
             currency=request.currency,
             reference_id=request.reference_id,
@@ -814,16 +916,88 @@ class RecoveryExecutionService:
         controls.version += 1
         controls.updated_at = now
 
-    async def _call_provider_and_record(
+    async def _persist_provider_dispatch(
         self,
         session: AsyncSession,
         *,
         action: RecoveryActionRecord,
         request: PaymentLinkCreateRequest,
+        prepared_at: datetime,
     ) -> None:
-        try:
-            result = await self._provider.create_standard_payment_link(request)
-        except ProviderOutcomeAmbiguousError as error:
+        """Flush an immutable intent record inside the pre-network transaction."""
+
+        request_sha256 = canonical_sha256(request)
+        if (
+            not hmac.compare_digest(action.request_sha256, request_sha256)
+            or action.request_document != request.model_dump(mode="json")
+            or action.reference_id != request.reference_id
+        ):
+            raise RecoveryEvidenceInvalidError
+        session.add(
+            RecoveryProviderDispatchRecord(
+                dispatch_id=stable_identifier("dispatch", action.merchant_id, action.action_id),
+                action_id=action.action_id,
+                plan_id=action.plan_id,
+                incident_id=action.incident_id,
+                merchant_id=action.merchant_id,
+                provider_target=action.execution_target,
+                reference_id=action.reference_id,
+                request_sha256=request_sha256,
+                request_document=request.model_dump(mode="json"),
+                external_notifications_enabled=False,
+                synthetic=action.synthetic,
+                prepared_at=prepared_at,
+            )
+        )
+        await session.flush()
+
+    async def _record_provider_outcome_in_session(
+        self,
+        session: AsyncSession,
+        *,
+        merchant_id: str,
+        action_id: str,
+        request: PaymentLinkCreateRequest,
+        result: PaymentLinkResult | None,
+        error: ProviderError | None,
+    ) -> RecoveryExecutionResponse:
+        """Record a provider outcome after the durable dispatch transaction commits."""
+
+        action = await session.scalar(
+            select(RecoveryActionRecord)
+            .where(
+                RecoveryActionRecord.action_id == action_id,
+                RecoveryActionRecord.merchant_id == merchant_id,
+            )
+            .with_for_update()
+        )
+        dispatch = await session.scalar(
+            select(RecoveryProviderDispatchRecord).where(
+                RecoveryProviderDispatchRecord.action_id == action_id,
+                RecoveryProviderDispatchRecord.merchant_id == merchant_id,
+            )
+        )
+        if action is None or dispatch is None:
+            raise RecoveryEvidenceInvalidError
+        if (
+            not hmac.compare_digest(dispatch.request_sha256, canonical_sha256(request))
+            or dispatch.request_document != request.model_dump(mode="json")
+            or dispatch.reference_id != action.reference_id
+            or dispatch.provider_target != action.execution_target
+        ):
+            raise RecoveryEvidenceInvalidError
+        current = await self._materialize_action(session, action)
+        if current.state is not ActionState.EXECUTING:
+            return await self._execution_response(
+                session,
+                action,
+                disposition=RecoveryExecutionDisposition.CREATED,
+            )
+        if (result is None) == (error is None):
+            raise RecoveryEvidenceInvalidError
+
+        actor = self._provider_actor(action)
+        if error is not None and isinstance(error, ProviderOutcomeAmbiguousError):
             self._add_transition(
                 session,
                 action=action,
@@ -831,11 +1005,11 @@ class RecoveryExecutionService:
                 prior_state=ActionState.EXECUTING,
                 new_state=ActionState.RECONCILIATION_REQUIRED,
                 occurred_at=self._clock_utc(),
-                actor=RecoveryActionActor.DETERMINISTIC_FAKE,
-                reason_code="fake_provider_outcome_ambiguous",
+                actor=actor,
+                reason_code="provider_outcome_ambiguous",
                 error=error.error,
             )
-        except ProviderError as error:
+        elif error is not None:
             self._add_transition(
                 session,
                 action=action,
@@ -843,23 +1017,97 @@ class RecoveryExecutionService:
                 prior_state=ActionState.EXECUTING,
                 new_state=ActionState.FAILED,
                 occurred_at=self._clock_utc(),
-                actor=RecoveryActionActor.DETERMINISTIC_FAKE,
-                reason_code="fake_provider_known_failure",
+                actor=actor,
+                reason_code="provider_known_failure",
                 error=error.error,
             )
         else:
-            self._add_success_transition(
+            if result is None:
+                raise RecoveryEvidenceInvalidError
+            await self._add_success_transition(
                 session,
                 action=action,
+                dispatch=dispatch,
                 sequence=5,
                 prior_state=ActionState.EXECUTING,
                 result=result,
-                actor=RecoveryActionActor.DETERMINISTIC_FAKE,
-                reason_code="fake_provider_created",
+                actor=actor,
+                reason_code="provider_created",
+                verification_source=ProviderVerificationSource.CREATE_RESPONSE,
             )
         await session.flush()
+        return await self._execution_response(
+            session,
+            action,
+            disposition=RecoveryExecutionDisposition.CREATED,
+        )
 
-    async def _reconcile_in_session(
+    async def _prepare_reconciliation_in_session(
+        self,
+        session: AsyncSession,
+        *,
+        merchant_id: str,
+        action_id: str,
+        idempotency_key: str,
+    ) -> _PreparedReconciliation:
+        action = await session.scalar(
+            select(RecoveryActionRecord)
+            .where(
+                RecoveryActionRecord.action_id == action_id,
+                RecoveryActionRecord.merchant_id == merchant_id,
+            )
+            .with_for_update()
+        )
+        if action is None:
+            raise RecoveryActionNotFoundError
+        request_sha256 = canonical_sha256({"merchant_id": merchant_id, "action_id": action_id})
+        existing = await session.scalar(
+            select(RecoveryReconciliationRecord).where(
+                RecoveryReconciliationRecord.action_id == action_id
+            )
+        )
+        by_key = await session.scalar(
+            select(RecoveryReconciliationRecord).where(
+                RecoveryReconciliationRecord.merchant_id == merchant_id,
+                RecoveryReconciliationRecord.idempotency_key == idempotency_key,
+            )
+        )
+        if existing is not None or by_key is not None:
+            if (
+                existing is None
+                or by_key is None
+                or existing.reconciliation_id != by_key.reconciliation_id
+                or existing.idempotency_key != idempotency_key
+                or not hmac.compare_digest(existing.request_sha256, request_sha256)
+            ):
+                raise RecoveryIdempotencyConflictError
+            receipt = await self._materialize_action(session, action)
+            provider_receipt = await self._materialize_provider_receipt(session, action)
+            return _PreparedReconciliation(
+                response=RecoveryReconciliationResponse(
+                    disposition="replayed",
+                    receipt=receipt,
+                    provider_receipt=provider_receipt,
+                ),
+                reference_id=None,
+            )
+        receipt = await self._materialize_action(session, action)
+        if receipt.state not in {
+            ActionState.EXECUTING,
+            ActionState.RECONCILIATION_REQUIRED,
+        }:
+            raise RecoveryActionNotReconciliationRequiredError
+        dispatch = await session.scalar(
+            select(RecoveryProviderDispatchRecord).where(
+                RecoveryProviderDispatchRecord.action_id == action.action_id,
+                RecoveryProviderDispatchRecord.merchant_id == merchant_id,
+            )
+        )
+        if dispatch is None or dispatch.reference_id != action.reference_id:
+            raise RecoveryEvidenceInvalidError
+        return _PreparedReconciliation(response=None, reference_id=action.reference_id)
+
+    async def _record_reconciliation_in_session(
         self,
         session: AsyncSession,
         *,
@@ -867,6 +1115,7 @@ class RecoveryExecutionService:
         action_id: str,
         idempotency_key: str,
         now: datetime,
+        provider_result: PaymentLinkResult | None,
     ) -> RecoveryReconciliationResponse:
         action = await session.scalar(
             select(RecoveryActionRecord)
@@ -900,10 +1149,26 @@ class RecoveryExecutionService:
             ):
                 raise RecoveryIdempotencyConflictError
             receipt = await self._materialize_action(session, action)
-            return RecoveryReconciliationResponse(disposition="replayed", receipt=receipt)
+            return RecoveryReconciliationResponse(
+                disposition="replayed",
+                receipt=receipt,
+                provider_receipt=await self._materialize_provider_receipt(session, action),
+            )
         receipt = await self._materialize_action(session, action)
-        if receipt.state is not ActionState.RECONCILIATION_REQUIRED:
+        if receipt.state not in {
+            ActionState.EXECUTING,
+            ActionState.RECONCILIATION_REQUIRED,
+            ActionState.SUCCEEDED,
+        }:
             raise RecoveryActionNotReconciliationRequiredError
+        dispatch = await session.scalar(
+            select(RecoveryProviderDispatchRecord).where(
+                RecoveryProviderDispatchRecord.action_id == action.action_id,
+                RecoveryProviderDispatchRecord.merchant_id == merchant_id,
+            )
+        )
+        if dispatch is None:
+            raise RecoveryEvidenceInvalidError
         session.add(
             RecoveryReconciliationRecord(
                 reconciliation_id=stable_identifier(
@@ -921,52 +1186,110 @@ class RecoveryExecutionService:
             )
         )
         await session.flush()
-        provider_result = await self._provider.reconcile(action.reference_id)
-        if provider_result is None:
+        if receipt.state is ActionState.SUCCEEDED:
+            if provider_result is not None and (
+                provider_result.provider_action_id != receipt.provider_action_id
+                or provider_result.reference_id != receipt.reference_id
+            ):
+                raise RecoveryEvidenceInvalidError
+        elif provider_result is None:
             self._add_transition(
                 session,
                 action=action,
                 sequence=len(receipt.transitions) + 1,
-                prior_state=ActionState.RECONCILIATION_REQUIRED,
+                prior_state=receipt.state,
                 new_state=ActionState.FAILED,
                 occurred_at=self._clock_utc(),
-                actor=RecoveryActionActor.WORKER,
-                reason_code="fake_provider_absence_reconciled",
+                actor=self._provider_actor(action),
+                reason_code="provider_absence_reconciled",
                 error=RecoveryActionError(
                     category=RecoveryActionErrorCategory.UPSTREAM_FAILURE,
-                    reason_code="FAKE_PROVIDER_CONFIRMED_NOT_CREATED",
+                    reason_code=(
+                        "FAKE_PROVIDER_CONFIRMED_NOT_CREATED"
+                        if action.execution_target
+                        == RecoveryExecutionTarget.DETERMINISTIC_FAKE.value
+                        else "RAZORPAY_TEST_MODE_CONFIRMED_NOT_CREATED"
+                    ),
                     retry_permitted=True,
                     reconciliation_required=False,
                 ),
             )
         else:
             verified_result = provider_result.model_copy(update={"verified_at": self._clock_utc()})
-            self._add_success_transition(
+            await self._add_success_transition(
                 session,
                 action=action,
+                dispatch=dispatch,
                 sequence=len(receipt.transitions) + 1,
-                prior_state=ActionState.RECONCILIATION_REQUIRED,
+                prior_state=receipt.state,
                 result=verified_result,
-                actor=RecoveryActionActor.WORKER,
-                reason_code="fake_provider_reference_reconciled",
+                actor=self._provider_actor(action),
+                reason_code="provider_reference_reconciled",
+                verification_source=ProviderVerificationSource.REFERENCE_LOOKUP,
             )
         await session.flush()
         terminal = await self._materialize_action(session, action)
-        return RecoveryReconciliationResponse(disposition="created", receipt=terminal)
+        return RecoveryReconciliationResponse(
+            disposition="created",
+            receipt=terminal,
+            provider_receipt=await self._materialize_provider_receipt(session, action),
+        )
 
-    def _add_success_transition(
+    async def _add_success_transition(
         self,
         session: AsyncSession,
         *,
         action: RecoveryActionRecord,
+        dispatch: RecoveryProviderDispatchRecord,
         sequence: int,
         prior_state: ActionState,
         result: PaymentLinkResult,
         actor: RecoveryActionActor,
         reason_code: str,
+        verification_source: ProviderVerificationSource,
     ) -> None:
-        if result.reference_id != action.reference_id or result.synthetic is not action.synthetic:
+        if (
+            result.reference_id != action.reference_id
+            or result.amount_subunits != action.amount_subunits
+            or result.currency != action.currency
+            or result.synthetic is not action.synthetic
+            or dispatch.action_id != action.action_id
+            or dispatch.provider_target != action.execution_target
+            or not hmac.compare_digest(dispatch.request_sha256, action.request_sha256)
+        ):
             raise RecoveryEvidenceInvalidError
+        response_document = result.model_dump(mode="json")
+        response_sha256 = canonical_sha256(result)
+        session.add(
+            RecoveryProviderReceiptRecord(
+                provider_receipt_id=stable_identifier(
+                    "provider",
+                    action.merchant_id,
+                    action.action_id,
+                ),
+                dispatch_id=dispatch.dispatch_id,
+                action_id=action.action_id,
+                plan_id=action.plan_id,
+                incident_id=action.incident_id,
+                merchant_id=action.merchant_id,
+                provider_target=action.execution_target,
+                provider_action_id=result.provider_action_id,
+                reference_id=result.reference_id,
+                status=result.status.value,
+                amount_subunits=result.amount_subunits,
+                currency=result.currency,
+                short_url=str(result.short_url) if result.short_url is not None else None,
+                provider_created_at=result.provider_created_at,
+                verified_at=result.verified_at,
+                verification_source=verification_source.value,
+                request_sha256=dispatch.request_sha256,
+                response_sha256=response_sha256,
+                response_document=response_document,
+                external_notifications_enabled=False,
+                synthetic=result.synthetic,
+                created_at=result.verified_at,
+            )
+        )
         self._add_transition(
             session,
             action=action,
@@ -978,12 +1301,7 @@ class RecoveryExecutionService:
             reason_code=reason_code,
             provider_action_id=result.provider_action_id,
             verified_at=result.verified_at,
-            response={
-                "provider_action_id": result.provider_action_id,
-                "reference_id": result.reference_id,
-                "status": "created",
-                "synthetic": result.synthetic,
-            },
+            response=response_document,
         )
 
     def _add_transition(
@@ -1053,6 +1371,7 @@ class RecoveryExecutionService:
         return RecoveryExecutionResponse(
             disposition=disposition,
             receipt=receipt,
+            provider_receipt=await self._materialize_provider_receipt(session, action),
             execution_policy_result=policy,
             execution_policy_result_sha256=policy_sha256,
             synthetic=action.synthetic,
@@ -1128,9 +1447,107 @@ class RecoveryExecutionService:
         except (ValidationError, ValueError) as error:
             raise RecoveryEvidenceInvalidError from error
 
+    async def _materialize_provider_receipt(
+        self,
+        session: AsyncSession,
+        action: RecoveryActionRecord,
+    ) -> RecoveryProviderReceipt | None:
+        record = await session.scalar(
+            select(RecoveryProviderReceiptRecord).where(
+                RecoveryProviderReceiptRecord.action_id == action.action_id,
+                RecoveryProviderReceiptRecord.merchant_id == action.merchant_id,
+            )
+        )
+        if record is None:
+            return None
+        dispatch = await session.scalar(
+            select(RecoveryProviderDispatchRecord).where(
+                RecoveryProviderDispatchRecord.dispatch_id == record.dispatch_id,
+                RecoveryProviderDispatchRecord.action_id == action.action_id,
+            )
+        )
+        if dispatch is None:
+            raise RecoveryEvidenceInvalidError
+        try:
+            result = PaymentLinkResult.model_validate(record.response_document)
+            receipt = RecoveryProviderReceipt(
+                provider_receipt_id=record.provider_receipt_id,
+                dispatch_id=record.dispatch_id,
+                action_id=record.action_id,
+                plan_id=record.plan_id,
+                incident_id=record.incident_id,
+                merchant_id=record.merchant_id,
+                execution_target=RecoveryExecutionTarget(record.provider_target),
+                provider_action_id=record.provider_action_id,
+                reference_id=record.reference_id,
+                status=result.status,
+                amount_subunits=record.amount_subunits,
+                currency=record.currency,
+                short_url=result.short_url,
+                provider_created_at=record.provider_created_at,
+                verified_at=record.verified_at,
+                verification_source=ProviderVerificationSource(record.verification_source),
+                request_sha256=record.request_sha256,
+                response_sha256=record.response_sha256,
+                external_notifications_enabled=record.external_notifications_enabled,
+                synthetic=record.synthetic,
+            )
+        except (ValidationError, ValueError) as error:
+            raise RecoveryEvidenceInvalidError from error
+        if (
+            record.action_id != action.action_id
+            or record.plan_id != action.plan_id
+            or record.incident_id != action.incident_id
+            or record.merchant_id != action.merchant_id
+            or record.provider_target != action.execution_target
+            or record.provider_action_id != result.provider_action_id
+            or not (record.reference_id == action.reference_id == result.reference_id)
+            or not (
+                record.amount_subunits == action.amount_subunits == result.amount_subunits
+            )
+            or not (record.currency == action.currency == result.currency)
+            or record.provider_created_at != result.provider_created_at
+            or record.verified_at != result.verified_at
+            or record.synthetic is not action.synthetic
+            or dispatch.provider_target != action.execution_target
+            or not hmac.compare_digest(record.request_sha256, action.request_sha256)
+            or not hmac.compare_digest(record.request_sha256, dispatch.request_sha256)
+            or not hmac.compare_digest(record.response_sha256, canonical_sha256(result))
+        ):
+            raise RecoveryEvidenceInvalidError
+        return receipt
+
     def _require_merchant(self, merchant_id: str) -> None:
         if merchant_id != self._settings.merchant_id:
             raise MerchantScopeError
+
+    @staticmethod
+    def _provider_actor(action: RecoveryActionRecord) -> RecoveryActionActor:
+        target = RecoveryExecutionTarget(action.execution_target)
+        if target is RecoveryExecutionTarget.DETERMINISTIC_FAKE:
+            return RecoveryActionActor.DETERMINISTIC_FAKE
+        return RecoveryActionActor.RAZORPAY_TEST_MODE
+
+    @staticmethod
+    def _log_execution_persistence_failure(merchant_id: str, plan_id: str) -> None:
+        LOGGER.warning(
+            "recovery_execution_persistence_failed",
+            merchant_id=merchant_id,
+            plan_id=plan_id,
+            reason_code=RecoveryPersistenceError.reason_code,
+        )
+
+    @staticmethod
+    def _log_reconciliation_persistence_failure(
+        merchant_id: str,
+        action_id: str,
+    ) -> None:
+        LOGGER.warning(
+            "recovery_reconciliation_persistence_failed",
+            merchant_id=merchant_id,
+            action_id=action_id,
+            reason_code=RecoveryPersistenceError.reason_code,
+        )
 
     def _operation_lock(self, key: str) -> asyncio.Lock:
         """Coalesce same-process duplicates; database constraints remain authoritative."""
@@ -1178,4 +1595,5 @@ def _materialize_policy_record(record: PolicyResultRecord) -> PolicyResultContra
 
 
 def _reference_id(merchant_id: str, payment_id: str, plan_id: str) -> str:
-    return stable_identifier("recovery", merchant_id, f"{payment_id}:{plan_id}")
+    material = f"{merchant_id}\x1f{payment_id}\x1f{plan_id}".encode()
+    return f"rr_{hashlib.sha256(material).hexdigest()[:32]}"

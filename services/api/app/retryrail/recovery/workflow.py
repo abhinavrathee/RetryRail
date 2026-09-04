@@ -858,7 +858,9 @@ class RecoveryWorkflowService:
             plan_expires_at=plan.stopping_rules.expires_at,
             merchant_kill_switch=self._settings.recovery_kill_switch,
             already_recovered=controls.already_recovered,
-            execution_target=RecoveryExecutionTarget.DETERMINISTIC_FAKE,
+            execution_target=RecoveryExecutionTarget(
+                self._settings.recovery_execution_target
+            ),
             synthetic=payment.synthetic,
         )
         source_evidence = RecoverySourceEvidence(

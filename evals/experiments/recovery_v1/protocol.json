@@ -1,0 +1,96 @@
+{
+  "amount_bands": [
+    {
+      "band_id": "amount_under_100000",
+      "lower_bound_subunits": 0,
+      "upper_bound_subunits": 100000
+    },
+    {
+      "band_id": "amount_100000_to_249999",
+      "lower_bound_subunits": 100000,
+      "upper_bound_subunits": 250000
+    },
+    {
+      "band_id": "amount_250000_and_above",
+      "lower_bound_subunits": 250000,
+      "upper_bound_subunits": null
+    }
+  ],
+  "bootstrap": {
+    "confidence_level_ppm": 950000,
+    "deterministic_sha256_index_draws": true,
+    "method": "independent_arm_nonparametric_percentile",
+    "namespace": "recovery_bootstrap_v1",
+    "recovery_rate_statistic": "recovery_rate_difference",
+    "replicates": 10000,
+    "statistic": "value_per_eligible_difference"
+  },
+  "costs": {
+    "action_cost_per_treatment_subunits": 200,
+    "currency": "INR",
+    "false_intervention_cost_per_unrecovered_treatment_subunits": 300,
+    "interpretation": "synthetic_modeling_assumption_not_razorpay_pricing"
+  },
+  "design": {
+    "assignment_hash": "sha256",
+    "assignment_namespace": "assignment_v1",
+    "assignment_unit": "payment_id",
+    "attribution_window_seconds": 86400,
+    "control_allocation_bps": 2000,
+    "control_recovery_rate_bps": 1500,
+    "design_id": "experiment_design_v1",
+    "eligibility_frozen_before_assignment": true,
+    "exclude_already_recovered": true,
+    "failed_payments_only": true,
+    "frozen_at": "2026-08-31T00:00:00Z",
+    "incident_members_only": true,
+    "inconclusive_when_interval_crosses_zero": true,
+    "outcome_namespace": "outcome_v1",
+    "schema_version": "1.0.0",
+    "strata": [
+      "method",
+      "issuer",
+      "amount_band"
+    ],
+    "synthetic": true,
+    "treatment_allocation_bps": 8000,
+    "treatment_recovery_rate_bps": 4500
+  },
+  "eligibility": {
+    "exclude_already_recovered": true,
+    "failed_payments_only": true,
+    "incident_members_only": true,
+    "required_currency": "INR",
+    "required_dataset_role": "blind",
+    "required_schema_version": "2.0.0",
+    "same_rule_for_treatment_and_control": true,
+    "source_rows_scanned_in_full": true,
+    "synthetic_only": true
+  },
+  "experiment_id": "recovery_experiment_v1",
+  "frozen_at": "2026-08-31T00:00:00Z",
+  "gross_recovery_is_not_incremental": true,
+  "inconclusive_when_primary_interval_includes_zero": true,
+  "primary_estimand": "incremental_recovered_gmv_value_per_eligible",
+  "protocol_id": "recovery_experiment_protocol_v1",
+  "schema_version": "1.0.0",
+  "secondary_estimand": "absolute_recovery_rate_uplift",
+  "source": {
+    "currency": "INR",
+    "dataset_id": "retryrail_detector_v2_blind_v1",
+    "dataset_role": "blind",
+    "detector_release_path": "evals/blind/detector_v4/runs/detector_v4_official_blind_5497598109b06d21c625/blind.release.v1.json",
+    "detector_release_qualified": true,
+    "detector_release_sha256": "da633356f34e358327be73bf733165b9993fdbb4d159bf7ace9fa512813a0faa",
+    "detector_version": "detector_v4_0_0",
+    "manifest_path": "evals/blind/detector_v4/runs/detector_v4_official_blind_5497598109b06d21c625/blind.dataset_manifest.v1.json",
+    "manifest_sha256": "30547b03a068b8d303dba11feb1e981b1eee4a85c721825e382687d0f1dca7d6",
+    "merchant_id": "merchant_synthetic_001",
+    "synthetic": true,
+    "truth_path": "evals/generated/detector_v4/blind/detector_v4_official_blind_5497598109b06d21c625/blind.attempt_truth.v1.jsonl",
+    "truth_records": 5760,
+    "truth_sha256": "35d0e4904572d7a72891f5eae0c7a8f145f8092da7da7a7b7ad393f581654d27"
+  },
+  "status": "frozen_before_assignment_and_outcomes",
+  "synthetic": true
+}

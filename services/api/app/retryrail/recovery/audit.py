@@ -17,6 +17,8 @@ from retryrail.db.tables import (
     RecoveryActionRecord,
     RecoveryActionTransitionRecord,
     RecoveryPlanRecord,
+    RecoveryProviderDispatchRecord,
+    RecoveryProviderReceiptRecord,
     RecoveryReconciliationRecord,
     RulesBasedIncidentBriefRecord,
 )
@@ -35,6 +37,7 @@ _BASE_REQUIRED_FACTS = (
     "execution_policy",
     "action_receipt_contract",
     "provider_terminal_transition",
+    "provider_dispatch",
     "recovery_control_attempt",
 )
 
@@ -83,6 +86,8 @@ class RecoveryAuditVerifier:
                 )
                 if reconciled:
                     required.append("reconciliation_receipt")
+                if receipt.state is ActionState.SUCCEEDED:
+                    required.append("provider_receipt")
                 observed = await _observed_facts(session, action=action)
         except SQLAlchemyError as error:
             raise RecoveryPersistenceError from error
@@ -211,6 +216,22 @@ async def _outcome_facts(
     action: RecoveryActionRecord,
 ) -> set[str]:
     observed: set[str] = set()
+    dispatch = await session.scalar(
+        select(RecoveryProviderDispatchRecord).where(
+            RecoveryProviderDispatchRecord.action_id == action.action_id,
+            RecoveryProviderDispatchRecord.merchant_id == action.merchant_id,
+        )
+    )
+    if dispatch is not None:
+        observed.add("provider_dispatch")
+    provider_receipt = await session.scalar(
+        select(RecoveryProviderReceiptRecord).where(
+            RecoveryProviderReceiptRecord.action_id == action.action_id,
+            RecoveryProviderReceiptRecord.merchant_id == action.merchant_id,
+        )
+    )
+    if provider_receipt is not None:
+        observed.add("provider_receipt")
     transitions = tuple(
         (
             await session.scalars(

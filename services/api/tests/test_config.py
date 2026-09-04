@@ -126,3 +126,35 @@ def test_production_accepts_separate_runtime_approval_secrets() -> None:
     )
 
     assert settings.environment is Environment.PRODUCTION
+
+
+def test_razorpay_test_mode_requires_complete_test_credentials() -> None:
+    with pytest.raises(ValidationError, match="requires an API key id and secret"):
+        Settings(recovery_execution_target="razorpay_test_mode")
+
+    with pytest.raises(ValidationError, match="configured together"):
+        Settings(razorpay_key_id=SecretStr("rzp_test_example_identifier"))
+
+    with pytest.raises(ValidationError, match="Test Mode key ids only"):
+        Settings(
+            razorpay_key_id=SecretStr("rzp_live_never_admitted"),
+            razorpay_key_secret=SecretStr("not-a-real-secret"),
+        )
+
+
+def test_razorpay_test_credentials_are_redacted_and_admitted() -> None:
+    key_id = "rzp_test_example_identifier"
+    key_secret = "unit-test-provider-secret"
+    settings = Settings(
+        recovery_execution_target="razorpay_test_mode",
+        razorpay_key_id=SecretStr(key_id),
+        razorpay_key_secret=SecretStr(key_secret),
+    )
+
+    assert settings.recovery_execution_target == "razorpay_test_mode"
+    assert settings.razorpay_key_id is not None
+    assert settings.razorpay_key_secret is not None
+    assert settings.razorpay_key_id.get_secret_value() == key_id
+    assert settings.razorpay_key_secret.get_secret_value() == key_secret
+    assert key_id not in repr(settings)
+    assert key_secret not in repr(settings)

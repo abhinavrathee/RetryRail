@@ -12,7 +12,7 @@ from sqlalchemy.ext.asyncio import (
     create_async_engine,
 )
 
-MIGRATION_HEAD = "0005_m4_rules_fallback"
+MIGRATION_HEAD = "0006_m5_provider_dispatch"
 
 
 @dataclass(frozen=True, slots=True)

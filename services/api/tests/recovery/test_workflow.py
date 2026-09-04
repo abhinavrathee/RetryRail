@@ -20,7 +20,11 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from retryrail.config import Settings
 from retryrail.contracts.domain import CohortDimension
-from retryrail.contracts.recovery import ApprovalDecision, ApprovalStatus
+from retryrail.contracts.recovery import (
+    ApprovalDecision,
+    ApprovalStatus,
+    RecoveryActionActor,
+)
 from retryrail.db.session import Database
 from retryrail.db.tables import (
     ApprovalDecisionRecord,
@@ -33,6 +37,8 @@ from retryrail.db.tables import (
     RecoveryActionRecord,
     RecoveryActionTransitionRecord,
     RecoveryPlanRecord,
+    RecoveryProviderDispatchRecord,
+    RecoveryProviderReceiptRecord,
     RulesBasedIncidentBriefRecord,
 )
 from retryrail.detection.models import (
@@ -56,12 +62,16 @@ from retryrail.observability.metrics import PipelineMetrics
 from retryrail.recovery.adapter import (
     DeterministicFakeRazorpayAdapter,
     FakeProviderScenario,
+    PaymentLinkCreateRequest,
+    PaymentLinkResult,
+    PaymentLinkStatus,
 )
 from retryrail.recovery.audit import RecoveryAuditVerifier
 from retryrail.recovery.execution import RecoveryExecutionService
 from retryrail.recovery.models import (
     ApprovalDecisionResponse,
     ApprovalTokenBinding,
+    ProviderVerificationSource,
     RecoveryExecutionResponse,
     RecoveryPlanPreview,
 )
@@ -100,6 +110,59 @@ class _DeniedPreviewCase:
     prior_action_attempts: int = 0
     incident_status: str = "open"
     denied_rule: str = "incident_action_eligibility"
+
+
+class _SimulatedProcessCrashError(RuntimeError):
+    """Controlled interruption after the provider accepted a request."""
+
+
+class _CrashAfterCreateProvider:
+    """Verify pre-dispatch durability, then emulate a crash before receipt storage."""
+
+    def __init__(self, settings: Settings, *, now: datetime) -> None:
+        self._settings = settings
+        self._now = now
+        self._created: PaymentLinkResult | None = None
+        self.create_calls = 0
+        self.reconcile_calls = 0
+
+    async def create_standard_payment_link(
+        self,
+        request: PaymentLinkCreateRequest,
+    ) -> PaymentLinkResult:
+        self.create_calls += 1
+        database = Database(self._settings.database_dsn())
+        try:
+            async with database.sessions() as session:
+                action = await session.scalar(select(RecoveryActionRecord))
+                dispatch = await session.scalar(select(RecoveryProviderDispatchRecord))
+                assert action is not None
+                assert dispatch is not None
+                assert action.action_id == dispatch.action_id
+                assert action.reference_id == dispatch.reference_id == request.reference_id
+                assert action.execution_target == "razorpay_test_mode"
+                assert dispatch.provider_target == "razorpay_test_mode"
+                assert dispatch.external_notifications_enabled is False
+        finally:
+            await database.dispose()
+        self._created = PaymentLinkResult(
+            provider_action_id="plink_RetryRailCrashSafe001",
+            reference_id=request.reference_id,
+            status=PaymentLinkStatus.CREATED,
+            amount_subunits=request.amount_subunits,
+            currency=request.currency,
+            short_url="https://rzp.io/i/retryrail-crash-safe",
+            provider_created_at=self._now,
+            verified_at=self._now,
+            synthetic=True,
+        )
+        raise _SimulatedProcessCrashError
+
+    async def reconcile(self, reference_id: str) -> PaymentLinkResult | None:
+        self.reconcile_calls += 1
+        assert self._created is not None
+        assert self._created.reference_id == reference_id
+        return self._created
 
 
 async def _seed_case(
@@ -2049,6 +2112,144 @@ def test_concurrent_duplicate_execute_has_one_consumption_and_provider_call(
                     )
                     == 1
                 )
+        finally:
+            await database.dispose()
+
+    asyncio.run(exercise())
+
+
+def test_test_mode_dispatch_survives_crash_and_reconciles_without_second_create(  # noqa: PLR0915
+    settings: Settings,
+) -> None:
+    async def exercise() -> None:  # noqa: PLR0915
+        test_mode_settings = Settings.model_validate(
+            {
+                **settings.model_dump(),
+                "recovery_execution_target": "razorpay_test_mode",
+                "razorpay_key_id": SecretStr("rzp_test_unit_test_identifier"),
+                "razorpay_key_secret": SecretStr("unit-test-provider-secret"),
+            }
+        )
+        seeded = await _seed_case(test_mode_settings, suffix="146")
+        database = Database(test_mode_settings.database_dsn())
+        now = _BASE_TIME + timedelta(hours=7)
+        metrics = PipelineMetrics()
+        workflow = RecoveryWorkflowService(
+            database,
+            test_mode_settings,
+            metrics,
+            clock=lambda: now,
+            token_factory=lambda: f"rr_apv_{'Z' * 43}",
+        )
+        provider = _CrashAfterCreateProvider(test_mode_settings, now=now)
+        execution = RecoveryExecutionService(
+            database,
+            test_mode_settings,
+            metrics,
+            workflow,
+            provider,
+            clock=lambda: now,
+        )
+        try:
+            preview = (
+                await workflow.create_preview(
+                    merchant_id=test_mode_settings.merchant_id,
+                    incident_id=seeded.incident_id,
+                    payment_id=seeded.payment_id,
+                    idempotency_key="crash_safe_preview",
+                )
+            ).preview
+            assert preview.execution_target.value == "razorpay_test_mode"
+            approval = await workflow.decide(
+                merchant_id=test_mode_settings.merchant_id,
+                plan_id=preview.plan.plan_id,
+                actor_id=test_mode_settings.merchant_approver_id,
+                decision=ApprovalDecision.APPROVE,
+                idempotency_key="crash_safe_approval",
+            )
+            assert approval.approval_token is not None
+
+            with pytest.raises(_SimulatedProcessCrashError):
+                await execution.execute(
+                    merchant_id=test_mode_settings.merchant_id,
+                    plan_id=preview.plan.plan_id,
+                    raw_approval_token=approval.approval_token,
+                    idempotency_key="crash_safe_execution",
+                )
+
+            async with database.sessions() as session:
+                action = await session.scalar(select(RecoveryActionRecord))
+                dispatch = await session.scalar(select(RecoveryProviderDispatchRecord))
+                assert action is not None
+                assert dispatch is not None
+                assert (
+                    await session.scalar(
+                        select(func.count()).select_from(RecoveryProviderReceiptRecord)
+                    )
+                    == 0
+                )
+                persisted = await execution.get_receipt(
+                    merchant_id=test_mode_settings.merchant_id,
+                    action_id=action.action_id,
+                )
+                assert persisted.state.value == "executing"
+                action_id = action.action_id
+
+            replayed = await execution.execute(
+                merchant_id=test_mode_settings.merchant_id,
+                plan_id=preview.plan.plan_id,
+                raw_approval_token=approval.approval_token,
+                idempotency_key="crash_safe_execution",
+            )
+            assert replayed.disposition.value == "replayed"
+            assert replayed.receipt is not None
+            assert replayed.receipt.state.value == "executing"
+            assert provider.create_calls == 1
+
+            reconciled = await execution.reconcile(
+                merchant_id=test_mode_settings.merchant_id,
+                action_id=action_id,
+                idempotency_key="crash_safe_reconciliation",
+            )
+            assert reconciled.disposition == "created"
+            assert reconciled.receipt.state.value == "succeeded"
+            assert reconciled.receipt.execution_side_effect.value == (
+                "razorpay_test_mode_mutation"
+            )
+            assert reconciled.receipt.transitions[-1].actor is (
+                RecoveryActionActor.RAZORPAY_TEST_MODE
+            )
+            assert reconciled.provider_receipt is not None
+            assert reconciled.provider_receipt.verification_source is (
+                ProviderVerificationSource.REFERENCE_LOOKUP
+            )
+            assert str(reconciled.provider_receipt.short_url) == (
+                "https://rzp.io/i/retryrail-crash-safe"
+            )
+            assert reconciled.provider_receipt.external_notifications_enabled is False
+            assert provider.create_calls == 1
+            assert provider.reconcile_calls == 1
+
+            async with database.sessions() as session:
+                assert (
+                    await session.scalar(
+                        select(func.count()).select_from(RecoveryProviderDispatchRecord)
+                    )
+                    == 1
+                )
+                assert (
+                    await session.scalar(
+                        select(func.count()).select_from(RecoveryProviderReceiptRecord)
+                    )
+                    == 1
+                )
+                with pytest.raises(SQLAlchemyError, match="immutable"):
+                    await session.execute(text("DELETE FROM recovery_provider_dispatches"))
+                await session.rollback()
+                with pytest.raises(SQLAlchemyError, match="immutable"):
+                    await session.execute(
+                        text("UPDATE recovery_provider_receipts SET status='paid'")
+                    )
         finally:
             await database.dispose()
 

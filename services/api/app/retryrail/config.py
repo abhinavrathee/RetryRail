@@ -26,6 +26,9 @@ _INSECURE_SECRET_VALUES = frozenset(
         "replace-with-a-random-local-test-secret",
     }
 )
+_MAX_RAZORPAY_KEY_ID_LENGTH = 80
+_MIN_RAZORPAY_KEY_SECRET_LENGTH = 8
+_MAX_RAZORPAY_KEY_SECRET_LENGTH = 200
 
 
 class Settings(BaseSettings):
@@ -71,6 +74,13 @@ class Settings(BaseSettings):
     approval_token_lifetime_seconds: int = Field(default=600, ge=30, le=900)
     recovery_maximum_attempts_per_payment: int = Field(default=1, ge=1, le=3)
     recovery_cooldown_seconds: int = Field(default=900, ge=0, le=604_800)
+    recovery_execution_target: Literal[
+        "deterministic_fake", "razorpay_test_mode"
+    ] = "deterministic_fake"
+    razorpay_key_id: SecretStr | None = None
+    razorpay_key_secret: SecretStr | None = None
+    razorpay_connect_timeout_seconds: float = Field(default=3.0, ge=0.1, le=10.0)
+    razorpay_read_timeout_seconds: float = Field(default=8.0, ge=0.1, le=30.0)
     max_webhook_body_bytes: int = Field(default=262_144, ge=1_024, le=1_048_576)
     outbox_max_attempts: int = Field(default=5, ge=1, le=20)
     worker_batch_size: int = Field(default=50, ge=1, le=500)
@@ -86,6 +96,8 @@ class Settings(BaseSettings):
     @model_validator(mode="after")
     def reject_unsafe_production_configuration(self) -> "Settings":
         """Prevent placeholder secrets and non-PostgreSQL production stores."""
+
+        self._validate_razorpay_test_mode_configuration()
 
         if self.environment is not Environment.PRODUCTION:
             return self
@@ -120,6 +132,34 @@ class Settings(BaseSettings):
             msg = "webhook, merchant approval and token HMAC secrets must be distinct"
             raise ValueError(msg)
         return self
+
+    def _validate_razorpay_test_mode_configuration(self) -> None:
+        """Admit only a complete Test Mode credential pair at the provider boundary."""
+
+        key_id = self.razorpay_key_id.get_secret_value() if self.razorpay_key_id else ""
+        key_secret = (
+            self.razorpay_key_secret.get_secret_value() if self.razorpay_key_secret else ""
+        )
+        if bool(key_id) is not bool(key_secret):
+            msg = "Razorpay Test Mode key id and secret must be configured together"
+            raise ValueError(msg)
+        if self.recovery_execution_target == "razorpay_test_mode" and (
+            not key_id or not key_secret
+        ):
+            msg = "Razorpay Test Mode execution requires an API key id and secret"
+            raise ValueError(msg)
+        if not key_id:
+            return
+        if not key_id.startswith("rzp_test_"):
+            msg = "Razorpay execution accepts Test Mode key ids only"
+            raise ValueError(msg)
+        if (
+            len(key_id) > _MAX_RAZORPAY_KEY_ID_LENGTH
+            or len(key_secret) < _MIN_RAZORPAY_KEY_SECRET_LENGTH
+            or len(key_secret) > _MAX_RAZORPAY_KEY_SECRET_LENGTH
+        ):
+            msg = "Razorpay Test Mode credentials have an invalid shape"
+            raise ValueError(msg)
 
     def database_dsn(self) -> str:
         """Reveal the database URL only at the connection boundary."""

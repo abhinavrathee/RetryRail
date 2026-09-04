@@ -22,6 +22,12 @@ from retryrail.contracts.recovery import (
     RecoveryTemplateContract,
 )
 from retryrail.events.models import NormalizedPaymentEvent
+from retryrail.experiments.models import (
+    ExperimentAssignmentFreeze,
+    RecoveryExperimentProtocol,
+    RecoveryExperimentReport,
+    RecoveryOutcomeBatch,
+)
 from retryrail.synthetic.models import (
     AttemptGroundTruth,
     ExperimentDesign,
@@ -128,6 +134,30 @@ _SCHEMAS = (
         relative_path="contracts/domain/experiment_design.v1.schema.json",
         schema_id="https://retryrail.dev/contracts/domain/experiment-design/v1",
         title="RetryRail Experiment Design v1",
+    ),
+    SchemaDefinition(
+        model=RecoveryExperimentProtocol,
+        relative_path="contracts/domain/recovery_experiment_protocol.v1.schema.json",
+        schema_id="https://retryrail.dev/contracts/domain/recovery-experiment-protocol/v1",
+        title="RetryRail Recovery Experiment Protocol v1",
+    ),
+    SchemaDefinition(
+        model=ExperimentAssignmentFreeze,
+        relative_path="contracts/domain/experiment_assignment_freeze.v1.schema.json",
+        schema_id="https://retryrail.dev/contracts/domain/experiment-assignment-freeze/v1",
+        title="RetryRail Experiment Assignment Freeze v1",
+    ),
+    SchemaDefinition(
+        model=RecoveryOutcomeBatch,
+        relative_path="contracts/domain/recovery_outcome_batch.v1.schema.json",
+        schema_id="https://retryrail.dev/contracts/domain/recovery-outcome-batch/v1",
+        title="RetryRail Recovery Outcome Batch v1",
+    ),
+    SchemaDefinition(
+        model=RecoveryExperimentReport,
+        relative_path="contracts/domain/recovery_experiment_report.v1.schema.json",
+        schema_id="https://retryrail.dev/contracts/domain/recovery-experiment-report/v1",
+        title="RetryRail Recovery Experiment Report v1",
     ),
 )
 

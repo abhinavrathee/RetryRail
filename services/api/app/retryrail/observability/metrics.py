@@ -132,6 +132,24 @@ class PipelineMetrics:
             ("result", "state"),
             registry=self.registry,
         )
+        self.recovery_provider_dispatches = Counter(
+            "retryrail_recovery_provider_dispatches_total",
+            "Durable pre-network dispatches by bounded provider target.",
+            ("target",),
+            registry=self.registry,
+        )
+        self.recovery_provider_outcomes = Counter(
+            "retryrail_recovery_provider_outcomes_total",
+            "Sanitized create outcomes without merchant or action identifiers.",
+            ("target", "result"),
+            registry=self.registry,
+        )
+        self.recovery_provider_lookups = Counter(
+            "retryrail_recovery_provider_lookups_total",
+            "Lookup-only reconciliation outcomes.",
+            ("target", "result"),
+            registry=self.registry,
+        )
         self.rules_fallback_analyses = Counter(
             "retryrail_rules_fallback_analyses_total",
             "Content-addressed incident briefs produced without a model provider.",

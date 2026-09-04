@@ -1,6 +1,6 @@
 .DEFAULT_GOAL := help
 
-.PHONY: help bootstrap install-security-hook dev migrate seed v2-data-check v2-candidate-check v2-blind-check v3-protocol-check v3-candidate-check v3-adversarial-check v3-freeze-check v3-blind-check v4-protocol-check v4-candidate-check v4-adversarial-check v4-freeze-check v4-blind-check replay detect demo lint typecheck test test-contract test-e2e build eval security-check check
+.PHONY: help bootstrap install-security-hook dev migrate seed v2-data-check v2-candidate-check v2-blind-check v3-protocol-check v3-candidate-check v3-adversarial-check v3-freeze-check v3-blind-check v4-protocol-check v4-candidate-check v4-adversarial-check v4-freeze-check v4-blind-check experiment-freeze-check replay detect demo lint typecheck test test-contract test-e2e build eval security-check check
 
 help:
 	@echo "RetryRail commands"
@@ -22,6 +22,7 @@ help:
 	@echo "  v4-adversarial-check Verify detector-v4 hierarchy and contract edge cases"
 	@echo "  v4-freeze-check Verify the nonce-free detector-v4 candidate freeze"
 	@echo "  v4-blind-check Reproduce revealed inputs and verify append-only v4 evidence"
+	@echo "  experiment-freeze-check Verify pre-outcome M5 protocol and assignments"
 	@echo "  replay          Run the protected M2 reliability-case replay"
 	@echo "  detect          Refresh deterministic aggregates and incidents once"
 	@echo "  eval            Verify frozen detector reports and release decision"
@@ -91,6 +92,9 @@ v4-blind-check:
 	uv run retryrail-v4-blind-reproduce
 	uv run retryrail-v4-blind --check
 
+experiment-freeze-check:
+	uv run retryrail-experiment freeze --check
+
 replay:
 	uv run retryrail-replay --mode required_cases
 
@@ -119,6 +123,7 @@ test-contract:
 	uv run retryrail-v2-data --check
 	uv run retryrail-v3-protocol --check
 	uv run retryrail-v4-protocol --check
+	uv run retryrail-experiment freeze --check
 	uv run pytest services/api/tests/contracts
 
 test-e2e:

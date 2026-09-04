@@ -20,7 +20,11 @@ from retryrail.events.ingestion import EventIngestionService
 from retryrail.observability.logging import configure_logging
 from retryrail.observability.metrics import PipelineMetrics
 from retryrail.observability.metrics import router as metrics_router
-from retryrail.recovery.adapter import DeterministicFakeRazorpayAdapter, RecoveryProvider
+from retryrail.recovery.adapter import (
+    DeterministicFakeRazorpayAdapter,
+    RazorpayTestModeAdapter,
+    RecoveryProvider,
+)
 from retryrail.recovery.analysis import RulesBasedIncidentAnalyst
 from retryrail.recovery.audit import RecoveryAuditVerifier
 from retryrail.recovery.execution import RecoveryExecutionService
@@ -66,7 +70,7 @@ def create_app(
             resolved_settings,
             resolved_metrics,
         )
-        provider = recovery_provider or DeterministicFakeRazorpayAdapter()
+        provider = recovery_provider or _configured_recovery_provider(resolved_settings)
         application.state.recovery_workflow_service = workflow
         application.state.recovery_provider = provider
         execution = RecoveryExecutionService(
@@ -91,6 +95,8 @@ def create_app(
         try:
             yield
         finally:
+            if recovery_provider is None and isinstance(provider, RazorpayTestModeAdapter):
+                await provider.aclose()
             if owns_database:
                 await resolved_database.dispose()
 
@@ -138,6 +144,22 @@ def create_app(
 
 
 app = create_app()
+
+
+def _configured_recovery_provider(settings: Settings) -> RecoveryProvider:
+    """Construct only the provider explicitly enabled by validated settings."""
+
+    if settings.recovery_execution_target == "deterministic_fake":
+        return DeterministicFakeRazorpayAdapter()
+    if settings.razorpay_key_id is None or settings.razorpay_key_secret is None:
+        msg = "validated Razorpay Test Mode settings are incomplete"
+        raise RuntimeError(msg)
+    return RazorpayTestModeAdapter(
+        key_id=settings.razorpay_key_id,
+        key_secret=settings.razorpay_key_secret,
+        connect_timeout_seconds=settings.razorpay_connect_timeout_seconds,
+        read_timeout_seconds=settings.razorpay_read_timeout_seconds,
+    )
 
 
 def run() -> None:

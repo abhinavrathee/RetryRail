@@ -11,8 +11,10 @@ from retryrail.recovery.analysis import RulesBasedIncidentAnalyst
 from retryrail.recovery.execution import (
     RecoveryActionNotFoundError,
     RecoveryActionNotReconciliationRequiredError,
+    RecoveryExecutionRequiresSyntheticError,
     RecoveryExecutionService,
     RecoveryFakeTargetRequiresSyntheticError,
+    RecoveryProviderLookupUnavailableError,
 )
 from retryrail.recovery.models import (
     ApprovalDecisionRequest,
@@ -325,7 +327,10 @@ def _http_error(error: RecoveryWorkflowError) -> HTTPException:
         )
     elif isinstance(error, RecoveryEvidenceInvalidError):
         code = status.HTTP_500_INTERNAL_SERVER_ERROR
-    elif isinstance(error, RecoveryPersistenceError):
+    elif isinstance(
+        error,
+        (RecoveryPersistenceError, RecoveryProviderLookupUnavailableError),
+    ):
         code = status.HTTP_503_SERVICE_UNAVAILABLE
     elif isinstance(
         error,
@@ -340,6 +345,7 @@ def _http_error(error: RecoveryWorkflowError) -> HTTPException:
             ApprovalTokenAlreadyUsedError,
             RecoveryActionNotReconciliationRequiredError,
             RecoveryFakeTargetRequiresSyntheticError,
+            RecoveryExecutionRequiresSyntheticError,
         ),
     ):
         code = status.HTTP_409_CONFLICT

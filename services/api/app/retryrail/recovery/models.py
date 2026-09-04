@@ -3,7 +3,7 @@
 from enum import StrEnum
 from typing import Annotated, Literal, Self
 
-from pydantic import AwareDatetime, Field, StringConstraints, model_validator
+from pydantic import AnyHttpUrl, AwareDatetime, Field, StringConstraints, model_validator
 
 from retryrail.contracts.domain import (
     ActionState,
@@ -25,6 +25,7 @@ from retryrail.contracts.recovery import (
     Sha256Digest,
 )
 from retryrail.events.models import Currency, Identifier
+from retryrail.recovery.adapter import PaymentLinkStatus
 
 ApprovalBearer = Annotated[
     str,
@@ -268,11 +269,63 @@ class RecoveryExecutionDisposition(StrEnum):
     BLOCKED = "blocked"
 
 
+class ProviderVerificationSource(StrEnum):
+    """How RetryRail obtained the authoritative provider representation."""
+
+    CREATE_RESPONSE = "create_response"
+    REFERENCE_LOOKUP = "reference_lookup"
+
+
+class RecoveryProviderReceipt(StrictContract):
+    """Redacted immutable proof of one fake or Razorpay Test Mode provider entity."""
+
+    schema_version: Literal["1.0.0"] = "1.0.0"
+    provider_receipt_id: Identifier
+    dispatch_id: Identifier
+    action_id: Identifier
+    plan_id: Identifier
+    incident_id: Identifier
+    merchant_id: Identifier
+    execution_target: RecoveryExecutionTarget
+    provider_action_id: Identifier
+    reference_id: Identifier
+    status: PaymentLinkStatus
+    amount_subunits: int = Field(gt=0, le=100_000_000_000)
+    currency: Currency
+    short_url: AnyHttpUrl | None = None
+    provider_created_at: AwareDatetime
+    verified_at: AwareDatetime
+    verification_source: ProviderVerificationSource
+    request_sha256: Sha256Digest
+    response_sha256: Sha256Digest
+    external_notifications_enabled: Literal[False] = False
+    synthetic: Literal[True] = True
+
+    @model_validator(mode="after")
+    def validate_provider_receipt(self) -> Self:
+        """Require HTTPS Test Mode evidence and monotonic provider timestamps."""
+
+        if self.verified_at < self.provider_created_at:
+            msg = "provider receipt verification cannot precede creation"
+            raise ValueError(msg)
+        if self.short_url is not None and self.short_url.scheme != "https":
+            msg = "provider receipt short URL must use HTTPS"
+            raise ValueError(msg)
+        if (
+            self.execution_target is RecoveryExecutionTarget.RAZORPAY_TEST_MODE
+            and self.short_url is None
+        ):
+            msg = "Razorpay Test Mode receipts require the returned short URL"
+            raise ValueError(msg)
+        return self
+
+
 class RecoveryExecutionResponse(StrictContract):
     """Typed execution boundary including fresh policy and optional action receipt."""
 
     disposition: RecoveryExecutionDisposition
     receipt: RecoveryActionContract | None = None
+    provider_receipt: RecoveryProviderReceipt | None = None
     execution_policy_result: PolicyResultContract | None = None
     execution_policy_result_sha256: Sha256Digest | None = None
     synthetic: bool
@@ -282,8 +335,8 @@ class RecoveryExecutionResponse(StrictContract):
         """Keep policy denial, expiry and executable receipts unambiguous."""
 
         if self.disposition is RecoveryExecutionDisposition.BLOCKED:
-            if self.receipt is not None:
-                msg = "blocked execution cannot contain an action receipt"
+            if self.receipt is not None or self.provider_receipt is not None:
+                msg = "blocked execution cannot contain action or provider receipts"
                 raise ValueError(msg)
             if (
                 self.execution_policy_result is None
@@ -299,6 +352,7 @@ class RecoveryExecutionResponse(StrictContract):
         if self.synthetic is not self.receipt.synthetic:
             msg = "execution and receipt synthetic labels must match"
             raise ValueError(msg)
+        self._validate_provider_binding()
         if self.receipt.execution_policy_result_id is None:
             if self.receipt.state is not ActionState.EXPIRED:
                 msg = "only expired receipts may omit execution policy evidence"
@@ -321,12 +375,28 @@ class RecoveryExecutionResponse(StrictContract):
             raise ValueError(msg)
         return self
 
+    def _validate_provider_binding(self) -> None:
+        """Bind optional sanitized provider evidence to one succeeded action."""
+
+        if self.provider_receipt is None or self.receipt is None:
+            return
+        if (
+            self.receipt.state is not ActionState.SUCCEEDED
+            or self.provider_receipt.action_id != self.receipt.action_id
+            or self.provider_receipt.provider_action_id != self.receipt.provider_action_id
+            or self.provider_receipt.execution_target is not self.receipt.execution_target
+            or self.provider_receipt.synthetic is not self.receipt.synthetic
+        ):
+            msg = "provider receipt does not bind to the succeeded action"
+            raise ValueError(msg)
+
 
 class RecoveryReconciliationResponse(StrictContract):
     """Idempotent resolution of an ambiguous fake-provider outcome."""
 
     disposition: Literal["created", "replayed"]
     receipt: RecoveryActionContract
+    provider_receipt: RecoveryProviderReceipt | None = None
 
     @model_validator(mode="after")
     def validate_terminal_receipt(self) -> Self:
@@ -334,6 +404,13 @@ class RecoveryReconciliationResponse(StrictContract):
 
         if self.receipt.state not in {ActionState.SUCCEEDED, ActionState.FAILED}:
             msg = "reconciliation response requires a terminal receipt"
+            raise ValueError(msg)
+        if self.provider_receipt is not None and (
+            self.receipt.state is not ActionState.SUCCEEDED
+            or self.provider_receipt.action_id != self.receipt.action_id
+            or self.provider_receipt.provider_action_id != self.receipt.provider_action_id
+        ):
+            msg = "reconciliation provider receipt does not bind to its action"
             raise ValueError(msg)
         return self
 

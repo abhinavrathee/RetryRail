@@ -1,0 +1,224 @@
+{
+  "$defs": {
+    "ExperimentArm": {
+      "description": "Mutually exclusive recovery experiment arms.",
+      "enum": [
+        "treatment",
+        "control"
+      ],
+      "title": "ExperimentArm",
+      "type": "string"
+    },
+    "RecoveryOutcome": {
+      "additionalProperties": false,
+      "description": "One same-payment outcome observed within the predeclared attribution window.",
+      "properties": {
+        "action_cost_subunits": {
+          "minimum": 0,
+          "title": "Action Cost Subunits",
+          "type": "integer"
+        },
+        "amount_subunits": {
+          "exclusiveMinimum": 0,
+          "title": "Amount Subunits",
+          "type": "integer"
+        },
+        "arm": {
+          "$ref": "#/$defs/ExperimentArm"
+        },
+        "assignment_id": {
+          "maxLength": 80,
+          "minLength": 3,
+          "pattern": "^[A-Za-z0-9_-]+$",
+          "title": "Assignment Id",
+          "type": "string"
+        },
+        "attribution_rule": {
+          "const": "same_payment_within_predeclared_window",
+          "default": "same_payment_within_predeclared_window",
+          "title": "Attribution Rule",
+          "type": "string"
+        },
+        "attribution_window_seconds": {
+          "exclusiveMinimum": 0,
+          "title": "Attribution Window Seconds",
+          "type": "integer"
+        },
+        "currency": {
+          "maxLength": 3,
+          "minLength": 3,
+          "pattern": "^[A-Z]{3}$",
+          "title": "Currency",
+          "type": "string"
+        },
+        "eligible_at": {
+          "format": "date-time",
+          "title": "Eligible At",
+          "type": "string"
+        },
+        "experiment_id": {
+          "maxLength": 80,
+          "minLength": 3,
+          "pattern": "^[A-Za-z0-9_-]+$",
+          "title": "Experiment Id",
+          "type": "string"
+        },
+        "false_intervention": {
+          "title": "False Intervention",
+          "type": "boolean"
+        },
+        "false_intervention_cost_subunits": {
+          "minimum": 0,
+          "title": "False Intervention Cost Subunits",
+          "type": "integer"
+        },
+        "observed_at": {
+          "format": "date-time",
+          "title": "Observed At",
+          "type": "string"
+        },
+        "outcome_draw_sha256": {
+          "pattern": "^[a-f0-9]{64}$",
+          "title": "Outcome Draw Sha256",
+          "type": "string"
+        },
+        "payment_id": {
+          "maxLength": 80,
+          "minLength": 3,
+          "pattern": "^[A-Za-z0-9_-]+$",
+          "title": "Payment Id",
+          "type": "string"
+        },
+        "recovered": {
+          "title": "Recovered",
+          "type": "boolean"
+        },
+        "recovered_gmv_subunits": {
+          "minimum": 0,
+          "title": "Recovered Gmv Subunits",
+          "type": "integer"
+        },
+        "schema_version": {
+          "const": "1.0.0",
+          "default": "1.0.0",
+          "title": "Schema Version",
+          "type": "string"
+        },
+        "synthetic": {
+          "const": true,
+          "default": true,
+          "title": "Synthetic",
+          "type": "boolean"
+        }
+      },
+      "required": [
+        "experiment_id",
+        "assignment_id",
+        "payment_id",
+        "arm",
+        "eligible_at",
+        "observed_at",
+        "attribution_window_seconds",
+        "outcome_draw_sha256",
+        "recovered",
+        "amount_subunits",
+        "recovered_gmv_subunits",
+        "currency",
+        "action_cost_subunits",
+        "false_intervention",
+        "false_intervention_cost_subunits"
+      ],
+      "title": "RecoveryOutcome",
+      "type": "object"
+    }
+  },
+  "$id": "https://retryrail.dev/contracts/domain/recovery-outcome-batch/v1",
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "additionalProperties": false,
+  "description": "All synthetic outcomes generated only after the assignment freeze.",
+  "properties": {
+    "assignment_freeze_sha256": {
+      "pattern": "^[a-f0-9]{64}$",
+      "title": "Assignment Freeze Sha256",
+      "type": "string"
+    },
+    "assignment_frozen_before_outcomes": {
+      "const": true,
+      "default": true,
+      "title": "Assignment Frozen Before Outcomes",
+      "type": "boolean"
+    },
+    "batch_id": {
+      "maxLength": 80,
+      "minLength": 3,
+      "pattern": "^[A-Za-z0-9_-]+$",
+      "title": "Batch Id",
+      "type": "string"
+    },
+    "experiment_id": {
+      "maxLength": 80,
+      "minLength": 3,
+      "pattern": "^[A-Za-z0-9_-]+$",
+      "title": "Experiment Id",
+      "type": "string"
+    },
+    "generated_at": {
+      "format": "date-time",
+      "title": "Generated At",
+      "type": "string"
+    },
+    "metric_scope": {
+      "const": "synthetic_batch_not_live_merchant_performance",
+      "default": "synthetic_batch_not_live_merchant_performance",
+      "title": "Metric Scope",
+      "type": "string"
+    },
+    "outcome_count": {
+      "exclusiveMinimum": 1,
+      "title": "Outcome Count",
+      "type": "integer"
+    },
+    "outcomes": {
+      "items": {
+        "$ref": "#/$defs/RecoveryOutcome"
+      },
+      "minItems": 2,
+      "title": "Outcomes",
+      "type": "array"
+    },
+    "outcomes_sha256": {
+      "pattern": "^[a-f0-9]{64}$",
+      "title": "Outcomes Sha256",
+      "type": "string"
+    },
+    "protocol_sha256": {
+      "pattern": "^[a-f0-9]{64}$",
+      "title": "Protocol Sha256",
+      "type": "string"
+    },
+    "schema_version": {
+      "const": "1.0.0",
+      "default": "1.0.0",
+      "title": "Schema Version",
+      "type": "string"
+    },
+    "synthetic": {
+      "const": true,
+      "default": true,
+      "title": "Synthetic",
+      "type": "boolean"
+    }
+  },
+  "required": [
+    "batch_id",
+    "experiment_id",
+    "protocol_sha256",
+    "assignment_freeze_sha256",
+    "generated_at",
+    "outcome_count",
+    "outcomes_sha256",
+    "outcomes"
+  ],
+  "title": "RetryRail Recovery Outcome Batch v1",
+  "type": "object"
+}

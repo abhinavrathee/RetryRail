@@ -1,0 +1,551 @@
+{
+  "$defs": {
+    "AmountBandDefinition": {
+      "additionalProperties": false,
+      "description": "A complete non-overlapping integer-subunit amount interval.",
+      "properties": {
+        "band_id": {
+          "maxLength": 80,
+          "minLength": 3,
+          "pattern": "^[A-Za-z0-9_-]+$",
+          "title": "Band Id",
+          "type": "string"
+        },
+        "lower_bound_subunits": {
+          "minimum": 0,
+          "title": "Lower Bound Subunits",
+          "type": "integer"
+        },
+        "upper_bound_subunits": {
+          "anyOf": [
+            {
+              "exclusiveMinimum": 0,
+              "type": "integer"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Upper Bound Subunits"
+        }
+      },
+      "required": [
+        "band_id",
+        "lower_bound_subunits"
+      ],
+      "title": "AmountBandDefinition",
+      "type": "object"
+    },
+    "BootstrapDesign": {
+      "additionalProperties": false,
+      "description": "Pre-outcome uncertainty procedure for both primary and companion metrics.",
+      "properties": {
+        "confidence_level_ppm": {
+          "const": 950000,
+          "default": 950000,
+          "title": "Confidence Level Ppm",
+          "type": "integer"
+        },
+        "deterministic_sha256_index_draws": {
+          "const": true,
+          "default": true,
+          "title": "Deterministic Sha256 Index Draws",
+          "type": "boolean"
+        },
+        "method": {
+          "const": "independent_arm_nonparametric_percentile",
+          "default": "independent_arm_nonparametric_percentile",
+          "title": "Method",
+          "type": "string"
+        },
+        "namespace": {
+          "maxLength": 80,
+          "minLength": 3,
+          "pattern": "^[A-Za-z0-9_-]+$",
+          "title": "Namespace",
+          "type": "string"
+        },
+        "recovery_rate_statistic": {
+          "const": "recovery_rate_difference",
+          "default": "recovery_rate_difference",
+          "title": "Recovery Rate Statistic",
+          "type": "string"
+        },
+        "replicates": {
+          "maximum": 100000,
+          "minimum": 1000,
+          "title": "Replicates",
+          "type": "integer"
+        },
+        "statistic": {
+          "const": "value_per_eligible_difference",
+          "default": "value_per_eligible_difference",
+          "title": "Statistic",
+          "type": "string"
+        }
+      },
+      "required": [
+        "replicates",
+        "namespace"
+      ],
+      "title": "BootstrapDesign",
+      "type": "object"
+    },
+    "CostAssumptions": {
+      "additionalProperties": false,
+      "description": "Synthetic per-action costs fixed before outcomes, never provider fee claims.",
+      "properties": {
+        "action_cost_per_treatment_subunits": {
+          "minimum": 0,
+          "title": "Action Cost Per Treatment Subunits",
+          "type": "integer"
+        },
+        "currency": {
+          "maxLength": 3,
+          "minLength": 3,
+          "pattern": "^[A-Z]{3}$",
+          "title": "Currency",
+          "type": "string"
+        },
+        "false_intervention_cost_per_unrecovered_treatment_subunits": {
+          "minimum": 0,
+          "title": "False Intervention Cost Per Unrecovered Treatment Subunits",
+          "type": "integer"
+        },
+        "interpretation": {
+          "const": "synthetic_modeling_assumption_not_razorpay_pricing",
+          "default": "synthetic_modeling_assumption_not_razorpay_pricing",
+          "title": "Interpretation",
+          "type": "string"
+        }
+      },
+      "required": [
+        "currency",
+        "action_cost_per_treatment_subunits",
+        "false_intervention_cost_per_unrecovered_treatment_subunits"
+      ],
+      "title": "CostAssumptions",
+      "type": "object"
+    },
+    "EligibilityDefinition": {
+      "additionalProperties": false,
+      "description": "Selection rule frozen before assignment and shared by both arms.",
+      "properties": {
+        "exclude_already_recovered": {
+          "const": true,
+          "default": true,
+          "title": "Exclude Already Recovered",
+          "type": "boolean"
+        },
+        "failed_payments_only": {
+          "const": true,
+          "default": true,
+          "title": "Failed Payments Only",
+          "type": "boolean"
+        },
+        "incident_members_only": {
+          "const": true,
+          "default": true,
+          "title": "Incident Members Only",
+          "type": "boolean"
+        },
+        "required_currency": {
+          "maxLength": 3,
+          "minLength": 3,
+          "pattern": "^[A-Z]{3}$",
+          "title": "Required Currency",
+          "type": "string"
+        },
+        "required_dataset_role": {
+          "const": "blind",
+          "default": "blind",
+          "title": "Required Dataset Role",
+          "type": "string"
+        },
+        "required_schema_version": {
+          "const": "2.0.0",
+          "default": "2.0.0",
+          "title": "Required Schema Version",
+          "type": "string"
+        },
+        "same_rule_for_treatment_and_control": {
+          "const": true,
+          "default": true,
+          "title": "Same Rule For Treatment And Control",
+          "type": "boolean"
+        },
+        "source_rows_scanned_in_full": {
+          "const": true,
+          "default": true,
+          "title": "Source Rows Scanned In Full",
+          "type": "boolean"
+        },
+        "synthetic_only": {
+          "const": true,
+          "default": true,
+          "title": "Synthetic Only",
+          "type": "boolean"
+        }
+      },
+      "required": [
+        "required_currency"
+      ],
+      "title": "EligibilityDefinition",
+      "type": "object"
+    },
+    "ExperimentDesign": {
+      "additionalProperties": false,
+      "description": "Pre-results assignment and outcome rules frozen for later M5 use.",
+      "properties": {
+        "assignment_hash": {
+          "const": "sha256",
+          "default": "sha256",
+          "title": "Assignment Hash",
+          "type": "string"
+        },
+        "assignment_namespace": {
+          "maxLength": 80,
+          "minLength": 3,
+          "pattern": "^[A-Za-z0-9_-]+$",
+          "title": "Assignment Namespace",
+          "type": "string"
+        },
+        "assignment_unit": {
+          "const": "payment_id",
+          "default": "payment_id",
+          "title": "Assignment Unit",
+          "type": "string"
+        },
+        "attribution_window_seconds": {
+          "exclusiveMinimum": 0,
+          "maximum": 604800,
+          "title": "Attribution Window Seconds",
+          "type": "integer"
+        },
+        "control_allocation_bps": {
+          "exclusiveMaximum": 10000,
+          "exclusiveMinimum": 0,
+          "title": "Control Allocation Bps",
+          "type": "integer"
+        },
+        "control_recovery_rate_bps": {
+          "maximum": 10000,
+          "minimum": 0,
+          "title": "Control Recovery Rate Bps",
+          "type": "integer"
+        },
+        "design_id": {
+          "maxLength": 80,
+          "minLength": 3,
+          "pattern": "^[A-Za-z0-9_-]+$",
+          "title": "Design Id",
+          "type": "string"
+        },
+        "eligibility_frozen_before_assignment": {
+          "const": true,
+          "default": true,
+          "title": "Eligibility Frozen Before Assignment",
+          "type": "boolean"
+        },
+        "exclude_already_recovered": {
+          "const": true,
+          "default": true,
+          "title": "Exclude Already Recovered",
+          "type": "boolean"
+        },
+        "failed_payments_only": {
+          "const": true,
+          "default": true,
+          "title": "Failed Payments Only",
+          "type": "boolean"
+        },
+        "frozen_at": {
+          "format": "date-time",
+          "title": "Frozen At",
+          "type": "string"
+        },
+        "incident_members_only": {
+          "const": true,
+          "default": true,
+          "title": "Incident Members Only",
+          "type": "boolean"
+        },
+        "inconclusive_when_interval_crosses_zero": {
+          "const": true,
+          "default": true,
+          "title": "Inconclusive When Interval Crosses Zero",
+          "type": "boolean"
+        },
+        "outcome_namespace": {
+          "maxLength": 80,
+          "minLength": 3,
+          "pattern": "^[A-Za-z0-9_-]+$",
+          "title": "Outcome Namespace",
+          "type": "string"
+        },
+        "schema_version": {
+          "const": "1.0.0",
+          "default": "1.0.0",
+          "title": "Schema Version",
+          "type": "string"
+        },
+        "strata": {
+          "items": {
+            "maxLength": 80,
+            "minLength": 1,
+            "pattern": "^[A-Za-z0-9_.:-]+$",
+            "type": "string"
+          },
+          "minItems": 1,
+          "title": "Strata",
+          "type": "array"
+        },
+        "synthetic": {
+          "const": true,
+          "default": true,
+          "title": "Synthetic",
+          "type": "boolean"
+        },
+        "treatment_allocation_bps": {
+          "exclusiveMaximum": 10000,
+          "exclusiveMinimum": 0,
+          "title": "Treatment Allocation Bps",
+          "type": "integer"
+        },
+        "treatment_recovery_rate_bps": {
+          "maximum": 10000,
+          "minimum": 0,
+          "title": "Treatment Recovery Rate Bps",
+          "type": "integer"
+        }
+      },
+      "required": [
+        "design_id",
+        "frozen_at",
+        "assignment_namespace",
+        "outcome_namespace",
+        "treatment_allocation_bps",
+        "control_allocation_bps",
+        "strata",
+        "control_recovery_rate_bps",
+        "treatment_recovery_rate_bps",
+        "attribution_window_seconds"
+      ],
+      "title": "ExperimentDesign",
+      "type": "object"
+    },
+    "ExperimentSource": {
+      "additionalProperties": false,
+      "description": "Exact qualified synthetic source batch authorized for measurement.",
+      "properties": {
+        "currency": {
+          "maxLength": 3,
+          "minLength": 3,
+          "pattern": "^[A-Z]{3}$",
+          "title": "Currency",
+          "type": "string"
+        },
+        "dataset_id": {
+          "maxLength": 80,
+          "minLength": 3,
+          "pattern": "^[A-Za-z0-9_-]+$",
+          "title": "Dataset Id",
+          "type": "string"
+        },
+        "dataset_role": {
+          "const": "blind",
+          "default": "blind",
+          "title": "Dataset Role",
+          "type": "string"
+        },
+        "detector_release_path": {
+          "maxLength": 160,
+          "minLength": 3,
+          "pattern": "^[A-Za-z0-9_./-]+$",
+          "title": "Detector Release Path",
+          "type": "string"
+        },
+        "detector_release_qualified": {
+          "const": true,
+          "default": true,
+          "title": "Detector Release Qualified",
+          "type": "boolean"
+        },
+        "detector_release_sha256": {
+          "pattern": "^[a-f0-9]{64}$",
+          "title": "Detector Release Sha256",
+          "type": "string"
+        },
+        "detector_version": {
+          "maxLength": 80,
+          "minLength": 3,
+          "pattern": "^[A-Za-z0-9_-]+$",
+          "title": "Detector Version",
+          "type": "string"
+        },
+        "manifest_path": {
+          "maxLength": 160,
+          "minLength": 3,
+          "pattern": "^[A-Za-z0-9_./-]+$",
+          "title": "Manifest Path",
+          "type": "string"
+        },
+        "manifest_sha256": {
+          "pattern": "^[a-f0-9]{64}$",
+          "title": "Manifest Sha256",
+          "type": "string"
+        },
+        "merchant_id": {
+          "maxLength": 80,
+          "minLength": 3,
+          "pattern": "^[A-Za-z0-9_-]+$",
+          "title": "Merchant Id",
+          "type": "string"
+        },
+        "synthetic": {
+          "const": true,
+          "default": true,
+          "title": "Synthetic",
+          "type": "boolean"
+        },
+        "truth_path": {
+          "maxLength": 160,
+          "minLength": 3,
+          "pattern": "^[A-Za-z0-9_./-]+$",
+          "title": "Truth Path",
+          "type": "string"
+        },
+        "truth_records": {
+          "exclusiveMinimum": 0,
+          "title": "Truth Records",
+          "type": "integer"
+        },
+        "truth_sha256": {
+          "pattern": "^[a-f0-9]{64}$",
+          "title": "Truth Sha256",
+          "type": "string"
+        }
+      },
+      "required": [
+        "dataset_id",
+        "merchant_id",
+        "currency",
+        "manifest_path",
+        "manifest_sha256",
+        "truth_path",
+        "truth_sha256",
+        "truth_records",
+        "detector_version",
+        "detector_release_path",
+        "detector_release_sha256"
+      ],
+      "title": "ExperimentSource",
+      "type": "object"
+    }
+  },
+  "$id": "https://retryrail.dev/contracts/domain/recovery-experiment-protocol/v1",
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "additionalProperties": false,
+  "description": "Complete pre-outcome M5 analysis contract.",
+  "properties": {
+    "amount_bands": {
+      "items": {
+        "$ref": "#/$defs/AmountBandDefinition"
+      },
+      "maxItems": 10,
+      "minItems": 2,
+      "title": "Amount Bands",
+      "type": "array"
+    },
+    "bootstrap": {
+      "$ref": "#/$defs/BootstrapDesign"
+    },
+    "costs": {
+      "$ref": "#/$defs/CostAssumptions"
+    },
+    "design": {
+      "$ref": "#/$defs/ExperimentDesign"
+    },
+    "eligibility": {
+      "$ref": "#/$defs/EligibilityDefinition"
+    },
+    "experiment_id": {
+      "maxLength": 80,
+      "minLength": 3,
+      "pattern": "^[A-Za-z0-9_-]+$",
+      "title": "Experiment Id",
+      "type": "string"
+    },
+    "frozen_at": {
+      "format": "date-time",
+      "title": "Frozen At",
+      "type": "string"
+    },
+    "gross_recovery_is_not_incremental": {
+      "const": true,
+      "default": true,
+      "title": "Gross Recovery Is Not Incremental",
+      "type": "boolean"
+    },
+    "inconclusive_when_primary_interval_includes_zero": {
+      "const": true,
+      "default": true,
+      "title": "Inconclusive When Primary Interval Includes Zero",
+      "type": "boolean"
+    },
+    "primary_estimand": {
+      "const": "incremental_recovered_gmv_value_per_eligible",
+      "default": "incremental_recovered_gmv_value_per_eligible",
+      "title": "Primary Estimand",
+      "type": "string"
+    },
+    "protocol_id": {
+      "maxLength": 80,
+      "minLength": 3,
+      "pattern": "^[A-Za-z0-9_-]+$",
+      "title": "Protocol Id",
+      "type": "string"
+    },
+    "schema_version": {
+      "const": "1.0.0",
+      "default": "1.0.0",
+      "title": "Schema Version",
+      "type": "string"
+    },
+    "secondary_estimand": {
+      "const": "absolute_recovery_rate_uplift",
+      "default": "absolute_recovery_rate_uplift",
+      "title": "Secondary Estimand",
+      "type": "string"
+    },
+    "source": {
+      "$ref": "#/$defs/ExperimentSource"
+    },
+    "status": {
+      "const": "frozen_before_assignment_and_outcomes",
+      "default": "frozen_before_assignment_and_outcomes",
+      "title": "Status",
+      "type": "string"
+    },
+    "synthetic": {
+      "const": true,
+      "default": true,
+      "title": "Synthetic",
+      "type": "boolean"
+    }
+  },
+  "required": [
+    "protocol_id",
+    "experiment_id",
+    "frozen_at",
+    "source",
+    "design",
+    "eligibility",
+    "amount_bands",
+    "bootstrap",
+    "costs"
+  ],
+  "title": "RetryRail Recovery Experiment Protocol v1",
+  "type": "object"
+}

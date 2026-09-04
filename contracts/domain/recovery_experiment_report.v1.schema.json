@@ -1,0 +1,462 @@
+{
+  "$defs": {
+    "BootstrapUncertainty": {
+      "additionalProperties": false,
+      "description": "Deterministic percentile intervals around value and recovery-rate uplift.",
+      "properties": {
+        "bootstrap_seed_sha256": {
+          "pattern": "^[a-f0-9]{64}$",
+          "title": "Bootstrap Seed Sha256",
+          "type": "string"
+        },
+        "confidence_level_ppm": {
+          "const": 950000,
+          "default": 950000,
+          "title": "Confidence Level Ppm",
+          "type": "integer"
+        },
+        "incremental_gmv_interval_includes_zero": {
+          "title": "Incremental Gmv Interval Includes Zero",
+          "type": "boolean"
+        },
+        "incremental_gmv_lower_subunits": {
+          "title": "Incremental Gmv Lower Subunits",
+          "type": "integer"
+        },
+        "incremental_gmv_point_subunits": {
+          "title": "Incremental Gmv Point Subunits",
+          "type": "integer"
+        },
+        "incremental_gmv_upper_subunits": {
+          "title": "Incremental Gmv Upper Subunits",
+          "type": "integer"
+        },
+        "method": {
+          "const": "independent_arm_nonparametric_percentile",
+          "title": "Method",
+          "type": "string"
+        },
+        "recovery_rate_interval_includes_zero": {
+          "title": "Recovery Rate Interval Includes Zero",
+          "type": "boolean"
+        },
+        "recovery_rate_uplift_lower_bps": {
+          "title": "Recovery Rate Uplift Lower Bps",
+          "type": "integer"
+        },
+        "recovery_rate_uplift_point_bps": {
+          "title": "Recovery Rate Uplift Point Bps",
+          "type": "integer"
+        },
+        "recovery_rate_uplift_upper_bps": {
+          "title": "Recovery Rate Uplift Upper Bps",
+          "type": "integer"
+        },
+        "replicates": {
+          "minimum": 1000,
+          "title": "Replicates",
+          "type": "integer"
+        }
+      },
+      "required": [
+        "method",
+        "replicates",
+        "bootstrap_seed_sha256",
+        "incremental_gmv_lower_subunits",
+        "incremental_gmv_point_subunits",
+        "incremental_gmv_upper_subunits",
+        "incremental_gmv_interval_includes_zero",
+        "recovery_rate_uplift_lower_bps",
+        "recovery_rate_uplift_point_bps",
+        "recovery_rate_uplift_upper_bps",
+        "recovery_rate_interval_includes_zero"
+      ],
+      "title": "BootstrapUncertainty",
+      "type": "object"
+    },
+    "ExperimentArm": {
+      "description": "Mutually exclusive recovery experiment arms.",
+      "enum": [
+        "treatment",
+        "control"
+      ],
+      "title": "ExperimentArm",
+      "type": "string"
+    },
+    "ExperimentArmSummary": {
+      "additionalProperties": false,
+      "description": "Raw arm-level recovery totals; no causal relabeling.",
+      "properties": {
+        "action_cost_subunits": {
+          "minimum": 0,
+          "title": "Action Cost Subunits",
+          "type": "integer"
+        },
+        "action_count": {
+          "minimum": 0,
+          "title": "Action Count",
+          "type": "integer"
+        },
+        "arm": {
+          "$ref": "#/$defs/ExperimentArm"
+        },
+        "eligible_count": {
+          "exclusiveMinimum": 0,
+          "title": "Eligible Count",
+          "type": "integer"
+        },
+        "eligible_gmv_subunits": {
+          "exclusiveMinimum": 0,
+          "title": "Eligible Gmv Subunits",
+          "type": "integer"
+        },
+        "false_intervention_cost_subunits": {
+          "minimum": 0,
+          "title": "False Intervention Cost Subunits",
+          "type": "integer"
+        },
+        "false_intervention_count": {
+          "minimum": 0,
+          "title": "False Intervention Count",
+          "type": "integer"
+        },
+        "recovered_count": {
+          "minimum": 0,
+          "title": "Recovered Count",
+          "type": "integer"
+        },
+        "recovered_gmv_subunits": {
+          "minimum": 0,
+          "title": "Recovered Gmv Subunits",
+          "type": "integer"
+        },
+        "recovery_rate_ppm": {
+          "maximum": 1000000,
+          "minimum": 0,
+          "title": "Recovery Rate Ppm",
+          "type": "integer"
+        },
+        "value_per_eligible_subunits_rounded": {
+          "minimum": 0,
+          "title": "Value Per Eligible Subunits Rounded",
+          "type": "integer"
+        }
+      },
+      "required": [
+        "arm",
+        "eligible_count",
+        "eligible_gmv_subunits",
+        "recovered_count",
+        "recovery_rate_ppm",
+        "recovered_gmv_subunits",
+        "value_per_eligible_subunits_rounded",
+        "action_count",
+        "action_cost_subunits",
+        "false_intervention_count",
+        "false_intervention_cost_subunits"
+      ],
+      "title": "ExperimentArmSummary",
+      "type": "object"
+    },
+    "IncrementalValueSummary": {
+      "additionalProperties": false,
+      "description": "Raw, counterfactual, incremental and net value kept explicitly separate.",
+      "properties": {
+        "absolute_recovery_rate_uplift_bps": {
+          "title": "Absolute Recovery Rate Uplift Bps",
+          "type": "integer"
+        },
+        "action_cost_subunits": {
+          "minimum": 0,
+          "title": "Action Cost Subunits",
+          "type": "integer"
+        },
+        "currency": {
+          "maxLength": 3,
+          "minLength": 3,
+          "pattern": "^[A-Z]{3}$",
+          "title": "Currency",
+          "type": "string"
+        },
+        "estimated_natural_recovery_in_treatment_subunits": {
+          "minimum": 0,
+          "title": "Estimated Natural Recovery In Treatment Subunits",
+          "type": "integer"
+        },
+        "estimator": {
+          "const": "difference_in_value_per_eligible_times_treatment_count",
+          "default": "difference_in_value_per_eligible_times_treatment_count",
+          "title": "Estimator",
+          "type": "string"
+        },
+        "false_intervention_cost_subunits": {
+          "minimum": 0,
+          "title": "False Intervention Cost Subunits",
+          "type": "integer"
+        },
+        "gross_treatment_recovered_gmv_subunits": {
+          "minimum": 0,
+          "title": "Gross Treatment Recovered Gmv Subunits",
+          "type": "integer"
+        },
+        "incremental_recovered_gmv_subunits": {
+          "title": "Incremental Recovered Gmv Subunits",
+          "type": "integer"
+        },
+        "incremental_recovered_payments_milli": {
+          "title": "Incremental Recovered Payments Milli",
+          "type": "integer"
+        },
+        "net_recovered_value_subunits": {
+          "title": "Net Recovered Value Subunits",
+          "type": "integer"
+        },
+        "observed_control_recovered_gmv_subunits": {
+          "minimum": 0,
+          "title": "Observed Control Recovered Gmv Subunits",
+          "type": "integer"
+        }
+      },
+      "required": [
+        "currency",
+        "gross_treatment_recovered_gmv_subunits",
+        "observed_control_recovered_gmv_subunits",
+        "estimated_natural_recovery_in_treatment_subunits",
+        "incremental_recovered_gmv_subunits",
+        "action_cost_subunits",
+        "false_intervention_cost_subunits",
+        "net_recovered_value_subunits",
+        "absolute_recovery_rate_uplift_bps",
+        "incremental_recovered_payments_milli"
+      ],
+      "title": "IncrementalValueSummary",
+      "type": "object"
+    },
+    "PaymentMethod": {
+      "description": "Bounded method dimensions used by the deterministic truth set.",
+      "enum": [
+        "card",
+        "netbanking",
+        "upi",
+        "wallet"
+      ],
+      "title": "PaymentMethod",
+      "type": "string"
+    },
+    "StratumAssignmentSummary": {
+      "additionalProperties": false,
+      "description": "Assignment balance evidence for one predeclared stratum.",
+      "properties": {
+        "allocation_deviation_bps": {
+          "maximum": 10000,
+          "minimum": 0,
+          "title": "Allocation Deviation Bps",
+          "type": "integer"
+        },
+        "amount_band": {
+          "maxLength": 80,
+          "minLength": 3,
+          "pattern": "^[A-Za-z0-9_-]+$",
+          "title": "Amount Band",
+          "type": "string"
+        },
+        "control_count": {
+          "minimum": 0,
+          "title": "Control Count",
+          "type": "integer"
+        },
+        "control_gmv_subunits": {
+          "minimum": 0,
+          "title": "Control Gmv Subunits",
+          "type": "integer"
+        },
+        "eligible_count": {
+          "exclusiveMinimum": 0,
+          "title": "Eligible Count",
+          "type": "integer"
+        },
+        "issuer": {
+          "maxLength": 80,
+          "minLength": 1,
+          "pattern": "^[A-Za-z0-9_.:-]+$",
+          "title": "Issuer",
+          "type": "string"
+        },
+        "method": {
+          "$ref": "#/$defs/PaymentMethod"
+        },
+        "observed_control_allocation_bps": {
+          "maximum": 10000,
+          "minimum": 0,
+          "title": "Observed Control Allocation Bps",
+          "type": "integer"
+        },
+        "stratum_id": {
+          "maxLength": 80,
+          "minLength": 3,
+          "pattern": "^[A-Za-z0-9_-]+$",
+          "title": "Stratum Id",
+          "type": "string"
+        },
+        "treatment_count": {
+          "minimum": 0,
+          "title": "Treatment Count",
+          "type": "integer"
+        },
+        "treatment_gmv_subunits": {
+          "minimum": 0,
+          "title": "Treatment Gmv Subunits",
+          "type": "integer"
+        }
+      },
+      "required": [
+        "stratum_id",
+        "method",
+        "issuer",
+        "amount_band",
+        "eligible_count",
+        "treatment_count",
+        "control_count",
+        "treatment_gmv_subunits",
+        "control_gmv_subunits",
+        "observed_control_allocation_bps",
+        "allocation_deviation_bps"
+      ],
+      "title": "StratumAssignmentSummary",
+      "type": "object"
+    }
+  },
+  "$id": "https://retryrail.dev/contracts/domain/recovery-experiment-report/v1",
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "additionalProperties": false,
+  "description": "Reviewer-facing M5 report for a full, versioned synthetic batch.",
+  "properties": {
+    "assignment_freeze_sha256": {
+      "pattern": "^[a-f0-9]{64}$",
+      "title": "Assignment Freeze Sha256",
+      "type": "string"
+    },
+    "balance_by_stratum": {
+      "items": {
+        "$ref": "#/$defs/StratumAssignmentSummary"
+      },
+      "minItems": 1,
+      "title": "Balance By Stratum",
+      "type": "array"
+    },
+    "conclusion": {
+      "enum": [
+        "statistically_positive_synthetic_incremental_value",
+        "statistically_negative_synthetic_incremental_value",
+        "inconclusive_synthetic_experiment"
+      ],
+      "title": "Conclusion",
+      "type": "string"
+    },
+    "control": {
+      "$ref": "#/$defs/ExperimentArmSummary"
+    },
+    "eligible_count": {
+      "exclusiveMinimum": 1,
+      "title": "Eligible Count",
+      "type": "integer"
+    },
+    "experiment_id": {
+      "maxLength": 80,
+      "minLength": 3,
+      "pattern": "^[A-Za-z0-9_-]+$",
+      "title": "Experiment Id",
+      "type": "string"
+    },
+    "generated_at": {
+      "format": "date-time",
+      "title": "Generated At",
+      "type": "string"
+    },
+    "gross_recovery_is_not_incremental": {
+      "const": true,
+      "default": true,
+      "title": "Gross Recovery Is Not Incremental",
+      "type": "boolean"
+    },
+    "metric_scope": {
+      "const": "synthetic_batch_not_live_merchant_performance",
+      "default": "synthetic_batch_not_live_merchant_performance",
+      "title": "Metric Scope",
+      "type": "string"
+    },
+    "outcome_batch_sha256": {
+      "pattern": "^[a-f0-9]{64}$",
+      "title": "Outcome Batch Sha256",
+      "type": "string"
+    },
+    "protocol_sha256": {
+      "pattern": "^[a-f0-9]{64}$",
+      "title": "Protocol Sha256",
+      "type": "string"
+    },
+    "report_id": {
+      "maxLength": 80,
+      "minLength": 3,
+      "pattern": "^[A-Za-z0-9_-]+$",
+      "title": "Report Id",
+      "type": "string"
+    },
+    "schema_version": {
+      "const": "1.0.0",
+      "default": "1.0.0",
+      "title": "Schema Version",
+      "type": "string"
+    },
+    "source_manifest_sha256": {
+      "pattern": "^[a-f0-9]{64}$",
+      "title": "Source Manifest Sha256",
+      "type": "string"
+    },
+    "source_rows_scanned": {
+      "exclusiveMinimum": 0,
+      "title": "Source Rows Scanned",
+      "type": "integer"
+    },
+    "source_truth_sha256": {
+      "pattern": "^[a-f0-9]{64}$",
+      "title": "Source Truth Sha256",
+      "type": "string"
+    },
+    "synthetic": {
+      "const": true,
+      "default": true,
+      "title": "Synthetic",
+      "type": "boolean"
+    },
+    "treatment": {
+      "$ref": "#/$defs/ExperimentArmSummary"
+    },
+    "uncertainty": {
+      "$ref": "#/$defs/BootstrapUncertainty"
+    },
+    "value": {
+      "$ref": "#/$defs/IncrementalValueSummary"
+    }
+  },
+  "required": [
+    "report_id",
+    "experiment_id",
+    "generated_at",
+    "protocol_sha256",
+    "assignment_freeze_sha256",
+    "outcome_batch_sha256",
+    "source_manifest_sha256",
+    "source_truth_sha256",
+    "source_rows_scanned",
+    "eligible_count",
+    "treatment",
+    "control",
+    "balance_by_stratum",
+    "value",
+    "uncertainty",
+    "conclusion"
+  ],
+  "title": "RetryRail Recovery Experiment Report v1",
+  "type": "object"
+}

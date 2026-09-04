@@ -1,0 +1,356 @@
+{
+  "$defs": {
+    "ExperimentArm": {
+      "description": "Mutually exclusive recovery experiment arms.",
+      "enum": [
+        "treatment",
+        "control"
+      ],
+      "title": "ExperimentArm",
+      "type": "string"
+    },
+    "ExperimentAssignment": {
+      "additionalProperties": false,
+      "description": "One immutable, pre-outcome assignment for an eligible failed payment.",
+      "properties": {
+        "amount_band": {
+          "maxLength": 80,
+          "minLength": 3,
+          "pattern": "^[A-Za-z0-9_-]+$",
+          "title": "Amount Band",
+          "type": "string"
+        },
+        "amount_subunits": {
+          "exclusiveMinimum": 0,
+          "title": "Amount Subunits",
+          "type": "integer"
+        },
+        "arm": {
+          "$ref": "#/$defs/ExperimentArm"
+        },
+        "assigned_at": {
+          "format": "date-time",
+          "title": "Assigned At",
+          "type": "string"
+        },
+        "assignment_id": {
+          "maxLength": 80,
+          "minLength": 3,
+          "pattern": "^[A-Za-z0-9_-]+$",
+          "title": "Assignment Id",
+          "type": "string"
+        },
+        "assignment_rank_sha256": {
+          "pattern": "^[a-f0-9]{64}$",
+          "title": "Assignment Rank Sha256",
+          "type": "string"
+        },
+        "attempt_id": {
+          "maxLength": 80,
+          "minLength": 3,
+          "pattern": "^[A-Za-z0-9_-]+$",
+          "title": "Attempt Id",
+          "type": "string"
+        },
+        "currency": {
+          "maxLength": 3,
+          "minLength": 3,
+          "pattern": "^[A-Z]{3}$",
+          "title": "Currency",
+          "type": "string"
+        },
+        "eligible_at": {
+          "format": "date-time",
+          "title": "Eligible At",
+          "type": "string"
+        },
+        "experiment_id": {
+          "maxLength": 80,
+          "minLength": 3,
+          "pattern": "^[A-Za-z0-9_-]+$",
+          "title": "Experiment Id",
+          "type": "string"
+        },
+        "issuer": {
+          "maxLength": 80,
+          "minLength": 1,
+          "pattern": "^[A-Za-z0-9_.:-]+$",
+          "title": "Issuer",
+          "type": "string"
+        },
+        "method": {
+          "$ref": "#/$defs/PaymentMethod"
+        },
+        "payment_id": {
+          "maxLength": 80,
+          "minLength": 3,
+          "pattern": "^[A-Za-z0-9_-]+$",
+          "title": "Payment Id",
+          "type": "string"
+        },
+        "scenario_id": {
+          "maxLength": 80,
+          "minLength": 3,
+          "pattern": "^[A-Za-z0-9_-]+$",
+          "title": "Scenario Id",
+          "type": "string"
+        },
+        "schema_version": {
+          "const": "1.0.0",
+          "default": "1.0.0",
+          "title": "Schema Version",
+          "type": "string"
+        },
+        "stratum_id": {
+          "maxLength": 80,
+          "minLength": 3,
+          "pattern": "^[A-Za-z0-9_-]+$",
+          "title": "Stratum Id",
+          "type": "string"
+        },
+        "synthetic": {
+          "const": true,
+          "default": true,
+          "title": "Synthetic",
+          "type": "boolean"
+        }
+      },
+      "required": [
+        "experiment_id",
+        "assignment_id",
+        "attempt_id",
+        "payment_id",
+        "scenario_id",
+        "eligible_at",
+        "assigned_at",
+        "amount_subunits",
+        "currency",
+        "method",
+        "issuer",
+        "amount_band",
+        "stratum_id",
+        "arm",
+        "assignment_rank_sha256"
+      ],
+      "title": "ExperimentAssignment",
+      "type": "object"
+    },
+    "PaymentMethod": {
+      "description": "Bounded method dimensions used by the deterministic truth set.",
+      "enum": [
+        "card",
+        "netbanking",
+        "upi",
+        "wallet"
+      ],
+      "title": "PaymentMethod",
+      "type": "string"
+    },
+    "StratumAssignmentSummary": {
+      "additionalProperties": false,
+      "description": "Assignment balance evidence for one predeclared stratum.",
+      "properties": {
+        "allocation_deviation_bps": {
+          "maximum": 10000,
+          "minimum": 0,
+          "title": "Allocation Deviation Bps",
+          "type": "integer"
+        },
+        "amount_band": {
+          "maxLength": 80,
+          "minLength": 3,
+          "pattern": "^[A-Za-z0-9_-]+$",
+          "title": "Amount Band",
+          "type": "string"
+        },
+        "control_count": {
+          "minimum": 0,
+          "title": "Control Count",
+          "type": "integer"
+        },
+        "control_gmv_subunits": {
+          "minimum": 0,
+          "title": "Control Gmv Subunits",
+          "type": "integer"
+        },
+        "eligible_count": {
+          "exclusiveMinimum": 0,
+          "title": "Eligible Count",
+          "type": "integer"
+        },
+        "issuer": {
+          "maxLength": 80,
+          "minLength": 1,
+          "pattern": "^[A-Za-z0-9_.:-]+$",
+          "title": "Issuer",
+          "type": "string"
+        },
+        "method": {
+          "$ref": "#/$defs/PaymentMethod"
+        },
+        "observed_control_allocation_bps": {
+          "maximum": 10000,
+          "minimum": 0,
+          "title": "Observed Control Allocation Bps",
+          "type": "integer"
+        },
+        "stratum_id": {
+          "maxLength": 80,
+          "minLength": 3,
+          "pattern": "^[A-Za-z0-9_-]+$",
+          "title": "Stratum Id",
+          "type": "string"
+        },
+        "treatment_count": {
+          "minimum": 0,
+          "title": "Treatment Count",
+          "type": "integer"
+        },
+        "treatment_gmv_subunits": {
+          "minimum": 0,
+          "title": "Treatment Gmv Subunits",
+          "type": "integer"
+        }
+      },
+      "required": [
+        "stratum_id",
+        "method",
+        "issuer",
+        "amount_band",
+        "eligible_count",
+        "treatment_count",
+        "control_count",
+        "treatment_gmv_subunits",
+        "control_gmv_subunits",
+        "observed_control_allocation_bps",
+        "allocation_deviation_bps"
+      ],
+      "title": "StratumAssignmentSummary",
+      "type": "object"
+    }
+  },
+  "$id": "https://retryrail.dev/contracts/domain/experiment-assignment-freeze/v1",
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "additionalProperties": false,
+  "description": "Eligibility and assignment bytes fixed before any simulated outcome draw.",
+  "properties": {
+    "assignments": {
+      "items": {
+        "$ref": "#/$defs/ExperimentAssignment"
+      },
+      "minItems": 2,
+      "title": "Assignments",
+      "type": "array"
+    },
+    "assignments_sha256": {
+      "pattern": "^[a-f0-9]{64}$",
+      "title": "Assignments Sha256",
+      "type": "string"
+    },
+    "balance_by_stratum": {
+      "items": {
+        "$ref": "#/$defs/StratumAssignmentSummary"
+      },
+      "minItems": 1,
+      "title": "Balance By Stratum",
+      "type": "array"
+    },
+    "control_count": {
+      "exclusiveMinimum": 0,
+      "title": "Control Count",
+      "type": "integer"
+    },
+    "currency": {
+      "maxLength": 3,
+      "minLength": 3,
+      "pattern": "^[A-Z]{3}$",
+      "title": "Currency",
+      "type": "string"
+    },
+    "eligibility_snapshot_sha256": {
+      "pattern": "^[a-f0-9]{64}$",
+      "title": "Eligibility Snapshot Sha256",
+      "type": "string"
+    },
+    "eligible_count": {
+      "exclusiveMinimum": 1,
+      "title": "Eligible Count",
+      "type": "integer"
+    },
+    "eligible_gmv_subunits": {
+      "exclusiveMinimum": 0,
+      "title": "Eligible Gmv Subunits",
+      "type": "integer"
+    },
+    "experiment_id": {
+      "maxLength": 80,
+      "minLength": 3,
+      "pattern": "^[A-Za-z0-9_-]+$",
+      "title": "Experiment Id",
+      "type": "string"
+    },
+    "freeze_id": {
+      "maxLength": 80,
+      "minLength": 3,
+      "pattern": "^[A-Za-z0-9_-]+$",
+      "title": "Freeze Id",
+      "type": "string"
+    },
+    "frozen_at": {
+      "format": "date-time",
+      "title": "Frozen At",
+      "type": "string"
+    },
+    "outcomes_observed": {
+      "const": false,
+      "default": false,
+      "title": "Outcomes Observed",
+      "type": "boolean"
+    },
+    "protocol_sha256": {
+      "pattern": "^[a-f0-9]{64}$",
+      "title": "Protocol Sha256",
+      "type": "string"
+    },
+    "schema_version": {
+      "const": "1.0.0",
+      "default": "1.0.0",
+      "title": "Schema Version",
+      "type": "string"
+    },
+    "source_rows_scanned": {
+      "exclusiveMinimum": 0,
+      "title": "Source Rows Scanned",
+      "type": "integer"
+    },
+    "synthetic": {
+      "const": true,
+      "default": true,
+      "title": "Synthetic",
+      "type": "boolean"
+    },
+    "treatment_count": {
+      "exclusiveMinimum": 0,
+      "title": "Treatment Count",
+      "type": "integer"
+    }
+  },
+  "required": [
+    "freeze_id",
+    "experiment_id",
+    "protocol_sha256",
+    "frozen_at",
+    "source_rows_scanned",
+    "eligible_count",
+    "eligible_gmv_subunits",
+    "currency",
+    "treatment_count",
+    "control_count",
+    "eligibility_snapshot_sha256",
+    "assignments_sha256",
+    "assignments",
+    "balance_by_stratum"
+  ],
+  "title": "RetryRail Experiment Assignment Freeze v1",
+  "type": "object"
+}

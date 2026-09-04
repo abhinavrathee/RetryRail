@@ -696,10 +696,12 @@ class RecoveryActionRecord(Base):
             name="ck_recovery_actions_template",
         ),
         CheckConstraint(
-            "execution_target = 'deterministic_fake' "
-            "AND execution_side_effect = 'simulated_external_mutation' "
+            "((execution_target = 'deterministic_fake' "
+            "AND execution_side_effect = 'simulated_external_mutation') OR "
+            "(execution_target = 'razorpay_test_mode' "
+            "AND execution_side_effect = 'razorpay_test_mode_mutation')) "
             "AND synthetic = true",
-            name="ck_recovery_actions_m4_fake_only",
+            name="ck_recovery_actions_execution_target",
         ),
         CheckConstraint(
             "amount_subunits > 0 AND external_notifications_enabled = false",
@@ -730,6 +732,144 @@ class RecoveryActionRecord(Base):
     idempotency_key: Mapped[str] = mapped_column(String(80), nullable=False)
     request_sha256: Mapped[str] = mapped_column(String(64), nullable=False)
     request_document: Mapped[dict[str, Any]] = mapped_column(JSON_DOCUMENT, nullable=False)
+    external_notifications_enabled: Mapped[bool] = mapped_column(Boolean, nullable=False)
+    synthetic: Mapped[bool] = mapped_column(Boolean, nullable=False)
+    created_at: Mapped[datetime] = mapped_column(UTCDateTime(), nullable=False)
+
+
+class RecoveryProviderDispatchRecord(Base):
+    """Immutable provider intent committed before any external network I/O."""
+
+    __tablename__ = "recovery_provider_dispatches"
+    __table_args__ = (
+        ForeignKeyConstraint(
+            ("action_id", "plan_id", "incident_id", "merchant_id"),
+            (
+                "recovery_actions.action_id",
+                "recovery_actions.plan_id",
+                "recovery_actions.incident_id",
+                "recovery_actions.merchant_id",
+            ),
+            name="fk_provider_dispatches_action_scope",
+            ondelete="RESTRICT",
+        ),
+        UniqueConstraint("action_id", name="uq_provider_dispatches_action"),
+        UniqueConstraint(
+            "provider_target",
+            "reference_id",
+            name="uq_provider_dispatches_target_reference",
+        ),
+        UniqueConstraint(
+            "dispatch_id",
+            "action_id",
+            name="uq_provider_dispatches_identity_action",
+        ),
+        CheckConstraint(
+            "provider_target IN ('deterministic_fake', 'razorpay_test_mode')",
+            name="ck_provider_dispatches_target",
+        ),
+        CheckConstraint(
+            "length(request_sha256) = 64 AND external_notifications_enabled = false "
+            "AND synthetic = true",
+            name="ck_provider_dispatches_bounded_request",
+        ),
+        Index("ix_provider_dispatches_merchant_time", "merchant_id", "prepared_at"),
+    )
+
+    dispatch_id: Mapped[str] = mapped_column(String(80), primary_key=True)
+    action_id: Mapped[str] = mapped_column(String(80), nullable=False)
+    plan_id: Mapped[str] = mapped_column(String(80), nullable=False)
+    incident_id: Mapped[str] = mapped_column(String(80), nullable=False)
+    merchant_id: Mapped[str] = mapped_column(String(80), nullable=False)
+    provider_target: Mapped[str] = mapped_column(String(32), nullable=False)
+    reference_id: Mapped[str] = mapped_column(String(40), nullable=False)
+    request_sha256: Mapped[str] = mapped_column(String(64), nullable=False)
+    request_document: Mapped[dict[str, Any]] = mapped_column(JSON_DOCUMENT, nullable=False)
+    external_notifications_enabled: Mapped[bool] = mapped_column(Boolean, nullable=False)
+    synthetic: Mapped[bool] = mapped_column(Boolean, nullable=False)
+    prepared_at: Mapped[datetime] = mapped_column(UTCDateTime(), nullable=False)
+
+
+class RecoveryProviderReceiptRecord(Base):
+    """Sanitized immutable provider response or lookup verification evidence."""
+
+    __tablename__ = "recovery_provider_receipts"
+    __table_args__ = (
+        ForeignKeyConstraint(
+            ("dispatch_id", "action_id"),
+            (
+                "recovery_provider_dispatches.dispatch_id",
+                "recovery_provider_dispatches.action_id",
+            ),
+            name="fk_provider_receipts_dispatch_action",
+            ondelete="RESTRICT",
+        ),
+        ForeignKeyConstraint(
+            ("action_id", "plan_id", "incident_id", "merchant_id"),
+            (
+                "recovery_actions.action_id",
+                "recovery_actions.plan_id",
+                "recovery_actions.incident_id",
+                "recovery_actions.merchant_id",
+            ),
+            name="fk_provider_receipts_action_scope",
+            ondelete="RESTRICT",
+        ),
+        UniqueConstraint("action_id", name="uq_provider_receipts_action"),
+        UniqueConstraint(
+            "provider_target",
+            "provider_action_id",
+            name="uq_provider_receipts_provider_action",
+        ),
+        CheckConstraint(
+            "provider_target IN ('deterministic_fake', 'razorpay_test_mode')",
+            name="ck_provider_receipts_target",
+        ),
+        CheckConstraint(
+            "status IN ('created', 'partially_paid', 'paid', 'expired', 'cancelled')",
+            name="ck_provider_receipts_status",
+        ),
+        CheckConstraint(
+            "verification_source IN ('create_response', 'reference_lookup')",
+            name="ck_provider_receipts_verification_source",
+        ),
+        CheckConstraint(
+            "length(request_sha256) = 64 AND length(response_sha256) = 64 "
+            "AND amount_subunits > 0 AND external_notifications_enabled = false "
+            "AND synthetic = true",
+            name="ck_provider_receipts_evidence",
+        ),
+        CheckConstraint(
+            "provider_created_at <= verified_at",
+            name="ck_provider_receipts_time_order",
+        ),
+        CheckConstraint(
+            "provider_target != 'razorpay_test_mode' "
+            "OR (short_url IS NOT NULL AND short_url LIKE 'https://%')",
+            name="ck_provider_receipts_test_mode_url",
+        ),
+        Index("ix_provider_receipts_merchant_time", "merchant_id", "verified_at"),
+    )
+
+    provider_receipt_id: Mapped[str] = mapped_column(String(80), primary_key=True)
+    dispatch_id: Mapped[str] = mapped_column(String(80), nullable=False)
+    action_id: Mapped[str] = mapped_column(String(80), nullable=False)
+    plan_id: Mapped[str] = mapped_column(String(80), nullable=False)
+    incident_id: Mapped[str] = mapped_column(String(80), nullable=False)
+    merchant_id: Mapped[str] = mapped_column(String(80), nullable=False)
+    provider_target: Mapped[str] = mapped_column(String(32), nullable=False)
+    provider_action_id: Mapped[str] = mapped_column(String(80), nullable=False)
+    reference_id: Mapped[str] = mapped_column(String(40), nullable=False)
+    status: Mapped[str] = mapped_column(String(32), nullable=False)
+    amount_subunits: Mapped[int] = mapped_column(BigInteger, nullable=False)
+    currency: Mapped[str] = mapped_column(String(3), nullable=False)
+    short_url: Mapped[str | None] = mapped_column(String(500), nullable=True)
+    provider_created_at: Mapped[datetime] = mapped_column(UTCDateTime(), nullable=False)
+    verified_at: Mapped[datetime] = mapped_column(UTCDateTime(), nullable=False)
+    verification_source: Mapped[str] = mapped_column(String(32), nullable=False)
+    request_sha256: Mapped[str] = mapped_column(String(64), nullable=False)
+    response_sha256: Mapped[str] = mapped_column(String(64), nullable=False)
+    response_document: Mapped[dict[str, Any]] = mapped_column(JSON_DOCUMENT, nullable=False)
     external_notifications_enabled: Mapped[bool] = mapped_column(Boolean, nullable=False)
     synthetic: Mapped[bool] = mapped_column(Boolean, nullable=False)
     created_at: Mapped[datetime] = mapped_column(UTCDateTime(), nullable=False)
