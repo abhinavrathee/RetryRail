@@ -1,0 +1,13 @@
+{
+  "nonce": "RetryRail-v4-public-nonsecret-saffron-bridge-monsoon-2026",
+  "nonce_sha256": "5497598109b06d21c6253e25b74e2d82d1149bacbbb6cfbe3466f59f8cf171a6",
+  "public_non_secret_value": true,
+  "published_after_release_decision": true,
+  "release_decision_sha256": "da633356f34e358327be73bf733165b9993fdbb4d159bf7ace9fa512813a0faa",
+  "reproducibility_only": true,
+  "reveal_id": "nonce_reveal_5497598109b06d21c625",
+  "revealed_at": "2026-09-04T00:01:00.232935Z",
+  "run_id": "detector_v4_official_blind_5497598109b06d21c625",
+  "schema_version": "1.0.0",
+  "synthetic": true
+}
