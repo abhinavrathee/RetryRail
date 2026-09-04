@@ -96,6 +96,48 @@ class PipelineMetrics:
             "At-risk GMV for detected open incidents in integer currency subunits.",
             registry=self.registry,
         )
+        self.recovery_plan_previews = Counter(
+            "retryrail_recovery_plan_previews_total",
+            "Durable recovery preview outcomes.",
+            ("result",),
+            registry=self.registry,
+        )
+        self.recovery_policy_decisions = Counter(
+            "retryrail_recovery_policy_decisions_total",
+            "Complete deterministic recovery policy outcomes.",
+            ("stage", "decision"),
+            registry=self.registry,
+        )
+        self.recovery_approval_decisions = Counter(
+            "retryrail_recovery_approval_decisions_total",
+            "Authenticated merchant approval decision outcomes.",
+            ("decision", "result"),
+            registry=self.registry,
+        )
+        self.approval_token_consumptions = Counter(
+            "retryrail_approval_token_consumptions_total",
+            "Atomic approval-token consumption outcomes.",
+            ("result",),
+            registry=self.registry,
+        )
+        self.recovery_action_executions = Counter(
+            "retryrail_recovery_action_executions_total",
+            "Execute-once recovery outcomes by bounded state.",
+            ("result", "state"),
+            registry=self.registry,
+        )
+        self.recovery_action_reconciliations = Counter(
+            "retryrail_recovery_action_reconciliations_total",
+            "Read-only provider reconciliation outcomes by terminal state.",
+            ("result", "state"),
+            registry=self.registry,
+        )
+        self.rules_fallback_analyses = Counter(
+            "retryrail_rules_fallback_analyses_total",
+            "Content-addressed incident briefs produced without a model provider.",
+            ("result",),
+            registry=self.registry,
+        )
 
 
 router = APIRouter(tags=["operations"])

@@ -73,6 +73,9 @@ packages = ["services/api/app/retryrail"]
 "services/api/migrations" = "retryrail/db/migrations"
 "evals/golden/detector_v1.freeze.json" = "retryrail/detection/assets/detector_v1.freeze.json"
 "evals/reports/detector_v1.release.json" = "retryrail/detection/assets/detector_v1.release.json"
+"evals/golden/detector_v4.candidate.json" = "retryrail/detection/assets/detector_v4.candidate.json"
+"evals/blind/detector_v4/runs/detector_v4_official_blind_5497598109b06d21c625/blind.release.v1.json" = "retryrail/detection/assets/detector_v4.blind.release.v1.json"
+"evals/blind/detector_v4/runs/detector_v4_official_blind_5497598109b06d21c625/blind.report.v1.json" = "retryrail/detection/assets/detector_v4.blind.report.v1.json"
 
 [tool.pytest.ini_options]
 addopts = "--strict-config --strict-markers -ra"

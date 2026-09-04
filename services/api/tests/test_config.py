@@ -61,3 +61,68 @@ def test_production_cannot_enable_synthetic_replay() -> None:
             cors_origins=[AnyHttpUrl("https://merchant.example")],
             replay_enabled=True,
         )
+
+
+def test_production_requires_distinct_non_placeholder_approval_secrets() -> None:
+    with pytest.raises(ValidationError, match="approval secrets"):
+        Settings(
+            environment=Environment.PRODUCTION,
+            database_url="postgresql+psycopg://service:value@db.internal/retryrail",
+            webhook_secret=SecretStr("runtime-injected-production-value"),
+            cors_origins=[AnyHttpUrl("https://merchant.example")],
+        )
+
+    shared = SecretStr("runtime-injected-shared-approval-secret")
+    with pytest.raises(ValidationError, match="must be distinct"):
+        Settings(
+            environment=Environment.PRODUCTION,
+            database_url="postgresql+psycopg://service:value@db.internal/retryrail",
+            webhook_secret=SecretStr("runtime-injected-production-value"),
+            merchant_approval_secret=shared,
+            approval_token_hmac_key=shared,
+            cors_origins=[AnyHttpUrl("https://merchant.example")],
+        )
+
+
+def test_production_requires_approval_secrets_distinct_from_webhook_secret() -> None:
+    shared = SecretStr("runtime-injected-shared-boundary-secret")
+    with pytest.raises(ValidationError, match="must be distinct"):
+        Settings(
+            environment=Environment.PRODUCTION,
+            database_url="postgresql+psycopg://service:value@db.internal/retryrail",
+            webhook_secret=shared,
+            merchant_approval_secret=shared,
+            approval_token_hmac_key=SecretStr(
+                "runtime-injected-token-hmac-key-value"
+            ),
+            cors_origins=[AnyHttpUrl("https://merchant.example")],
+        )
+
+    with pytest.raises(ValidationError, match="must be distinct"):
+        Settings(
+            environment=Environment.PRODUCTION,
+            database_url="postgresql+psycopg://service:value@db.internal/retryrail",
+            webhook_secret=shared,
+            merchant_approval_secret=SecretStr(
+                "runtime-injected-merchant-approval-value"
+            ),
+            approval_token_hmac_key=shared,
+            cors_origins=[AnyHttpUrl("https://merchant.example")],
+        )
+
+
+def test_production_accepts_separate_runtime_approval_secrets() -> None:
+    settings = Settings(
+        environment=Environment.PRODUCTION,
+        database_url="postgresql+psycopg://service:value@db.internal/retryrail",
+        webhook_secret=SecretStr("runtime-injected-production-value"),
+        merchant_approval_secret=SecretStr(
+            "runtime-injected-merchant-approval-value"
+        ),
+        approval_token_hmac_key=SecretStr(
+            "runtime-injected-token-hmac-key-value"
+        ),
+        cors_origins=[AnyHttpUrl("https://merchant.example")],
+    )
+
+    assert settings.environment is Environment.PRODUCTION

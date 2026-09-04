@@ -21,6 +21,8 @@ _INSECURE_SECRET_VALUES = frozenset(
         "",
         "change-me",
         "local-development-only",
+        "replace-with-a-random-local-approval-secret",
+        "replace-with-a-random-local-token-hmac-key",
         "replace-with-a-random-local-test-secret",
     }
 )
@@ -48,6 +50,27 @@ class Settings(BaseSettings):
         pattern=r"^[A-Za-z0-9_-]+$",
     )
     webhook_secret: SecretStr = SecretStr("replace-with-a-random-local-test-secret")
+    merchant_approval_secret: SecretStr = Field(
+        default=SecretStr("replace-with-a-random-local-approval-secret"),
+        min_length=32,
+    )
+    approval_token_hmac_key: SecretStr = Field(
+        default=SecretStr("replace-with-a-random-local-token-hmac-key"),
+        min_length=32,
+    )
+    merchant_approver_id: str = Field(
+        default="merchant_operator_local",
+        min_length=3,
+        max_length=80,
+        pattern=r"^[A-Za-z0-9_-]+$",
+    )
+    recovery_mode: Literal["analyze_only", "review_first"] = "review_first"
+    recovery_template_enabled: bool = True
+    recovery_kill_switch: bool = False
+    recovery_plan_lifetime_seconds: int = Field(default=1_800, ge=60, le=86_400)
+    approval_token_lifetime_seconds: int = Field(default=600, ge=30, le=900)
+    recovery_maximum_attempts_per_payment: int = Field(default=1, ge=1, le=3)
+    recovery_cooldown_seconds: int = Field(default=900, ge=0, le=604_800)
     max_webhook_body_bytes: int = Field(default=262_144, ge=1_024, le=1_048_576)
     outbox_max_attempts: int = Field(default=5, ge=1, le=20)
     worker_batch_size: int = Field(default=50, ge=1, le=500)
@@ -80,6 +103,21 @@ class Settings(BaseSettings):
             raise ValueError(msg)
         if any(origin.host in {"localhost", "127.0.0.1"} for origin in self.cors_origins):
             msg = "production CORS origins cannot target localhost"
+            raise ValueError(msg)
+        approval_secrets = {
+            self.merchant_approval_secret.get_secret_value(),
+            self.approval_token_hmac_key.get_secret_value(),
+        }
+        if approval_secrets & _INSECURE_SECRET_VALUES:
+            msg = "approval secrets must be replaced in production"
+            raise ValueError(msg)
+        runtime_secret_values = (
+            self.webhook_secret.get_secret_value(),
+            self.merchant_approval_secret.get_secret_value(),
+            self.approval_token_hmac_key.get_secret_value(),
+        )
+        if len(set(runtime_secret_values)) != len(runtime_secret_values):
+            msg = "webhook, merchant approval and token HMAC secrets must be distinct"
             raise ValueError(msg)
         return self
 

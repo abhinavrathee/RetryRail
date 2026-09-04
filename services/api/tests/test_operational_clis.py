@@ -44,9 +44,16 @@ def test_detect_run_formats_bounded_result_and_disposes_database(
             disposed.append(True)
 
     class FakeService:
-        def __init__(self, database: object, metrics: object) -> None:
+        def __init__(
+            self,
+            database: object,
+            metrics: object,
+            *,
+            runtime_version: str,
+        ) -> None:
             assert isinstance(database, FakeDatabase)
             assert metrics is not None
+            assert runtime_version == "v4"
 
         async def refresh(self, merchant_id: str) -> DetectionRefreshResult:
             assert merchant_id == _SettingsStub.merchant_id

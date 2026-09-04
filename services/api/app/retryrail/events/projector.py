@@ -7,7 +7,11 @@ from pydantic import ValidationError
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from retryrail.db.tables import PaymentEventRecord, PaymentProjectionRecord
+from retryrail.db.tables import (
+    PaymentEventRecord,
+    PaymentProjectionRecord,
+    PaymentRecoveryControlRecord,
+)
 from retryrail.events.models import NormalizedPaymentEvent, PaymentStatus
 
 
@@ -78,26 +82,63 @@ class PaymentProjector:
             .with_for_update()
         )
         if projection is None:
-            session.add(
-                PaymentProjectionRecord(
-                    merchant_id=event.merchant_id,
-                    payment_id=event.payment_id,
-                    status=payment.status.value,
-                    state_rank=rank,
-                    amount_subunits=payment.amount_subunits,
-                    currency=payment.currency,
-                    method=payment.method.value,
-                    issuer=payment.issuer,
-                    synthetic=normalized.synthetic,
-                    last_event_internal_id=event.internal_id,
-                    state_changed_at=normalized.occurred_at,
-                    last_processed_at=processed_at,
-                    version=1,
-                )
+            projection = PaymentProjectionRecord(
+                merchant_id=event.merchant_id,
+                payment_id=event.payment_id,
+                status=payment.status.value,
+                state_rank=rank,
+                amount_subunits=payment.amount_subunits,
+                currency=payment.currency,
+                method=payment.method.value,
+                issuer=payment.issuer,
+                synthetic=normalized.synthetic,
+                last_event_internal_id=event.internal_id,
+                state_changed_at=normalized.occurred_at,
+                last_processed_at=processed_at,
+                version=1,
             )
+            session.add(projection)
+            await session.flush()
+            if normalized.synthetic:
+                session.add(
+                    PaymentRecoveryControlRecord(
+                        merchant_id=event.merchant_id,
+                        payment_id=event.payment_id,
+                        contact_consent_verified=False,
+                        customer_opted_out=False,
+                        already_recovered=payment.status is not PaymentStatus.FAILED,
+                        prior_action_attempts=0,
+                        last_action_at=None,
+                        source="synthetic_fixture_default",
+                        version=1,
+                        updated_at=processed_at,
+                    )
+                )
             result = ProjectionResult.CREATED
         else:
             self._validate_identity(projection, event, normalized)
+            controls = await session.scalar(
+                select(PaymentRecoveryControlRecord)
+                .where(
+                    PaymentRecoveryControlRecord.merchant_id == event.merchant_id,
+                    PaymentRecoveryControlRecord.payment_id == event.payment_id,
+                )
+                .with_for_update()
+            )
+            if controls is None and normalized.synthetic:
+                controls = PaymentRecoveryControlRecord(
+                    merchant_id=event.merchant_id,
+                    payment_id=event.payment_id,
+                    contact_consent_verified=False,
+                    customer_opted_out=False,
+                    already_recovered=payment.status is not PaymentStatus.FAILED,
+                    prior_action_attempts=0,
+                    last_action_at=None,
+                    source="synthetic_fixture_default",
+                    version=1,
+                    updated_at=processed_at,
+                )
+                session.add(controls)
             if projection.issuer is None and payment.issuer is not None:
                 projection.issuer = payment.issuer
             projection.last_processed_at = processed_at
@@ -107,6 +148,10 @@ class PaymentProjector:
                 projection.last_event_internal_id = event.internal_id
                 projection.state_changed_at = normalized.occurred_at
                 projection.version += 1
+                if controls is not None and payment.status is not PaymentStatus.FAILED:
+                    controls.already_recovered = True
+                    controls.version += 1
+                    controls.updated_at = processed_at
                 result = ProjectionResult.ADVANCED
             else:
                 result = ProjectionResult.STALE

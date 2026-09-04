@@ -1,0 +1,90 @@
+{
+  "$id": "https://retryrail.dev/contracts/domain/recovery-template/v1",
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "additionalProperties": false,
+  "description": "Frozen definition of the sole pre-authorized P0 recovery template.",
+  "properties": {
+    "allowed_execution_targets": {
+      "default": [
+        "deterministic_fake",
+        "razorpay_test_mode"
+      ],
+      "maxItems": 2,
+      "minItems": 2,
+      "prefixItems": [
+        {
+          "const": "deterministic_fake",
+          "type": "string"
+        },
+        {
+          "const": "razorpay_test_mode",
+          "type": "string"
+        }
+      ],
+      "title": "Allowed Execution Targets",
+      "type": "array"
+    },
+    "approval_side_effect": {
+      "const": "durable_internal_write",
+      "default": "durable_internal_write",
+      "title": "Approval Side Effect",
+      "type": "string"
+    },
+    "effect": {
+      "const": "create_standard_payment_link",
+      "default": "create_standard_payment_link",
+      "title": "Effect",
+      "type": "string"
+    },
+    "external_notifications_enabled": {
+      "const": false,
+      "default": false,
+      "title": "External Notifications Enabled",
+      "type": "boolean"
+    },
+    "preserve_verified_amount": {
+      "const": true,
+      "default": true,
+      "title": "Preserve Verified Amount",
+      "type": "boolean"
+    },
+    "preview_side_effect": {
+      "const": "none",
+      "default": "none",
+      "title": "Preview Side Effect",
+      "type": "string"
+    },
+    "production_execution_allowed": {
+      "const": false,
+      "default": false,
+      "title": "Production Execution Allowed",
+      "type": "boolean"
+    },
+    "requires_external_approval": {
+      "const": true,
+      "default": true,
+      "title": "Requires External Approval",
+      "type": "boolean"
+    },
+    "schema_version": {
+      "const": "1.0.0",
+      "default": "1.0.0",
+      "title": "Schema Version",
+      "type": "string"
+    },
+    "template": {
+      "const": "standard_payment_link",
+      "default": "standard_payment_link",
+      "title": "Template",
+      "type": "string"
+    },
+    "template_version": {
+      "const": "standard_payment_link_v1",
+      "default": "standard_payment_link_v1",
+      "title": "Template Version",
+      "type": "string"
+    }
+  },
+  "title": "RetryRail Recovery Template v1",
+  "type": "object"
+}

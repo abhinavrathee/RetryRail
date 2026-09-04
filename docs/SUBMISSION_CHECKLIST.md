@@ -1,8 +1,21 @@
 # RetryRail Razorpay submission checklist
 
 This checklist mirrors the official Buildathon page and the application form
-structure verified on 2026-09-01. Do not submit until every required claim is
-supported by the public repository or video.
+structure, last re-verified on 2026-09-04. Do not submit until every required
+claim is supported by the public repository or video.
+
+## 0. Submission clock
+
+- [ ] Treat **September 5, 2026** as the final submission date. Razorpay
+  Careers says “Apply by 5 Sep.”
+- [ ] Do not assume the form remains open until 11:59 PM. The official landing
+  page, Careers notice and application form publish no cutoff hour or timezone.
+- [ ] Submit early enough to reopen the public repository and video links in a
+  signed-out browser before sending the irreversible final form response.
+
+Deadline references:
+<https://www.linkedin.com/posts/razorpay-careers_razorpaybuildathon-aiinterns-hiring-activity-7497899727838076929-UjeL>
+and <https://razorpay.com/buildathon/>.
 
 ## 1. Eligibility and internship choices
 
@@ -91,18 +104,19 @@ proportion-confidence check, then froze thresholds before evaluating on a
 held-out set. Final precision/recall were [values], with [false-positive cost].
 
 3. Preventing an AI explanation from becoming an unsafe money action
-The LLM receives only a redacted structured incident snapshot and can select
-only predefined recovery templates. It has no payment credentials. A
-deterministic policy layer rechecks amount, consent, scope, cooldown, approval
-and kill switch immediately before execution. The system also completes the
-workflow through a rules fallback when the model is unavailable.
+M4 proves this boundary with the model unavailable: the rules analyst can
+recommend only a predefined template and has no approval, credential or
+execution authority. A deterministic policy layer rechecks amount, consent,
+scope, cooldown, approval and kill switch immediately before execution. M6 must
+prove that any added LLM sees only the redacted structured snapshot and remains
+behind exactly the same boundary before this paragraph is used in a submission.
 
 4. Measuring actual recovery rather than correlation
-Some customers would recover naturally. We assigned eligible failures
-deterministically to treatment and holdout groups, fixed the attribution window
-before outcome generation, and reported both gross and incremental recovered
-GMV with uncertainty. This prevented us from attributing all later successes
-to RetryRail.
+Some customers would recover naturally. M5 must assign eligible failures
+deterministically to treatment and holdout groups, fix the attribution window
+before outcomes, and report both gross and incremental recovered GMV with
+uncertainty. Do not convert this to past tense until that versioned experiment
+passes; M4's at-risk opportunity and fake receipt are not causal evidence.
 ```
 
 Only retain challenges actually encountered and solved. Add links to the most
@@ -197,19 +211,19 @@ Recommended timing:
 | Detector precision/recall | V1 remains failed; v2 remains blocked on delay/leakage; v3 remains blocked and procedurally invalid. V4 official synthetic blind run `detector_v4_official_blind_5497598109b06d21c625` records 1,000,000 ppm precision and recall and passes every frozen detector target. Label it synthetic and do not imply production performance or active recovery |
 | Root-cause accuracy | V1 held-out remains unscorable after the miss; v2/v3 official evidence records 1,000,000 ppm top-1 attribution but failed other release gates. The qualified v4 official synthetic blind report records 1,000,000 ppm top-1 attribution |
 | Agent grounding/safety | `evals/reports/agent-golden.json` |
-| No duplicate action | Integration test plus demo audit receipt |
-| Timeout reconciliation | Integration test and failure-demo recording |
+| No duplicate action | `services/api/tests/recovery/test_workflow.py` concurrent execute/replay cases and immutable action receipt |
+| Timeout reconciliation | `services/api/tests/recovery/test_workflow.py` before/after-create ambiguity cases; M4 uses fake lookup-only proof, M5 still needs redacted Test Mode evidence |
 | Incremental recovered GMV | Versioned experiment report |
 | Razorpay integration | Redacted Test Mode action receipt |
-| Complete audit | Automated audit-completeness test and UI timeline |
+| Complete audit | `services/api/tests/recovery/test_m4_release_gate.py` and `docs/RECOVERY_WORKFLOW.md`; reviewer UI timeline remains M7 |
 | Clean release | Public CI run for tagged commit |
 
 Later-milestone paths remain required targets. V4's qualifying synthetic
-detector decision and R5.5 verification are complete, but M4
-deterministic policy, external merchant approval and the recovery/experiment
-milestones remain incomplete. If any strong component metric is used in the
-application, its synthetic limitation and relevant blocked predecessor context
-must appear beside it. V3's report-contract defect must still be disclosed
-wherever its official metrics appear. V4 R5.2 results remain revealed
-development evidence;
+detector decision, R5.5 verification and M4's deterministic model-unavailable
+fake recovery loop are complete. The fake receipt is explicitly simulated;
+Razorpay Test Mode execution and the treatment/control experiment remain M5
+work. If any strong component metric is used in the application, its synthetic
+limitation and relevant blocked predecessor context must appear beside it. V3's
+report-contract defect must still be disclosed wherever its official metrics
+appear. V4 R5.2 results remain revealed development evidence;
 only the append-only R5.4 run may be described as v4 blind qualification.

@@ -125,14 +125,86 @@ test proving that a one-character variation remains blocked. A future blind
 runner must use a plainly non-secret-shaped receipt identifier before its
 pre-nonce freeze rather than adding a general exception.
 
-## Known M0–M3 limits
+## M4 recovery threat boundary
 
-- The P0 API currently serves one configured merchant. Full merchant
-  authentication/authorization and database row-level security are not yet
-  implemented; a mismatched merchant path fails closed.
-- Edge/WAF rate limiting, approval tokens, policy revalidation and recovery
-  action receipts do not exist until their planned milestones. No endpoint
-  currently claims those protections.
+ADR-0007 freezes the recovery boundary before any mutating route exists. The
+only template preserves the verified source amount, disables external
+notifications and has no production execution target. Policy results must
+include merchant scope, qualified detector evidence, mode, template, money,
+consent, opt-out, attempts, cooldown, expiry, kill switch and prior-recovery
+checks; one denial makes the complete decision deny.
+
+Approval is an authenticated merchant action outside the model. M4.3 returns an
+opaque bearer once, but permits only a server-keyed hash in persistence. It is
+bound to the merchant, incident, plan and preview-policy digests, expires within
+fifteen minutes and is consumed by an atomic one-winner insert. The raw bearer
+is prohibited from logs, audits, traces and action receipts.
+
+The M4 action contract distinguishes the deterministic fake from Razorpay Test
+Mode, binds each action to one payment and an unchanged amount/currency, and
+requires a fresh execution-stage policy result. Ambiguous provider outcomes
+require reconciliation and explicitly forbid blind retry. M4.1 itself adds no
+endpoint, token issuer, database table, credential or provider call.
+
+M4.2 implements policy as a pure function over validated internal facts. It
+evaluates all 13 rules even after a denial, rejects unknown evaluator versions
+and non-UTC timestamps, and derives its idempotent identifier from the complete
+canonical context. The result is evidence, not an approval credential. A client
+or model must never supply policy facts.
+
+M4.3 now constructs those facts from locked merchant-scoped incident, payment
+projection and recovery-control records plus the immutable source event and
+validated server configuration. The request cannot carry money, mode, consent,
+eligibility, kill-switch or decision fields. Each immutable preview stores exact
+source provenance and canonical plan/policy/evidence digests. Recovery-control
+defaults are created only for explicitly synthetic fixtures; missing
+non-synthetic first-party controls fail closed.
+
+Approve/reject routes use a constant-time-checked single-merchant authorization
+secret and a server-configured actor identity outside the model. An approval
+bearer contains 256 random bits, is returned only once, and is stored only as an
+HMAC-SHA-256 digest under a separate production-required key. Exact API replay
+does not repeat the bearer. Approval expiry is capped at fifteen minutes and at
+plan expiry. A separate append-only consumption row has a unique approval
+constraint, so concurrent uses have one winner. Missing, malformed, unknown and
+mismatched tokens expose one non-oracular invalid reason.
+
+M4.4 exposes execute and reconcile only for the injected deterministic fake.
+Execution locks the plan and approval, reassembles current server-owned facts,
+persists a fresh execution-stage policy result, and stops before provider access
+on any denial. On allow, approval consumption, the action, its initial immutable
+transitions and the bounded attempt increment share one transaction. Stable
+references and database uniqueness make exact replay safe; an ambiguous timeout
+can perform lookup-only reconciliation and can never retry create.
+
+The fake request is explicitly synthetic, carries no customer contact or
+credential, preserves integer amount/currency and forces external notifications
+off. Its recorded side effect is `simulated_external_mutation`; it cannot attest
+a Razorpay Test Mode or production action. No Razorpay key is loaded by this
+path.
+
+M4.5's rules analyst imports no model provider and cannot detect, approve or
+execute. It rejects unverified evidence citations and keeps facts, hypotheses,
+unknowns and observed at-risk opportunity distinct. The audit verifier requires
+a pre-action brief plus the source event, incident, plan, both policy decisions,
+merchant approval, token consumption, terminal transition and attempt control.
+
+ADR-0009 adds detector-v4 activation without changing the frozen candidate,
+blind report or release. Startup verifies their exact digests and qualification;
+only open, synthetic incidents with the exact activated version/configuration
+identity can pass recovery policy. Failed v1–v3 identities and forged v4 hashes
+remain denied.
+
+## Known M0–M4 limits
+
+- The P0 API currently serves one configured merchant. Recovery writes require
+  a shared merchant authorization secret, but per-user sessions, roles,
+  revocation and database row-level security are not yet implemented. This is a
+  bounded demo control, not a production IAM claim.
+- Edge/WAF rate limiting, per-user IAM, durable network dispatch, Razorpay Test
+  Mode execution and customer-facing recovery do not exist yet. M4 action
+  receipts describe only a local deterministic fake and must never be presented
+  as external provider evidence.
 - Dead letters are retained and observable but have no operator requeue API;
   manual database mutation is intentionally not documented as a workflow.
 - Local Compose placeholders are development-only and are rejected by the
@@ -182,5 +254,6 @@ pre-nonce freeze rather than adding a general exception.
   `detector_v4_official_blind_5497598109b06d21c625` passes every unchanged
   target and its strict report contract. The public reveal was scanned as
   non-secret, the typed release is qualified for integration review, and R5.5
-  release verification passed. All runtime action flags remain false pending
-  M4's deterministic policy and external approval implementation.
+  release verification passed. Its frozen historical action flags remain false;
+  the separate hash-bound M4 activation permits only the exact qualified v4
+  identity to enter the synthetic fake recovery boundary.

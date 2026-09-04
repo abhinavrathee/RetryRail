@@ -1,0 +1,380 @@
+{
+  "$defs": {
+    "OperatingMode": {
+      "description": "Merchant control modes accepted by the recovery boundary.",
+      "enum": [
+        "analyze_only",
+        "review_first"
+      ],
+      "title": "OperatingMode",
+      "type": "string"
+    },
+    "PolicyContextSnapshot": {
+      "additionalProperties": false,
+      "description": "PII-free facts consumed by deterministic policy evaluation.",
+      "properties": {
+        "already_recovered": {
+          "title": "Already Recovered",
+          "type": "boolean"
+        },
+        "contact_consent_verified": {
+          "title": "Contact Consent Verified",
+          "type": "boolean"
+        },
+        "contact_required": {
+          "title": "Contact Required",
+          "type": "boolean"
+        },
+        "cooldown_seconds": {
+          "maximum": 604800,
+          "minimum": 0,
+          "title": "Cooldown Seconds",
+          "type": "integer"
+        },
+        "customer_opted_out": {
+          "title": "Customer Opted Out",
+          "type": "boolean"
+        },
+        "evaluated_at": {
+          "format": "date-time",
+          "title": "Evaluated At",
+          "type": "string"
+        },
+        "execution_target": {
+          "$ref": "#/$defs/RecoveryExecutionTarget"
+        },
+        "incident_action_eligible": {
+          "title": "Incident Action Eligible",
+          "type": "boolean"
+        },
+        "incident_id": {
+          "maxLength": 80,
+          "minLength": 3,
+          "pattern": "^[A-Za-z0-9_-]+$",
+          "title": "Incident Id",
+          "type": "string"
+        },
+        "last_action_at": {
+          "anyOf": [
+            {
+              "format": "date-time",
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Last Action At"
+        },
+        "maximum_attempts_per_payment": {
+          "exclusiveMinimum": 0,
+          "maximum": 3,
+          "title": "Maximum Attempts Per Payment",
+          "type": "integer"
+        },
+        "merchant_id": {
+          "maxLength": 80,
+          "minLength": 3,
+          "pattern": "^[A-Za-z0-9_-]+$",
+          "title": "Merchant Id",
+          "type": "string"
+        },
+        "merchant_kill_switch": {
+          "title": "Merchant Kill Switch",
+          "type": "boolean"
+        },
+        "mode": {
+          "$ref": "#/$defs/OperatingMode"
+        },
+        "payment_id": {
+          "maxLength": 80,
+          "minLength": 3,
+          "pattern": "^[A-Za-z0-9_-]+$",
+          "title": "Payment Id",
+          "type": "string"
+        },
+        "plan_expires_at": {
+          "format": "date-time",
+          "title": "Plan Expires At",
+          "type": "string"
+        },
+        "plan_id": {
+          "maxLength": 80,
+          "minLength": 3,
+          "pattern": "^[A-Za-z0-9_-]+$",
+          "title": "Plan Id",
+          "type": "string"
+        },
+        "policy_version": {
+          "maxLength": 80,
+          "minLength": 3,
+          "pattern": "^[A-Za-z0-9_-]+$",
+          "title": "Policy Version",
+          "type": "string"
+        },
+        "prior_action_attempts": {
+          "minimum": 0,
+          "title": "Prior Action Attempts",
+          "type": "integer"
+        },
+        "proposed_amount_subunits": {
+          "exclusiveMinimum": 0,
+          "maximum": 100000000000,
+          "title": "Proposed Amount Subunits",
+          "type": "integer"
+        },
+        "proposed_currency": {
+          "maxLength": 3,
+          "minLength": 3,
+          "pattern": "^[A-Z]{3}$",
+          "title": "Proposed Currency",
+          "type": "string"
+        },
+        "resource_merchant_id": {
+          "maxLength": 80,
+          "minLength": 3,
+          "pattern": "^[A-Za-z0-9_-]+$",
+          "title": "Resource Merchant Id",
+          "type": "string"
+        },
+        "source_amount_subunits": {
+          "exclusiveMinimum": 0,
+          "maximum": 100000000000,
+          "title": "Source Amount Subunits",
+          "type": "integer"
+        },
+        "source_currency": {
+          "maxLength": 3,
+          "minLength": 3,
+          "pattern": "^[A-Z]{3}$",
+          "title": "Source Currency",
+          "type": "string"
+        },
+        "stage": {
+          "$ref": "#/$defs/PolicyEvaluationStage"
+        },
+        "synthetic": {
+          "title": "Synthetic",
+          "type": "boolean"
+        },
+        "template": {
+          "$ref": "#/$defs/RecoveryTemplate"
+        },
+        "template_enabled": {
+          "title": "Template Enabled",
+          "type": "boolean"
+        }
+      },
+      "required": [
+        "stage",
+        "policy_version",
+        "evaluated_at",
+        "merchant_id",
+        "resource_merchant_id",
+        "incident_id",
+        "plan_id",
+        "payment_id",
+        "incident_action_eligible",
+        "mode",
+        "template",
+        "template_enabled",
+        "source_amount_subunits",
+        "proposed_amount_subunits",
+        "source_currency",
+        "proposed_currency",
+        "contact_required",
+        "contact_consent_verified",
+        "customer_opted_out",
+        "prior_action_attempts",
+        "maximum_attempts_per_payment",
+        "cooldown_seconds",
+        "plan_expires_at",
+        "merchant_kill_switch",
+        "already_recovered",
+        "execution_target",
+        "synthetic"
+      ],
+      "title": "PolicyContextSnapshot",
+      "type": "object"
+    },
+    "PolicyDecision": {
+      "description": "Aggregate deterministic policy outcome.",
+      "enum": [
+        "allow",
+        "deny"
+      ],
+      "title": "PolicyDecision",
+      "type": "string"
+    },
+    "PolicyEvaluationStage": {
+      "description": "Policy is evaluated during preview and repeated immediately before execution.",
+      "enum": [
+        "preview",
+        "execution"
+      ],
+      "title": "PolicyEvaluationStage",
+      "type": "string"
+    },
+    "PolicyReasonCode": {
+      "description": "Allowlisted, machine-readable reason for every P0 rule outcome.",
+      "enum": [
+        "POLICY_MERCHANT_SCOPE_MATCH",
+        "POLICY_MERCHANT_SCOPE_MISMATCH",
+        "POLICY_INCIDENT_ACTION_ELIGIBLE",
+        "POLICY_INCIDENT_ACTION_INELIGIBLE",
+        "POLICY_REVIEW_FIRST_ENABLED",
+        "POLICY_ANALYZE_ONLY_BLOCKS_MUTATION",
+        "POLICY_TEMPLATE_ENABLED",
+        "POLICY_TEMPLATE_DISABLED",
+        "POLICY_ORIGINAL_AMOUNT_MATCH",
+        "POLICY_AMOUNT_CHANGED",
+        "POLICY_CURRENCY_MATCH",
+        "POLICY_CURRENCY_MISMATCH",
+        "POLICY_CONTACT_NOT_REQUIRED_OR_CONSENT_VERIFIED",
+        "POLICY_CONTACT_CONSENT_MISSING",
+        "POLICY_CUSTOMER_NOT_OPTED_OUT",
+        "POLICY_CUSTOMER_OPTED_OUT",
+        "POLICY_ATTEMPT_CAP_AVAILABLE",
+        "POLICY_ATTEMPT_CAP_REACHED",
+        "POLICY_COOLDOWN_ELAPSED",
+        "POLICY_COOLDOWN_ACTIVE",
+        "POLICY_PLAN_ACTIVE",
+        "POLICY_PLAN_EXPIRED",
+        "POLICY_KILL_SWITCH_OFF",
+        "POLICY_KILL_SWITCH_ON",
+        "POLICY_PAYMENT_UNRECOVERED",
+        "POLICY_PAYMENT_ALREADY_RECOVERED"
+      ],
+      "title": "PolicyReasonCode",
+      "type": "string"
+    },
+    "PolicyRule": {
+      "description": "Complete P0 rule set; omitting any rule invalidates a policy result.",
+      "enum": [
+        "merchant_scope",
+        "incident_action_eligibility",
+        "operating_mode",
+        "template_enabled",
+        "original_amount",
+        "currency",
+        "contact_consent",
+        "customer_opt_out",
+        "attempt_cap",
+        "cooldown",
+        "plan_expiry",
+        "kill_switch",
+        "already_recovered"
+      ],
+      "title": "PolicyRule",
+      "type": "string"
+    },
+    "PolicyRuleOutcome": {
+      "description": "Per-rule result used to derive the aggregate decision.",
+      "enum": [
+        "pass",
+        "deny"
+      ],
+      "title": "PolicyRuleOutcome",
+      "type": "string"
+    },
+    "PolicyRuleResult": {
+      "additionalProperties": false,
+      "description": "One deterministic rule outcome with a reason bound to rule and polarity.",
+      "properties": {
+        "outcome": {
+          "$ref": "#/$defs/PolicyRuleOutcome"
+        },
+        "reason_code": {
+          "$ref": "#/$defs/PolicyReasonCode"
+        },
+        "rule": {
+          "$ref": "#/$defs/PolicyRule"
+        }
+      },
+      "required": [
+        "rule",
+        "outcome",
+        "reason_code"
+      ],
+      "title": "PolicyRuleResult",
+      "type": "object"
+    },
+    "RecoveryExecutionTarget": {
+      "description": "The only execution targets admitted by the P0 contracts.",
+      "enum": [
+        "deterministic_fake",
+        "razorpay_test_mode"
+      ],
+      "title": "RecoveryExecutionTarget",
+      "type": "string"
+    },
+    "RecoveryTemplate": {
+      "description": "Pre-authorized P0 intervention templates.",
+      "enum": [
+        "standard_payment_link"
+      ],
+      "title": "RecoveryTemplate",
+      "type": "string"
+    }
+  },
+  "$id": "https://retryrail.dev/contracts/domain/policy-result/v1",
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "additionalProperties": false,
+  "description": "Complete policy record; it describes authority but cannot grant approval.",
+  "properties": {
+    "context": {
+      "$ref": "#/$defs/PolicyContextSnapshot"
+    },
+    "decision": {
+      "$ref": "#/$defs/PolicyDecision"
+    },
+    "evaluation_side_effect": {
+      "const": "none",
+      "default": "none",
+      "title": "Evaluation Side Effect",
+      "type": "string"
+    },
+    "policy_result_id": {
+      "maxLength": 80,
+      "minLength": 3,
+      "pattern": "^[A-Za-z0-9_-]+$",
+      "title": "Policy Result Id",
+      "type": "string"
+    },
+    "recording_side_effect": {
+      "const": "durable_internal_write",
+      "default": "durable_internal_write",
+      "title": "Recording Side Effect",
+      "type": "string"
+    },
+    "rule_results": {
+      "items": {
+        "$ref": "#/$defs/PolicyRuleResult"
+      },
+      "maxItems": 13,
+      "minItems": 13,
+      "title": "Rule Results",
+      "type": "array"
+    },
+    "schema_version": {
+      "const": "1.0.0",
+      "default": "1.0.0",
+      "title": "Schema Version",
+      "type": "string"
+    },
+    "synthetic": {
+      "title": "Synthetic",
+      "type": "boolean"
+    }
+  },
+  "required": [
+    "policy_result_id",
+    "context",
+    "decision",
+    "rule_results",
+    "synthetic"
+  ],
+  "title": "RetryRail Policy Result v1",
+  "type": "object"
+}

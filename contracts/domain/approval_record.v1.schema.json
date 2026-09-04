@@ -1,0 +1,189 @@
+{
+  "$defs": {
+    "ApprovalDecision": {
+      "description": "Decision made by an authenticated merchant actor outside the model.",
+      "enum": [
+        "approve",
+        "reject"
+      ],
+      "title": "ApprovalDecision",
+      "type": "string"
+    },
+    "ApprovalStatus": {
+      "description": "Lifecycle of a hashed, short-lived, single-use approval credential.",
+      "enum": [
+        "issued",
+        "consumed",
+        "rejected",
+        "expired"
+      ],
+      "title": "ApprovalStatus",
+      "type": "string"
+    }
+  },
+  "$id": "https://retryrail.dev/contracts/domain/approval-record/v1",
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "additionalProperties": false,
+  "description": "Durable approval fact that never contains the bearer token itself.",
+  "properties": {
+    "actor_id": {
+      "maxLength": 80,
+      "minLength": 3,
+      "pattern": "^[A-Za-z0-9_-]+$",
+      "title": "Actor Id",
+      "type": "string"
+    },
+    "actor_type": {
+      "const": "merchant",
+      "default": "merchant",
+      "title": "Actor Type",
+      "type": "string"
+    },
+    "approval_id": {
+      "maxLength": 80,
+      "minLength": 3,
+      "pattern": "^[A-Za-z0-9_-]+$",
+      "title": "Approval Id",
+      "type": "string"
+    },
+    "consumed_at": {
+      "anyOf": [
+        {
+          "format": "date-time",
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "title": "Consumed At"
+    },
+    "decided_at": {
+      "format": "date-time",
+      "title": "Decided At",
+      "type": "string"
+    },
+    "decision": {
+      "$ref": "#/$defs/ApprovalDecision"
+    },
+    "expires_at": {
+      "anyOf": [
+        {
+          "format": "date-time",
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "title": "Expires At"
+    },
+    "incident_id": {
+      "maxLength": 80,
+      "minLength": 3,
+      "pattern": "^[A-Za-z0-9_-]+$",
+      "title": "Incident Id",
+      "type": "string"
+    },
+    "issued_at": {
+      "anyOf": [
+        {
+          "format": "date-time",
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "title": "Issued At"
+    },
+    "merchant_id": {
+      "maxLength": 80,
+      "minLength": 3,
+      "pattern": "^[A-Za-z0-9_-]+$",
+      "title": "Merchant Id",
+      "type": "string"
+    },
+    "plan_id": {
+      "maxLength": 80,
+      "minLength": 3,
+      "pattern": "^[A-Za-z0-9_-]+$",
+      "title": "Plan Id",
+      "type": "string"
+    },
+    "plan_sha256": {
+      "pattern": "^[a-f0-9]{64}$",
+      "title": "Plan Sha256",
+      "type": "string"
+    },
+    "policy_result_id": {
+      "maxLength": 80,
+      "minLength": 3,
+      "pattern": "^[A-Za-z0-9_-]+$",
+      "title": "Policy Result Id",
+      "type": "string"
+    },
+    "policy_result_sha256": {
+      "pattern": "^[a-f0-9]{64}$",
+      "title": "Policy Result Sha256",
+      "type": "string"
+    },
+    "schema_version": {
+      "const": "1.0.0",
+      "default": "1.0.0",
+      "title": "Schema Version",
+      "type": "string"
+    },
+    "side_effect": {
+      "const": "durable_internal_write",
+      "default": "durable_internal_write",
+      "title": "Side Effect",
+      "type": "string"
+    },
+    "single_use": {
+      "const": true,
+      "default": true,
+      "title": "Single Use",
+      "type": "boolean"
+    },
+    "status": {
+      "$ref": "#/$defs/ApprovalStatus"
+    },
+    "synthetic": {
+      "title": "Synthetic",
+      "type": "boolean"
+    },
+    "token_hash": {
+      "anyOf": [
+        {
+          "pattern": "^[a-f0-9]{64}$",
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "title": "Token Hash"
+    }
+  },
+  "required": [
+    "approval_id",
+    "plan_id",
+    "incident_id",
+    "merchant_id",
+    "policy_result_id",
+    "plan_sha256",
+    "policy_result_sha256",
+    "actor_id",
+    "decision",
+    "status",
+    "decided_at",
+    "synthetic"
+  ],
+  "title": "RetryRail Approval Record v1",
+  "type": "object"
+}

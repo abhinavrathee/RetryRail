@@ -17,7 +17,11 @@ async def _run() -> str:
     settings = get_settings()
     database = Database(settings.database_dsn())
     try:
-        result = await DetectionService(database, PipelineMetrics()).refresh(
+        result = await DetectionService(
+            database,
+            PipelineMetrics(),
+            runtime_version="v4",
+        ).refresh(
             settings.merchant_id
         )
     finally:

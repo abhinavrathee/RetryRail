@@ -1,0 +1,354 @@
+{
+  "$defs": {
+    "ActionState": {
+      "description": "Auditable recovery action states, including ambiguous outcomes.",
+      "enum": [
+        "previewed",
+        "awaiting_approval",
+        "approved",
+        "rejected",
+        "expired",
+        "executing",
+        "succeeded",
+        "failed",
+        "reconciliation_required"
+      ],
+      "title": "ActionState",
+      "type": "string"
+    },
+    "RecoveryActionActor": {
+      "description": "Actors admitted to the M4/M5 action receipt state graph.",
+      "enum": [
+        "system",
+        "policy_engine",
+        "merchant",
+        "worker",
+        "deterministic_fake",
+        "razorpay_test_mode"
+      ],
+      "title": "RecoveryActionActor",
+      "type": "string"
+    },
+    "RecoveryActionError": {
+      "additionalProperties": false,
+      "description": "Redacted action error with explicit retry and reconciliation semantics.",
+      "properties": {
+        "category": {
+          "$ref": "#/$defs/RecoveryActionErrorCategory"
+        },
+        "reason_code": {
+          "maxLength": 80,
+          "minLength": 3,
+          "pattern": "^[A-Za-z0-9_-]+$",
+          "title": "Reason Code",
+          "type": "string"
+        },
+        "reconciliation_required": {
+          "title": "Reconciliation Required",
+          "type": "boolean"
+        },
+        "retry_permitted": {
+          "title": "Retry Permitted",
+          "type": "boolean"
+        }
+      },
+      "required": [
+        "category",
+        "reason_code",
+        "retry_permitted",
+        "reconciliation_required"
+      ],
+      "title": "RecoveryActionError",
+      "type": "object"
+    },
+    "RecoveryActionErrorCategory": {
+      "description": "Typed P0 execution failure categories without raw provider messages.",
+      "enum": [
+        "invalid_input",
+        "unauthorized",
+        "rate_limited",
+        "upstream_failure",
+        "reconciliation_required"
+      ],
+      "title": "RecoveryActionErrorCategory",
+      "type": "string"
+    },
+    "RecoveryActionTransition": {
+      "additionalProperties": false,
+      "description": "One append-only M4 action transition.",
+      "properties": {
+        "actor": {
+          "$ref": "#/$defs/RecoveryActionActor"
+        },
+        "new_state": {
+          "$ref": "#/$defs/ActionState"
+        },
+        "occurred_at": {
+          "format": "date-time",
+          "title": "Occurred At",
+          "type": "string"
+        },
+        "prior_state": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/ActionState"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "reason_code": {
+          "maxLength": 80,
+          "minLength": 3,
+          "pattern": "^[A-Za-z0-9_-]+$",
+          "title": "Reason Code",
+          "type": "string"
+        }
+      },
+      "required": [
+        "prior_state",
+        "new_state",
+        "occurred_at",
+        "actor",
+        "reason_code"
+      ],
+      "title": "RecoveryActionTransition",
+      "type": "object"
+    },
+    "RecoveryExecutionTarget": {
+      "description": "The only execution targets admitted by the P0 contracts.",
+      "enum": [
+        "deterministic_fake",
+        "razorpay_test_mode"
+      ],
+      "title": "RecoveryExecutionTarget",
+      "type": "string"
+    },
+    "SideEffectClass": {
+      "description": "Bounded side-effect classes exposed at the recovery trust boundary.",
+      "enum": [
+        "none",
+        "durable_internal_write",
+        "simulated_external_mutation",
+        "razorpay_test_mode_mutation"
+      ],
+      "title": "SideEffectClass",
+      "type": "string"
+    }
+  },
+  "$id": "https://retryrail.dev/contracts/domain/recovery-action/v1",
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "additionalProperties": false,
+  "description": "Bounded action record joining preview, approval, execution and receipt evidence.",
+  "properties": {
+    "action_id": {
+      "maxLength": 80,
+      "minLength": 3,
+      "pattern": "^[A-Za-z0-9_-]+$",
+      "title": "Action Id",
+      "type": "string"
+    },
+    "amount_subunits": {
+      "exclusiveMinimum": 0,
+      "maximum": 100000000000,
+      "title": "Amount Subunits",
+      "type": "integer"
+    },
+    "approval_id": {
+      "anyOf": [
+        {
+          "maxLength": 80,
+          "minLength": 3,
+          "pattern": "^[A-Za-z0-9_-]+$",
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "title": "Approval Id"
+    },
+    "currency": {
+      "maxLength": 3,
+      "minLength": 3,
+      "pattern": "^[A-Z]{3}$",
+      "title": "Currency",
+      "type": "string"
+    },
+    "error": {
+      "anyOf": [
+        {
+          "$ref": "#/$defs/RecoveryActionError"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null
+    },
+    "execution_policy_result_id": {
+      "anyOf": [
+        {
+          "maxLength": 80,
+          "minLength": 3,
+          "pattern": "^[A-Za-z0-9_-]+$",
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "title": "Execution Policy Result Id"
+    },
+    "execution_side_effect": {
+      "$ref": "#/$defs/SideEffectClass"
+    },
+    "execution_target": {
+      "$ref": "#/$defs/RecoveryExecutionTarget"
+    },
+    "external_notifications_enabled": {
+      "const": false,
+      "default": false,
+      "title": "External Notifications Enabled",
+      "type": "boolean"
+    },
+    "idempotency_key": {
+      "maxLength": 80,
+      "minLength": 3,
+      "pattern": "^[A-Za-z0-9_-]+$",
+      "title": "Idempotency Key",
+      "type": "string"
+    },
+    "incident_id": {
+      "maxLength": 80,
+      "minLength": 3,
+      "pattern": "^[A-Za-z0-9_-]+$",
+      "title": "Incident Id",
+      "type": "string"
+    },
+    "merchant_id": {
+      "maxLength": 80,
+      "minLength": 3,
+      "pattern": "^[A-Za-z0-9_-]+$",
+      "title": "Merchant Id",
+      "type": "string"
+    },
+    "payment_id": {
+      "maxLength": 80,
+      "minLength": 3,
+      "pattern": "^[A-Za-z0-9_-]+$",
+      "title": "Payment Id",
+      "type": "string"
+    },
+    "plan_id": {
+      "maxLength": 80,
+      "minLength": 3,
+      "pattern": "^[A-Za-z0-9_-]+$",
+      "title": "Plan Id",
+      "type": "string"
+    },
+    "plan_sha256": {
+      "pattern": "^[a-f0-9]{64}$",
+      "title": "Plan Sha256",
+      "type": "string"
+    },
+    "preview_policy_result_id": {
+      "maxLength": 80,
+      "minLength": 3,
+      "pattern": "^[A-Za-z0-9_-]+$",
+      "title": "Preview Policy Result Id",
+      "type": "string"
+    },
+    "provider_action_id": {
+      "anyOf": [
+        {
+          "maxLength": 80,
+          "minLength": 3,
+          "pattern": "^[A-Za-z0-9_-]+$",
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "title": "Provider Action Id"
+    },
+    "reference_id": {
+      "maxLength": 80,
+      "minLength": 3,
+      "pattern": "^[A-Za-z0-9_-]+$",
+      "title": "Reference Id",
+      "type": "string"
+    },
+    "schema_version": {
+      "const": "1.0.0",
+      "default": "1.0.0",
+      "title": "Schema Version",
+      "type": "string"
+    },
+    "state": {
+      "$ref": "#/$defs/ActionState"
+    },
+    "synthetic": {
+      "title": "Synthetic",
+      "type": "boolean"
+    },
+    "template": {
+      "const": "standard_payment_link",
+      "default": "standard_payment_link",
+      "title": "Template",
+      "type": "string"
+    },
+    "template_version": {
+      "const": "standard_payment_link_v1",
+      "default": "standard_payment_link_v1",
+      "title": "Template Version",
+      "type": "string"
+    },
+    "transitions": {
+      "items": {
+        "$ref": "#/$defs/RecoveryActionTransition"
+      },
+      "minItems": 1,
+      "title": "Transitions",
+      "type": "array"
+    },
+    "verified_at": {
+      "anyOf": [
+        {
+          "format": "date-time",
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "title": "Verified At"
+    }
+  },
+  "required": [
+    "action_id",
+    "plan_id",
+    "incident_id",
+    "merchant_id",
+    "payment_id",
+    "plan_sha256",
+    "execution_target",
+    "execution_side_effect",
+    "amount_subunits",
+    "currency",
+    "reference_id",
+    "idempotency_key",
+    "preview_policy_result_id",
+    "state",
+    "transitions",
+    "synthetic"
+  ],
+  "title": "RetryRail Recovery Action v1",
+  "type": "object"
+}

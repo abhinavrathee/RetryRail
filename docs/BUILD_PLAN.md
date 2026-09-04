@@ -558,23 +558,68 @@ Tasks:
 
 Sequential review gates:
 
-1. **M4.1 — contracts and threat boundary:** freeze typed recovery-template,
-   plan, policy-result, approval and action contracts, their side effects and
-   the allowed state transitions. No mutating endpoint is introduced.
-2. **M4.2 — deterministic policy:** implement `ANALYZE_ONLY` and
+1. **M4.1 — contracts and threat boundary — complete:** freeze typed
+   recovery-template, plan, policy-result, approval and action contracts, their
+   side effects and the allowed state transitions. No mutating endpoint is
+   introduced.
+2. **M4.2 — deterministic policy — complete:** implement `ANALYZE_ONLY` and
    `REVIEW_FIRST` plus amount, currency, consent, opt-out, attempt, cooldown,
    expiry and kill-switch rules with allow and deny tests.
-3. **M4.3 — preview and approval:** implement plan preview and hashed,
+3. **M4.3 — preview and approval — complete:** assemble policy facts from authoritative
+   server records, persist plan preview evidence and implement hashed,
    short-lived, single-use approval tokens. Approval remains outside the model.
-4. **M4.4 — execution state machine:** implement append-only audit transitions,
+4. **M4.4 — execution state machine — complete:** implement append-only audit transitions,
    idempotent receipts and the fake Razorpay adapter, including ambiguous,
    duplicate, expired and concurrent request paths.
-5. **M4.5 — fallback and release gate:** add the rules-based incident brief and
+5. **M4.5 — fallback and release gate — complete:** add the rules-based incident brief and
    plan fallback, then run the complete model-unavailable integration, misuse
    and audit matrix plus all repository release gates.
 
 Each gate must pass before the next begins. M4.4 uses only the deterministic
 fake adapter; a real Razorpay Test Mode call remains M5 work.
+
+M4.1 was completed on September 4, 2026 as an additive, contract-only change.
+It adds versioned recovery-template, policy-result, approval-record and
+recovery-action schemas plus ADR-0007 and focused misuse/failure tests. The
+frozen M1 recovery-plan and action-receipt schemas remain unchanged. It
+introduced no policy runtime, token issuer, mutating endpoint, provider adapter
+or credential and established the boundary used by M4.2.
+
+M4.2 was completed on September 4, 2026 as a pure, version-pinned evaluator. It
+evaluates all 13 frozen rules without short-circuiting, emits allowlisted
+machine-readable reasons, rejects unknown versions and non-UTC facts, and uses
+a content-addressed result identity. Paired allow/deny, exact-boundary,
+multi-denial, deterministic-replay and property tests cover the engine. It adds
+no endpoint, persistence, approval credential or provider call.
+
+M4.3 was completed on September 4, 2026 as an authenticated, server-owned
+preview and approval boundary. Caller-supplied policy facts are rejected;
+incident, payment, source-event, recovery-control and configuration facts are
+cross-checked and persisted with exact provenance and canonical digests. Plan,
+policy, decision and consumption evidence is append-only. Approval uses a
+256-bit bearer delivered once, stored only as a separate-key HMAC digest,
+strictly expires and has a database-enforced one-winner consumption path.
+Concurrent preview, decision and consumption tests pass. No execute route,
+provider adapter, external notification or Razorpay credential was introduced;
+that deliberately internal authority boundary is consumed by M4.4.
+
+M4.4 was completed on September 5, 2026 with an authenticated execute-once
+coordinator, immutable action/transition/reconciliation evidence and a typed
+deterministic fake Payment Link adapter. It recomputes all policy rules from
+current authoritative state, denies before token consumption or provider access,
+and couples an allowed token consumption to action creation. Exact replay is
+stable, idempotency rebinding conflicts, and ambiguous timeouts can perform only
+reference lookup—never another create. Every fake action is synthetic, preserves
+amount/currency and disables external notifications.
+
+M4.5 was completed on September 5, 2026 with a rules-only analyst that validates
+every incident citation against verified merchant events, a content-addressed
+brief and an audit-completeness verifier. A separate activation layer verifies
+the exact qualified detector-v4 candidate/report/release bytes without altering
+frozen evidence. The literal release path runs detect -> analyze -> plan ->
+approve -> fake execute -> receipt -> audit with the model provider unavailable.
+ADR-0009 records the fake-only transaction boundary and the M5 requirement for
+durable network dispatch.
 
 Exit gate:
 

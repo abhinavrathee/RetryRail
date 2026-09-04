@@ -52,8 +52,8 @@ slice (M1), authenticated event pipeline (M2), and M3 detector/lifecycle
 machinery are implemented. Detector v1 deliberately remains release-blocked:
 it passed tuning but scored 0 precision and 0 recall on the frozen held-out
 batch. A generated, hash-bound release decision keeps every v1 incident
-action-ineligible. Recovery execution and impact reporting remain behind later
-milestones.
+action-ineligible. M4 now proves synthetic fake execution; Razorpay Test Mode
+and causal impact reporting remain behind M5.
 
 Detector-v2 remediation completed its one-time, nonce-derived synthetic blind
 run with byte-reproducible, append-only evidence. The frozen candidate found
@@ -80,15 +80,32 @@ perfect precision, recall and top-1 attribution, a 600-second median simulated
 delay, and zero safety or reconciliation violations. Its detector decision is
 qualified for M4 integration review. R5.5 subsequently passed working-tree,
 clean-checkout, security, container and all five remote CI gates. M3R.5 is now
-complete and M4 is next, while runtime actions remain disabled.
+complete. M4.1 freezes the recovery-template, complete policy-result, hashed
+approval-record and provider-bound action contracts plus their threat model.
+M4.2 now implements the pure, version-pinned 13-rule policy evaluator with
+complete allow/deny evidence. M4.3 now assembles those facts from authoritative
+server records, persists hash-bound preview evidence and implements
+authenticated, idempotent approve/reject with hash-only, short-lived,
+single-use bearers. M4.4 adds fresh pre-execution policy, atomic approval
+consumption, append-only action transitions, execute-once replay and a
+deterministic fake provider with lookup-only timeout reconciliation. M4.5 adds a
+grounded rules analyst, model-unavailable fallback, complete audit verifier and
+an additive activation gate for only the exact qualified detector-v4 identity.
+The frozen v4 release remains unchanged; the fake path is synthetic-only and
+cannot call Razorpay.
 See the [v4 protocol](docs/DETECTOR_V4_PROTOCOL.md) and
-[v4 candidate](docs/DETECTOR_V4_CANDIDATE.md).
+[v4 candidate](docs/DETECTOR_V4_CANDIDATE.md), plus the
+[M4 recovery-boundary decision](docs/adr/0007-m4-policy-approval-recovery-contract-boundary.md)
+and [M4.3 storage decision](docs/adr/0008-m4-authoritative-preview-and-approval-storage.md),
+plus the [M4 execution and activation decision](docs/adr/0009-m4-qualified-detector-and-execute-once-fake.md),
+plus the [deterministic policy](docs/POLICY.md) and
+[complete recovery workflow](docs/RECOVERY_WORKFLOW.md).
 
 ## Run through Part 4 locally
 
 Required tools are Python 3.12 or 3.13, `uv`, Node.js 22, pnpm 11, GNU Make
 and Docker with Compose.
-No cloud account or Razorpay credential is needed for M0–M3.
+No cloud account or Razorpay credential is needed for M0–M4.
 
 ```bash
 cp .env.example .env
@@ -143,11 +160,13 @@ event processing from being mistaken for a working recovery product. On
 Windows without GNU Make, run the underlying `uv`
 and `pnpm` commands shown in the Makefile.
 
-M0–M3 verification includes Python and TypeScript lint/typecheck, backend and
+M0–M4 verification includes Python and TypeScript lint/typecheck, backend and
 web unit tests, schema and truth-manifest drift, production web build, a
 Chromium smoke test, Bandit, credential/fixture scanning and Python/web
 dependency audits. Pipeline integration tests run hermetically on SQLite
-locally and against PostgreSQL 16 in the Python CI job.
+locally and against PostgreSQL 16 in the Python CI job. The M4 workflow adds
+SQLite/PostgreSQL migration coverage, adversarial approval/action races and a
+literal model-unavailable detector-to-audit release test.
 
 ## Official context
 
@@ -159,7 +178,7 @@ locally and against PostgreSQL 16 in the Python CI job.
 
 ## Status
 
-Parts 1–4 / M0–M3, M3R.1–R.3 and M3R.4 are implemented. M3R.4 is complete only
+M0–M3, M3R.1–R.5 and M4.1–M4.5 are implemented. M3R.4 is complete only
 as preservation of detector v3's blocked and procedurally invalid official
 result. M3R.5 R5.1 binds the exact hierarchy failure, three revealed
 development partitions, unchanged release targets, strict report round-trip
@@ -173,16 +192,24 @@ the one official synthetic blind slot only after that freeze was remotely
 verified. The committed prediction bytes precede truth access, reproduce
 exactly and lead to a qualified decision that passes every unchanged target.
 
-The v4 detector is qualified for M4 integration review and R5.5 has closed the
-repository, security, clean-checkout, container and remote release gates. Every
-output remains action-ineligible; M4 policy work is next and no recovery path
-exists yet. GitHub Actions includes PostgreSQL 16 integration and all
-implemented detector integrity gates. See the current
+The v4 detector is qualified and R5.5 closed the repository, security,
+clean-checkout, container and remote release gates. M4.1 preserves the M1 plan
+and receipt schemas byte-for-byte while adding the explicit recovery boundary;
+M4.2 implements all 13 deterministic rules; and M4.3 adds server-owned preview
+and merchant approval. M4.4 adds fake-only execute/reconcile with immutable
+receipts and at-most-once authority. M4.5 adds grounded no-model analysis,
+audit-completeness verification and a separate hash-bound activation for exact
+qualified v4 incidents. Failed historical detectors remain blocked, no frozen
+release artifact is rewritten, and no M4 route can reach Razorpay or notify a
+customer. M5 is the next milestone for Test Mode network integration and
+holdout-based incremental recovered-GMV measurement. See the current
 [project status and next-chat handoff](docs/PROJECT_STATUS.md),
 [v3 result](docs/DETECTOR_V3_PROTOCOL.md),
 [v4 protocol](docs/DETECTOR_V4_PROTOCOL.md),
 [v4 candidate](docs/DETECTOR_V4_CANDIDATE.md),
 [event pipeline](docs/EVENT_PIPELINE.md),
-[detector](docs/DETECTOR.md), [architecture](docs/ARCHITECTURE.md),
+[detector](docs/DETECTOR.md), [policy](docs/POLICY.md),
+[recovery workflow](docs/RECOVERY_WORKFLOW.md),
+[architecture](docs/ARCHITECTURE.md),
 [dataset](docs/DATASET.md), [security](docs/SECURITY.md) and the
 [authoritative build plan](docs/BUILD_PLAN.md).

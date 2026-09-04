@@ -2,11 +2,10 @@
 
 ## Current release boundary
 
-This document describes the implemented M0–M3 foundation, contract/data,
-authenticated-event and deterministic-detector boundaries, not the complete
-target system. The authoritative
-product behavior remains in `PRODUCT_REQUIREMENTS.md`; sequencing remains in
-`BUILD_PLAN.md`.
+This document describes the implemented M0–M3 foundation and complete M4
+model-independent recovery boundary, not the complete target system. The
+authoritative product behavior remains in
+`PRODUCT_REQUIREMENTS.md`; sequencing remains in `BUILD_PLAN.md`.
 
 ```mermaid
 flowchart LR
@@ -23,14 +22,31 @@ flowchart LR
     Aggregates --> Detector[Statistical detector]
     Detector --> Incidents[(Incidents + immutable evidence)]
     Incidents -->|merchant-scoped reads| API
-    Razorpay -. M5 outbound action .-> API
+    Incidents --> Analyst[M4.5 deterministic rules analyst]
+    Analyst --> BriefEvidence[(Immutable grounded briefs)]
+    Incidents --> Recovery[M4 authoritative recovery workflow]
+    Projection --> Recovery
+    Worker --> Controls[(Synthetic recovery controls)]
+    Controls --> Recovery
+    RecoveryContracts[M4.1 policy + approval + action contracts] --> Policy[M4.2 pure deterministic policy]
+    Recovery --> Policy
+    Recovery --> PreviewEvidence[(Immutable plans + policy results)]
+    Merchant[Authenticated merchant API client] -->|approve or reject| Recovery
+    Recovery --> ApprovalEvidence[(Immutable decisions + consumptions)]
+    ApprovalEvidence --> Executor[M4.4 execute-once coordinator]
+    Policy --> Executor
+    Executor --> Fake[Deterministic fake provider]
+    Fake --> ActionEvidence[(Actions + append-only transitions)]
+    ActionEvidence --> Audit[M4.5 audit completeness verifier]
+    Executor -. M5 network adapter not implemented .-> Razorpay
 ```
 
-Solid arrows are implemented and tested. The only dashed arrow is the explicit
-future outbound-action boundary. No M3 component can call Razorpay or mutate a
-customer-facing payment action.
+Solid arrows are implemented behavior. The dashed arrow marks the absent M5
+Razorpay Test Mode adapter. The M4.2 evaluator remains pure, and M4 execution is
+restricted to an explicitly synthetic, no-notification fake target. No current
+component can call Razorpay or mutate a customer-facing payment action.
 
-## Decisions implemented in M0–M3
+## Decisions implemented in M0–M4
 
 - Python 3.12-compatible FastAPI modular monolith with typed Pydantic
   boundaries.
@@ -59,6 +75,32 @@ customer-facing payment action.
   one-active-cohort lifecycle enforcement and append-only evidence/run receipts.
 - Verified attribution facts kept separate from merchant-local hypotheses and
   unknown external provider state.
+- M4.1 immutable schemas for the pre-authorized template, complete deterministic
+  policy result, hashed approval lifecycle and provider-bound recovery action.
+- Canonical policy-rule and action-transition ordering, actor authorization,
+  typed retry/reconciliation errors and explicit side-effect classifications.
+- A stateless, version-pinned policy engine that evaluates every rule without
+  short-circuiting, rejects non-UTC facts and derives a deterministic result ID
+  from the complete canonical context.
+- A server-owned context assembler that cross-checks incident cohort evidence,
+  immutable source event, payment projection and explicit recovery controls;
+  callers cannot submit money, consent, eligibility or policy facts.
+- Immutable, digest-bound plan, provenance, policy, merchant-decision and
+  token-consumption evidence with merchant-scoped idempotency constraints.
+- Constant-time single-merchant approval authentication and 256-bit approval
+  bearers stored only as a separate-key HMAC digest, delivered once and consumed
+  by a one-winner append-only database constraint.
+- An additive activation gate that verifies the exact qualified detector-v4
+  candidate, report and release bytes without rewriting any frozen artifact.
+- An execute-once coordinator that revalidates all 13 policy rules, atomically
+  consumes approval with the action receipt, returns exact idempotent replays and
+  never retries an ambiguous provider create.
+- A deterministic fake Payment Link adapter with typed success, known failure,
+  timeout-before-create and timeout-after-create behavior plus lookup-only
+  reconciliation by stable reference.
+- A no-model rules analyst that grounds every citation in verified merchant
+  events and an audit verifier that requires the complete source-to-terminal
+  action chain.
 - A threshold freeze plus committed tuning and held-out reports. Detector v1
   failed held-out targets and remains explicitly release-blocked through a
   machine-readable runtime decision.
@@ -85,11 +127,17 @@ customer-facing payment action.
 8. Incident observations and detector-run receipts reject update/delete in the
    database. A partial unique index prevents two open incidents for one
    merchant/cohort.
-9. The detector release decision is derived from held-out targets, bound to the
-   threshold artifact hash and bundled into the runtime. V1 incidents remain
-   visible with at-risk evidence but are persisted as action-ineligible.
-10. The future model boundary and external mutation boundary remain absent; M3
-   cannot perform any payment or customer action.
+9. Detector activation is additive and hash-bound to the exact qualified v4
+   candidate, blind report and release decision. V1–v3 identities and forged v4
+   configuration hashes remain action-ineligible; frozen evidence is unchanged.
+10. M4.1 contracts describe the model, approval and external mutation
+    boundaries. M4.2 evaluates only validated internal context and grants no
+    merchant approval.
+11. M4 rebuilds policy facts from server records, returns an approval bearer
+    once, stores only its keyed digest, and couples its single consumption to a
+    fresh execution policy and immutable action. The sole provider is a local,
+    explicitly synthetic fake with notifications disabled; Razorpay remains
+    unreachable.
 
 ## Dependency boundary
 
@@ -150,6 +198,45 @@ run existed in that freeze. R5.4 later consumed one public-nonce synthetic blind
 slot. Its prediction-only commit precedes truth authorization, exact prediction
 reproduction and the terminal report in history. The run passes every unchanged
 detector target and strict serialization check. R5.5 then passed working-tree,
-clean-checkout, security, container-runtime and remote CI gates. Its release
-decision permits M4 integration work, but all runtime actions remain disabled
-until deterministic policy and external approval are implemented.
+clean-checkout, security, container-runtime and remote CI gates. At that
+checkpoint its release decision permitted M4 integration work while runtime
+actions correctly remained disabled until deterministic policy and external
+approval were implemented.
+
+M4.1 now preserves the original M1 plan and receipt schemas and adds separately
+versioned recovery-template, policy-result, approval-record and recovery-action
+contracts. ADR-0007 records their side effects and threat model. The only
+template preserves amount, disables notifications, requires merchant approval
+and has no production target. Policy results cannot omit or hide a deny rule;
+approval records cannot contain the raw bearer; action transitions require the
+correct actor and target.
+
+M4.2 implements `deterministic_policy_v1_0_0` as a pure evaluator over those
+contracts. It records every rule result in canonical order, permits an aggregate
+allow only in `REVIEW_FIRST` when all 13 rules pass, treats exact expiry as
+denied, and permits exact cooldown completion. Identical contexts produce the
+same content-addressed result identifier. The engine itself still does not
+assemble facts or persist results.
+
+M4.3 wraps that engine in a separate authoritative workflow. It admits only
+incident/payment/idempotency identities from the caller, locks and cross-checks
+the source records, persists canonical plan/provenance/policy documents, and
+records one authenticated merchant decision. Approval credentials are random,
+short-lived, hash-only at rest and represented as an immutable decision plus a
+separate unique consumption fact. See ADR-0008 and `RECOVERY_WORKFLOW.md`.
+
+M4.4 adds the execute-once boundary. It locks the plan and approval, rebuilds
+current authoritative policy facts, persists a distinct execution-stage result
+and stops before provider access on any denial. On allow, token consumption,
+the action and initial transitions are one transaction. The deterministic fake
+uses a stable reference, never sends a notification and converts uncertainty to
+`reconciliation_required`; follow-up performs lookup only, never another create.
+
+M4.5 adds the model-unavailable path and release proof. The rules analyst
+validates statistics, diagnosis, cohort and every cited verified event before
+persisting a content-addressed brief. The audit verifier requires source,
+incident, pre-action brief, plan, both policy stages, merchant authority,
+consumption, terminal provider evidence and bounded attempt control. ADR-0009
+records the qualified-detector activation and fake-only transaction boundary.
+Razorpay Test Mode, durable network dispatch and causal recovery measurement are
+the next M5 increment.

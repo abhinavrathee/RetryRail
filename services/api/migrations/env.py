@@ -1,6 +1,7 @@
 """Alembic environment for async PostgreSQL and deterministic SQLite tests."""
 
 import asyncio
+import sys
 from logging.config import fileConfig
 
 from alembic import context
@@ -54,7 +55,14 @@ async def run_migrations_online() -> None:
     await connectable.dispose()
 
 
+def run_online_migrations_compatibly() -> None:
+    """Run async migrations with a Psycopg-compatible loop on Windows."""
+
+    loop_factory = asyncio.SelectorEventLoop if sys.platform == "win32" else None
+    asyncio.run(run_migrations_online(), loop_factory=loop_factory)
+
+
 if context.is_offline_mode():
     run_migrations_offline()
 else:
-    asyncio.run(run_migrations_online())
+    run_online_migrations_compatibly()

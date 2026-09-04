@@ -10,6 +10,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from retryrail import __version__
 from retryrail.api.health import router as health_router
 from retryrail.api.incidents import router as incidents_router
+from retryrail.api.recovery import router as recovery_router
 from retryrail.api.replay import router as replay_router
 from retryrail.api.webhooks import router as webhook_router
 from retryrail.config import Settings, get_settings
@@ -19,6 +20,11 @@ from retryrail.events.ingestion import EventIngestionService
 from retryrail.observability.logging import configure_logging
 from retryrail.observability.metrics import PipelineMetrics
 from retryrail.observability.metrics import router as metrics_router
+from retryrail.recovery.adapter import DeterministicFakeRazorpayAdapter, RecoveryProvider
+from retryrail.recovery.analysis import RulesBasedIncidentAnalyst
+from retryrail.recovery.audit import RecoveryAuditVerifier
+from retryrail.recovery.execution import RecoveryExecutionService
+from retryrail.recovery.workflow import RecoveryWorkflowService
 
 RequestHandler = Callable[[Request], Awaitable[Response]]
 
@@ -28,6 +34,7 @@ def create_app(
     *,
     database: Database | None = None,
     metrics: PipelineMetrics | None = None,
+    recovery_provider: RecoveryProvider | None = None,
 ) -> FastAPI:
     """Create the API with validated settings and security response headers."""
 
@@ -52,6 +59,34 @@ def create_app(
         application.state.detection_service = DetectionService(
             resolved_database,
             resolved_metrics,
+            runtime_version="v4",
+        )
+        workflow = RecoveryWorkflowService(
+            resolved_database,
+            resolved_settings,
+            resolved_metrics,
+        )
+        provider = recovery_provider or DeterministicFakeRazorpayAdapter()
+        application.state.recovery_workflow_service = workflow
+        application.state.recovery_provider = provider
+        execution = RecoveryExecutionService(
+            resolved_database,
+            resolved_settings,
+            resolved_metrics,
+            workflow,
+            provider,
+        )
+        application.state.recovery_execution_service = execution
+        application.state.incident_analyst_provider = None
+        application.state.rules_based_incident_analyst = RulesBasedIncidentAnalyst(
+            resolved_database,
+            resolved_settings,
+            resolved_metrics,
+        )
+        application.state.recovery_audit_verifier = RecoveryAuditVerifier(
+            resolved_database,
+            resolved_settings,
+            execution,
         )
         try:
             yield
@@ -79,6 +114,8 @@ def create_app(
             "X-Razorpay-Event-Id",
             "X-Razorpay-Signature",
             "X-RetryRail-Replay-Token",
+            "X-RetryRail-Merchant-Authorization",
+            "X-RetryRail-Approval-Token",
         ],
     )
 
@@ -95,6 +132,7 @@ def create_app(
     application.include_router(incidents_router)
     application.include_router(webhook_router)
     application.include_router(replay_router)
+    application.include_router(recovery_router)
     application.include_router(metrics_router)
     return application
 

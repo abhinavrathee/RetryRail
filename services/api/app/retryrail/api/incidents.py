@@ -27,6 +27,8 @@ from retryrail.detection.models import (
     DetectorStatistics,
     DiagnosisSnapshot,
 )
+from retryrail.detection.runtime_activation import load_detector_v4_activation
+from retryrail.detection.v2_models import V2DetectorStatistics
 
 router = APIRouter(prefix="/api/v1", tags=["incidents"])
 
@@ -55,7 +57,7 @@ class IncidentObservation(StrictContract):
 
     observation_id: str
     evaluated_at: AwareDatetime
-    statistics: DetectorStatistics
+    statistics: DetectorStatistics | V2DetectorStatistics
     evidence_event_ids: tuple[str, ...] = Field(min_length=1)
 
 
@@ -63,7 +65,7 @@ class IncidentDetailResponse(StrictContract):
     """Complete evidence view used by deterministic planning and later UI."""
 
     summary: IncidentSummary
-    peak_statistics: DetectorStatistics
+    peak_statistics: DetectorStatistics | V2DetectorStatistics
     observations: tuple[IncidentObservation, ...] = Field(min_length=1)
     evidence_labels: tuple[
         Literal["verified_observation", "inferred_hypothesis", "unknown"], ...
@@ -145,13 +147,24 @@ async def overview(request: Request) -> OverviewResponse:
             .order_by(desc(IncidentRecord.opened_at))
             .limit(1)
         )
-    release = load_detector_release_decision()
+    if latest_run is None or latest_run.detector_version == "detector_v4_0_0":
+        activation = load_detector_v4_activation()
+        detector_version = (
+            latest_run.detector_version
+            if latest_run is not None
+            else activation.detector_version
+        )
+        release_status = DetectorReleaseStatus(activation.status.value)
+        release_failed_targets: tuple[DetectorReleaseTarget, ...] = ()
+    else:
+        release = load_detector_release_decision()
+        detector_version = latest_run.detector_version
+        release_status = release.status
+        release_failed_targets = release.failed_targets
     return OverviewResponse(
-        detector_version=(
-            latest_run.detector_version if latest_run is not None else "detector_v1_0_0"
-        ),
-        detector_release_status=release.status,
-        detector_release_failed_targets=release.failed_targets,
+        detector_version=detector_version,
+        detector_release_status=release_status,
+        detector_release_failed_targets=release_failed_targets,
         active_incidents=active,
         action_eligible_incidents=action_eligible,
         total_incidents=total,
@@ -224,12 +237,12 @@ async def get_incident(incident_id: str, request: Request) -> IncidentDetailResp
             IncidentObservation(
                 observation_id=item.observation_id,
                 evaluated_at=item.evaluated_at,
-                statistics=DetectorStatistics.model_validate(item.statistics),
+                statistics=_statistics(item.statistics),
                 evidence_event_ids=tuple(item.evidence_event_ids),
             )
             for item in observation_records
         )
-        peak = DetectorStatistics.model_validate(record.peak_statistics)
+        peak = _statistics(record.peak_statistics)
         summary = _summary(record)
     except ValidationError as error:
         raise HTTPException(
@@ -251,7 +264,7 @@ async def get_incident(incident_id: str, request: Request) -> IncidentDetailResp
 
 def _summary(record: IncidentRecord) -> IncidentSummary:
     try:
-        statistics = DetectorStatistics.model_validate(record.peak_statistics)
+        statistics = _statistics(record.peak_statistics)
         diagnosis = DiagnosisSnapshot.model_validate(record.diagnosis)
         affected_cohort = tuple(
             CohortPredicate.model_validate(item) for item in record.affected_cohort
@@ -266,16 +279,7 @@ def _summary(record: IncidentRecord) -> IncidentSummary:
             resolved_at=record.resolved_at,
             affected_cohort=affected_cohort,
             evidence_event_ids=tuple(record.evidence_event_ids),
-            evidence=IncidentEvidence(
-                baseline_attempts=statistics.baseline_attempts,
-                baseline_successes=statistics.baseline_successes,
-                current_attempts=statistics.current_attempts,
-                current_successes=statistics.current_successes,
-                minimum_attempts=statistics.minimum_current_attempts,
-                observed_success_rate_drop_bps=statistics.success_rate_drop_bps,
-                confidence_ppm=statistics.confidence_ppm,
-                excess_failures=statistics.excess_failures,
-            ),
+            evidence=_incident_evidence(statistics),
             likely_error_sources=diagnosis.likely_causes,
             gmv_at_risk_subunits=record.gmv_at_risk_subunits,
             currency=record.currency,
@@ -288,9 +292,47 @@ def _summary(record: IncidentRecord) -> IncidentSummary:
         ) from error
     return IncidentSummary(
         incident=incident,
-        action_eligible=record.action_eligible,
+        action_eligible=load_detector_v4_activation().allows_incident(record),
         detector_config_sha256=record.detector_config_sha256,
         diagnosis=diagnosis,
+    )
+
+
+def _statistics(
+    document: dict[str, object],
+) -> DetectorStatistics | V2DetectorStatistics:
+    """Reload either historical v1 or activated v4 evidence without coercion."""
+
+    if "cohort_level" in document:
+        return V2DetectorStatistics.model_validate(document)
+    return DetectorStatistics.model_validate(document)
+
+
+def _incident_evidence(
+    statistics: DetectorStatistics | V2DetectorStatistics,
+) -> IncidentEvidence:
+    """Map versioned detector evidence into the frozen incident summary contract."""
+
+    if isinstance(statistics, V2DetectorStatistics):
+        return IncidentEvidence(
+            baseline_attempts=statistics.baseline_attempts,
+            baseline_successes=statistics.baseline_attempts - statistics.baseline_failures,
+            current_attempts=statistics.current_attempts,
+            current_successes=statistics.current_attempts - statistics.current_failures,
+            minimum_attempts=statistics.minimum_current_attempts,
+            observed_success_rate_drop_bps=statistics.actionable_rate_drop_bps,
+            confidence_ppm=statistics.confidence_ppm,
+            excess_failures=statistics.excess_actionable_failures,
+        )
+    return IncidentEvidence(
+        baseline_attempts=statistics.baseline_attempts,
+        baseline_successes=statistics.baseline_successes,
+        current_attempts=statistics.current_attempts,
+        current_successes=statistics.current_successes,
+        minimum_attempts=statistics.minimum_current_attempts,
+        observed_success_rate_drop_bps=statistics.success_rate_drop_bps,
+        confidence_ppm=statistics.confidence_ppm,
+        excess_failures=statistics.excess_failures,
     )
 
 

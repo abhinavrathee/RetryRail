@@ -20,6 +20,7 @@ from retryrail.db.tables import (
     OutboxMessageRecord,
     PaymentEventRecord,
     PaymentProjectionRecord,
+    PaymentRecoveryControlRecord,
 )
 from retryrail.events.ingestion import EventIngestionService
 from retryrail.events.models import NormalizedPaymentEvent
@@ -174,6 +175,9 @@ def test_required_replay_reconciles_every_projection(settings: Settings) -> None
                 projections = list(
                     (await session.scalars(select(PaymentProjectionRecord))).all()
                 )
+                recovery_controls = list(
+                    (await session.scalars(select(PaymentRecoveryControlRecord))).all()
+                )
                 event_count = await session.scalar(
                     select(func.count()).select_from(PaymentEventRecord)
                 )
@@ -193,6 +197,15 @@ def test_required_replay_reconciles_every_projection(settings: Settings) -> None
             assert {item.payment_id: item.status for item in projections} == expected
             assert all(item.synthetic for item in projections)
             assert any(item.status == "captured" and item.version == 1 for item in projections)
+            assert len(recovery_controls) == len(projections)
+            assert all(
+                item.source == "synthetic_fixture_default" for item in recovery_controls
+            )
+            assert {
+                item.payment_id: item.already_recovered for item in recovery_controls
+            } == {
+                item.payment_id: item.status != "failed" for item in projections
+            }
         finally:
             await database.dispose()
 

@@ -90,7 +90,7 @@ async def serve(
         lease_seconds=resolved_settings.worker_lease_seconds,
         retry_base_seconds=resolved_settings.worker_retry_base_seconds,
     )
-    detector = DetectionService(resolved_database, resolved_metrics)
+    detector = DetectionService(resolved_database, resolved_metrics, runtime_version="v4")
 
     stop = stop_event or asyncio.Event()
     loop = asyncio.get_running_loop()

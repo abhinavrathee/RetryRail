@@ -1,6 +1,7 @@
 """Export and verify committed JSON Schemas from their Pydantic source."""
 
 import argparse
+import hashlib
 import json
 import sys
 from dataclasses import dataclass
@@ -13,6 +14,12 @@ from retryrail.contracts.domain import (
     DetectorEvaluationContract,
     IncidentContract,
     RecoveryPlanContract,
+)
+from retryrail.contracts.recovery import (
+    ApprovalRecordContract,
+    PolicyResultContract,
+    RecoveryActionContract,
+    RecoveryTemplateContract,
 )
 from retryrail.events.models import NormalizedPaymentEvent
 from retryrail.synthetic.models import (
@@ -75,6 +82,30 @@ _SCHEMAS = (
         title="RetryRail Action Receipt v1",
     ),
     SchemaDefinition(
+        model=RecoveryTemplateContract,
+        relative_path="contracts/domain/recovery_template.v1.schema.json",
+        schema_id="https://retryrail.dev/contracts/domain/recovery-template/v1",
+        title="RetryRail Recovery Template v1",
+    ),
+    SchemaDefinition(
+        model=PolicyResultContract,
+        relative_path="contracts/domain/policy_result.v1.schema.json",
+        schema_id="https://retryrail.dev/contracts/domain/policy-result/v1",
+        title="RetryRail Policy Result v1",
+    ),
+    SchemaDefinition(
+        model=ApprovalRecordContract,
+        relative_path="contracts/domain/approval_record.v1.schema.json",
+        schema_id="https://retryrail.dev/contracts/domain/approval-record/v1",
+        title="RetryRail Approval Record v1",
+    ),
+    SchemaDefinition(
+        model=RecoveryActionContract,
+        relative_path="contracts/domain/recovery_action.v1.schema.json",
+        schema_id="https://retryrail.dev/contracts/domain/recovery-action/v1",
+        title="RetryRail Recovery Action v1",
+    ),
+    SchemaDefinition(
         model=DetectorEvaluationContract,
         relative_path="contracts/domain/detector_evaluation.v1.schema.json",
         schema_id="https://retryrail.dev/contracts/domain/detector-evaluation/v1",
@@ -100,6 +131,19 @@ _SCHEMAS = (
     ),
 )
 
+_FROZEN_M1_SCHEMA_SHA256 = {
+    "contracts/domain/recovery_plan.v1.schema.json": (
+        "c53a01c5f8cd527559fa0ee7ecbf781ed5785b432cd7bffce5fad9d5d28b0889"
+    ),
+    "contracts/domain/action_receipt.v1.schema.json": (
+        "e1100a957f1c6bb14117e3e6f059ead5ba465af9013be7cb714934545f552ff2"
+    ),
+}
+
+
+class FrozenSchemaChangeError(RuntimeError):
+    """Raised before an exporter can rewrite a frozen published schema."""
+
 
 def _render_schema(definition: SchemaDefinition) -> str:
     schema = definition.model.model_json_schema(
@@ -110,6 +154,37 @@ def _render_schema(definition: SchemaDefinition) -> str:
     schema["$schema"] = "https://json-schema.org/draft/2020-12/schema"
     schema["title"] = definition.title
     return f"{json.dumps(schema, indent=2, sort_keys=True)}\n"
+
+
+def frozen_schema_source_changes() -> tuple[str, ...]:
+    """Return frozen M1 schemas whose current model no longer renders canonically."""
+
+    frozen_definitions = {
+        definition.relative_path: definition
+        for definition in _SCHEMAS
+        if definition.relative_path in _FROZEN_M1_SCHEMA_SHA256
+    }
+    return tuple(
+        relative_path
+        for relative_path, expected_sha256 in _FROZEN_M1_SCHEMA_SHA256.items()
+        if hashlib.sha256(
+            _render_schema(frozen_definitions[relative_path]).encode("utf-8")
+        ).hexdigest()
+        != expected_sha256
+    )
+
+
+def _assert_frozen_schema_sources() -> None:
+    """Fail closed when code would silently alter a published M1 schema."""
+
+    changed_paths = frozen_schema_source_changes()
+    if changed_paths:
+        details = "\n".join(f"- {path}" for path in changed_paths)
+        msg = (
+            "generated source would alter frozen M1 schemas:\n"
+            f"{details}\ncreate a new schema version instead of changing v1"
+        )
+        raise FrozenSchemaChangeError(msg)
 
 
 def render_event_schema() -> str:
@@ -146,6 +221,7 @@ def stale_schema_paths(root: Path = _REPOSITORY_ROOT) -> tuple[str, ...]:
 def write_all_schemas(root: Path = _REPOSITORY_ROOT) -> None:
     """Write every versioned schema from its Pydantic source model."""
 
+    _assert_frozen_schema_sources()
     for definition in _SCHEMAS:
         path = root / definition.relative_path
         path.parent.mkdir(parents=True, exist_ok=True)
@@ -166,6 +242,11 @@ def main() -> None:
     """Export the contract or verify the committed representation."""
 
     arguments = _parser().parse_args()
+    try:
+        _assert_frozen_schema_sources()
+    except FrozenSchemaChangeError as exc:
+        sys.stderr.write(f"{exc}\n")
+        raise SystemExit(1) from None
     if arguments.check:
         stale_paths = stale_schema_paths()
         if stale_paths:

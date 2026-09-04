@@ -4,7 +4,7 @@ import hashlib
 import time
 from dataclasses import dataclass
 from datetime import UTC, datetime, timedelta
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, Literal
 
 import structlog
 from pydantic import ValidationError
@@ -27,6 +27,13 @@ from retryrail.detection.config import (
 )
 from retryrail.detection.engine import DetectorEngine, cohort_key, reconstruct_attempts
 from retryrail.detection.models import DetectedIncident, DetectorConfig, DetectorRunResult
+from retryrail.detection.runtime_activation import (
+    load_activated_detector_v4_config,
+    load_detector_v4_activation,
+)
+from retryrail.detection.v2_models import V2DetectedIncident
+from retryrail.detection.v4_engine import DetectorV4Engine
+from retryrail.detection.v4_models import DetectorV4Config, V4DetectorRunResult
 from retryrail.events.ingestion import PROJECT_PAYMENT_TOPIC
 from retryrail.events.models import NormalizedPaymentEvent
 from retryrail.observability.metrics import PipelineMetrics
@@ -35,6 +42,10 @@ LOGGER = structlog.get_logger(__name__)
 
 if TYPE_CHECKING:
     from sqlalchemy.ext.asyncio import AsyncSession
+
+type RuntimeDetectorConfig = DetectorConfig | DetectorV4Config
+type RuntimeDetectorRunResult = DetectorRunResult | V4DetectorRunResult
+type RuntimeDetectedIncident = DetectedIncident | V2DetectedIncident
 
 
 @dataclass(frozen=True, slots=True)
@@ -65,19 +76,46 @@ class DetectionService:
         database: Database,
         metrics: PipelineMetrics,
         config: DetectorConfig | None = None,
+        *,
+        runtime_version: Literal["v1", "v4"] = "v1",
     ) -> None:
         self._database = database
         self._metrics = metrics
-        self._config = config or load_detector_config()
-        self._config_sha256 = detector_config_sha256()
-        self._release = load_detector_release_decision()
-        if (
-            self._config != load_detector_config()
-            or self._release.detector_version != self._config.detector_version
-            or self._release.detector_config_sha256 != self._config_sha256
-        ):
-            raise DetectorArtifactMismatchError
-        self._engine = DetectorEngine(self._config)
+        self._runtime_version = runtime_version
+        self._config: RuntimeDetectorConfig
+        self._engine: DetectorEngine | DetectorV4Engine
+        self._release_status: str
+        self._runtime_action_eligible: bool
+        if runtime_version == "v4":
+            if config is not None:
+                raise DetectorArtifactMismatchError
+            v4_config = load_activated_detector_v4_config()
+            activation = load_detector_v4_activation()
+            self._config = v4_config
+            self._config_sha256 = activation.detector_config_sha256
+            if (
+                activation.detector_version != v4_config.detector_version
+                or activation.detector_config_sha256 != self._config_sha256
+                or not activation.action_eligible
+            ):
+                raise DetectorArtifactMismatchError
+            self._release_status = activation.status.value
+            self._runtime_action_eligible = activation.action_eligible
+            self._engine = DetectorV4Engine(v4_config)
+        else:
+            v1_config = config or load_detector_config()
+            release = load_detector_release_decision()
+            self._config = v1_config
+            self._config_sha256 = detector_config_sha256()
+            if (
+                v1_config != load_detector_config()
+                or release.detector_version != v1_config.detector_version
+                or release.detector_config_sha256 != self._config_sha256
+            ):
+                raise DetectorArtifactMismatchError
+            self._release_status = release.status.value
+            self._runtime_action_eligible = release.action_eligible
+            self._engine = DetectorEngine(v1_config)
 
     async def refresh(self, merchant_id: str) -> DetectionRefreshResult:
         """Compute outside a write transaction, then persist one snapshot atomically."""
@@ -148,7 +186,7 @@ class DetectionService:
             merchant_id=merchant_id,
             reused=result.reused,
             run_id=result.run_id,
-            release_status=self._release.status.value,
+            release_status=self._release_status,
         )
         return result
 
@@ -204,7 +242,7 @@ class DetectionService:
 
     async def _persist(
         self,
-        run: DetectorRunResult,
+        run: RuntimeDetectorRunResult,
         *,
         run_id: str,
         merchant_id: str,
@@ -249,7 +287,7 @@ class DetectionService:
                         created_at=now,
                     )
                 )
-            if not self._release.action_eligible:
+            if not self._runtime_action_eligible:
                 await session.execute(
                     update(IncidentRecord)
                     .where(
@@ -299,7 +337,7 @@ class DetectionService:
     async def _upsert_aggregates(
         self,
         session: "AsyncSession",
-        run: DetectorRunResult,
+        run: RuntimeDetectorRunResult,
         *,
         source_watermark: datetime,
         updated_at: datetime,
@@ -347,7 +385,7 @@ class DetectionService:
     async def _upsert_incidents(
         self,
         session: "AsyncSession",
-        run: DetectorRunResult,
+        run: RuntimeDetectorRunResult,
         *,
         updated_at: datetime,
     ) -> tuple[int, int]:
@@ -394,7 +432,7 @@ class DetectionService:
             _update_incident_record(
                 record,
                 incident,
-                action_eligible=self._release.action_eligible,
+                action_eligible=self._runtime_action_eligible and incident.synthetic,
                 updated_at=updated_at,
             )
             if prior_status == "open" and incident.status.value == "resolved":
@@ -433,7 +471,7 @@ class DetectionService:
 
 def _update_incident_record(
     record: IncidentRecord,
-    incident: DetectedIncident,
+    incident: RuntimeDetectedIncident,
     *,
     action_eligible: bool,
     updated_at: datetime,
