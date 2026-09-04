@@ -74,7 +74,12 @@ implements that separately versioned candidate and passes all unchanged
 targets independently on all three revealed synthetic development partitions,
 including strict open-report byte reproduction. R5.3 adds 15 passing
 adversarial cases and freezes the candidate plus the append-only blind runner.
-No v4 nonce or blind result exists yet, so this is not release qualification.
+R5.4 then consumes one fresh public-nonce official synthetic blind run after
+the freeze passed all five remote jobs. The report records 6 TP / 0 FP / 0 FN,
+perfect precision, recall and top-1 attribution, a 600-second median simulated
+delay, and zero safety or reconciliation violations. Its detector decision is
+qualified for M4 integration review, while runtime actions remain disabled and
+R5.5 release verification remains pending.
 See the [v4 protocol](docs/DETECTOR_V4_PROTOCOL.md) and
 [v4 candidate](docs/DETECTOR_V4_CANDIDATE.md).
 
@@ -161,11 +166,14 @@ candidate, records every overlap decision, passes each development partition
 and fixes required-nullable canonical report output. R5.3 records 15 passing
 adversarial cases, freezes all candidate identities and freezes an append-only,
 prediction-first runner with strict report read-back and receipt-bound
-clean-checkout reproduction after the public nonce is revealed.
+clean-checkout reproduction after the public nonce is revealed. R5.4 consumes
+the one official synthetic blind slot only after that freeze was remotely
+verified. The committed prediction bytes precede truth access, reproduce
+exactly and lead to a qualified decision that passes every unchanged target.
 
-The v4 candidate and runner are frozen but not release-qualified. No v4 nonce
-or official run exists, every output is action-ineligible, and M4 remains
-blocked. The one-time R5.4 blind run is next. GitHub Actions includes
+The v4 detector is qualified for M4 integration review, but every output remains
+action-ineligible and M4 stays blocked until R5.5 closes the repository,
+security, clean-checkout and remote release gates. GitHub Actions includes
 PostgreSQL 16 integration and all implemented detector integrity gates. See
 [v3 result](docs/DETECTOR_V3_PROTOCOL.md),
 [v4 protocol](docs/DETECTOR_V4_PROTOCOL.md),

@@ -2,15 +2,20 @@
 
 ## Status and boundary
 
-M3R.5 R5.2 and R5.3 are complete. Detector `detector_v4_0_0` is implemented and passes
-all unchanged release targets on each of the three development partitions
-allowed by the precommitted v4 protocol. These are revealed synthetic
-development results, not blind evidence and not a release qualification.
+M3R.5 R5.2 through R5.4 are complete. Detector `detector_v4_0_0` passes all
+unchanged release targets on each of the three development partitions allowed
+by the precommitted v4 protocol. Those revealed synthetic development results
+are not blind evidence. Its separately generated official synthetic blind run
+also passes every unchanged target and is release-qualified for M4 integration
+review.
 
 The candidate, exact matcher/evaluator/contracts and append-only blind runner
-are now frozen. Fifteen deterministic adversarial cases pass. There is no
-official run identity or fresh nonce, the candidate remains globally
-action-ineligible, and it does not authorize M4 recovery work.
+were frozen before the official nonce existed. Fifteen deterministic
+adversarial cases pass. Run
+`detector_v4_official_blind_5497598109b06d21c625` is terminally complete and
+append-only. The qualified decision does not authorize runtime recovery:
+R5.5 remains pending and every output stays action-ineligible until M4's
+deterministic policy and external approval boundaries exist.
 
 ## Lifecycle correction
 
@@ -94,10 +99,11 @@ Historical v3 bytes remain unchanged.
 
 Prediction artifacts are label-free. Reports load truth only after all three
 prediction byte sequences exist. Each artifact is canonical and digest-bound.
-The historical R5.2 suite correctly retains `candidate_frozen=false` because
-it predates the freeze; the R5.3 freeze is the authoritative frozen identity.
-Both official nonce/run fields remain null and all runtime/release flags remain
-false.
+The historical R5.2 suite correctly retains `candidate_frozen=false` and null
+official nonce/run fields because it predates the freeze and official run; the
+R5.3 freeze is the authoritative frozen identity. The later R5.4 append-only
+receipts, not those historical development artifacts, carry the official run
+identity and release decision.
 
 ## R5.3 adversarial and runner freeze
 
@@ -120,6 +126,30 @@ writing a completion receipt. Its separately frozen reproduction entry point
 can recreate only the two git-ignored inputs for a completed run, verifies them
 against the append-only receipt chain and refuses to overwrite mismatched bytes.
 
+## R5.4 official blind qualification
+
+The prediction-only commit `19398fc` precedes truth access in Git history. It
+contains the commitment, canonical label-free prediction artifact and its
+receipt. The subsequent result commit `b9c3efd` records the one truth-access
+receipt and terminal digest chain for
+`detector_v4_official_blind_5497598109b06d21c625`.
+
+The synthetic blind report covers 5,760 attempts and 10,676 normalized events.
+It records 6 TP / 0 FP / 0 FN, 1,000,000 ppm precision, recall and top-1
+attribution, a 600-second median simulated first-signal delay, and zero
+hard-negative action-eligible incidents, baseline leakage or evidence
+reconciliation violations. Required nullable fields, strict reload and exact
+canonical byte reproduction all pass. The decision is qualified for M4
+integration review, while `runtime_action_eligible` remains false throughout.
+
+Official evidence is rooted at:
+
+- `evals/blind/detector_v4/runs/detector_v4_official_blind_5497598109b06d21c625/nonce.commitment.json`
+- `evals/blind/detector_v4/runs/detector_v4_official_blind_5497598109b06d21c625/blind.predictions.v1.json`
+- `evals/blind/detector_v4/runs/detector_v4_official_blind_5497598109b06d21c625/blind.report.v1.json`
+- `evals/blind/detector_v4/runs/detector_v4_official_blind_5497598109b06d21c625/blind.release.v1.json`
+- `evals/blind/detector_v4/runs/detector_v4_official_blind_5497598109b06d21c625/completion.receipt.json`
+
 ## Verification
 
 ```bash
@@ -138,6 +168,6 @@ make v4-freeze-check
 make v4-blind-check
 ```
 
-R5.4 may create one fresh public, non-sensitive nonce only after this complete
-freeze is committed, pushed and remotely verified. That single run is
-append-only; any prediction, scoring or serialization failure consumes it.
+R5.4 created its one fresh public, non-sensitive nonce only after the complete
+freeze was committed, pushed and remotely verified. That run is now consumed
+and append-only. R5.5 preservation and release verification remain next.

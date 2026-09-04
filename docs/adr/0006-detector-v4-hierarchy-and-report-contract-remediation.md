@@ -1,6 +1,6 @@
 # ADR 0006: Remediate hierarchy starvation and report serialization in v4
 
-- Status: Accepted; R5.1–R5.3 complete, candidate and runner frozen
+- Status: Accepted; R5.1–R5.4 complete, official synthetic blind run qualified
 - Date: 2026-09-03
 
 ## Context
@@ -60,5 +60,11 @@ incident. R5.3 then records 15 passing adversarial cases and binds candidate,
 configuration, matcher, evaluator, contracts, development evidence and the
 append-only runner into two nonce-free freezes. The runner boundary includes a
 receipt-bound clean-checkout reproducer for git-ignored inputs after public
-nonce reveal. This does not qualify the detector; one fresh R5.4 blind run is
-still required.
+nonce reveal. R5.4 then consumes the one fresh official slot as
+`detector_v4_official_blind_5497598109b06d21c625`. Its separate pre-truth and
+terminal commits preserve prediction-first ordering. The run records 6 TP /
+0 FP / 0 FN, passes every unchanged metric and safety target, strictly reloads
+its report and reproduces identical canonical bytes. The qualified decision
+permits M4 integration review but leaves all runtime actions disabled. R5.5
+repository, security, clean-checkout and remote release verification remains
+required before M4 implementation starts.

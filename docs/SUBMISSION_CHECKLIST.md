@@ -194,8 +194,8 @@ Recommended timing:
 
 | Claim | Evidence location |
 | --- | --- |
-| Detector precision/recall | V1 remains failed; v2 remains blocked on delay/leakage; v3 official synthetic evidence records 833,333 ppm precision and recall and is blocked plus procedurally invalid. V4 is frozen after passing three revealed development partitions at 1,000,000 ppm precision/recall but has not run its blind qualification. None may be presented as a qualified release |
-| Root-cause accuracy | V1 held-out remains unscorable after the miss; v2/v3 official and v4 revealed development synthetic reports record 1,000,000 ppm top-1 attribution, but no overall detector release is qualified |
+| Detector precision/recall | V1 remains failed; v2 remains blocked on delay/leakage; v3 remains blocked and procedurally invalid. V4 official synthetic blind run `detector_v4_official_blind_5497598109b06d21c625` records 1,000,000 ppm precision and recall and passes every frozen detector target. Label it synthetic and do not imply production performance or active recovery |
+| Root-cause accuracy | V1 held-out remains unscorable after the miss; v2/v3 official evidence records 1,000,000 ppm top-1 attribution but failed other release gates. The qualified v4 official synthetic blind report records 1,000,000 ppm top-1 attribution |
 | Agent grounding/safety | `evals/reports/agent-golden.json` |
 | No duplicate action | Integration test plus demo audit receipt |
 | Timeout reconciliation | Integration test and failure-demo recording |
@@ -204,10 +204,11 @@ Recommended timing:
 | Complete audit | Automated audit-completeness test and UI timeline |
 | Clean release | Public CI run for tagged commit |
 
-Later-milestone paths remain required targets. M3 detector evidence now exists,
-but none of v1, v2, v3 or v4 has a qualifying release. If any strong component
-metric is used in the application, its synthetic limitation and full blocked
-release context must appear beside it. V3's report-contract defect must also be
-disclosed wherever its official metrics appear. V4 R5.2 results must be labelled
-revealed development evidence; the R5.3 freeze adds no performance evidence and
-cannot be presented as blind performance or a completed detector release.
+Later-milestone paths remain required targets. V4 now has a qualifying
+synthetic detector decision, but R5.5 verification, M4 deterministic policy,
+external merchant approval and the recovery/experiment milestones remain
+incomplete. If any strong component metric is used in the application, its
+synthetic limitation and relevant blocked predecessor context must appear
+beside it. V3's report-contract defect must still be disclosed wherever its
+official metrics appear. V4 R5.2 results remain revealed development evidence;
+only the append-only R5.4 run may be described as v4 blind qualification.

@@ -2,15 +2,17 @@
 
 ## Current status
 
-M3R.5 phases R5.1 through R5.3 are complete. The failure analysis, development
+M3R.5 phases R5.1 through R5.4 are complete. The failure analysis, development
 evidence boundary, allowed change class, unchanged targets, report contract and
 fresh-run procedure were precommitted before the separately versioned v4
 candidate was implemented. That candidate now passes every unchanged target
 on all three allowed development partitions and passes the strict open-report
 round-trip preflight. Fifteen adversarial cases pass, and the candidate plus
-append-only runner are frozen. It is not release-qualified, and no fresh
-official nonce or blind run exists. Detector v2 and v3 remain immutable failed
-predecessors, M4 remains blocked, and every output remains action-ineligible.
+append-only runner were frozen before the fresh nonce existed. The one official
+synthetic blind run is now complete and passes every unchanged release target.
+Detector v2 and v3 remain immutable failed predecessors. R5.5 release
+verification remains pending, M4 implementation remains blocked behind it, and
+every output remains runtime action-ineligible.
 
 The machine-readable boundary is
 `evals/protocols/detector_v4.protocol.json`. The
@@ -130,12 +132,14 @@ a blocked decision, even if its in-memory metrics would otherwise pass.
 | R5.1 | Bind failure analysis, evidence, change envelope, report contract and release rules | Complete |
 | R5.2 | Implement and tune one separately versioned candidate on all three partitions | Complete |
 | R5.3 | Add adversarial cases and freeze candidate, matcher, evaluator, contracts and runner | Complete |
-| R5.4 | Create one fresh public nonce; persist/replay predictions; authorize truth once | Pending |
+| R5.4 | Create one fresh public nonce; persist/replay predictions; authorize truth once | Complete — qualified |
 | R5.5 | Preserve the result and run all repository, security and remote release gates | Pending |
 
-Development and adversarial success are not release claims. R5.3 creates no
-nonce. R5.4 gets one append-only official slot only after the complete freeze
-is committed, pushed and remotely verified.
+Development and adversarial success are not release claims. R5.3 created no
+nonce. R5.4 received its one append-only official slot only after the complete
+freeze was committed, pushed and all five jobs in
+[GitHub Actions run 27](https://github.com/abhinavrathee/RetryRail/actions/runs/33817099527)
+passed.
 
 ## R5.2 development result
 
@@ -175,9 +179,40 @@ canonicalize identically. Once a completed run publishes its nonce, the frozen
 reproducer can restore only the two git-ignored deterministic input artifacts,
 verify their receipt-bound bytes and refuse any mismatched existing file.
 
-## Fresh-run rules
+## R5.4 official blind result
 
-The future v4 blind procedure must:
+The public non-secret nonce
+`RetryRail-v4-public-nonsecret-saffron-bridge-monsoon-2026` created exactly one
+run, `detector_v4_official_blind_5497598109b06d21c625`. Commit `19398fc`
+contains only the nonce commitment, label-free prediction bytes and prediction
+receipt. Commit `b9c3efd` is later in history and contains the truth-access
+receipt, manifest, report, release decision, public reveal and completion
+receipt. The runner reproduced the persisted prediction bytes before writing
+the truth-access receipt and loading truth once.
+
+| Measure | Required | Observed | Result |
+| --- | ---: | ---: | --- |
+| Precision | >= 900,000 ppm | 1,000,000 ppm | Pass |
+| Recall | >= 850,000 ppm | 1,000,000 ppm | Pass |
+| Top-1 attribution | >= 800,000 ppm | 1,000,000 ppm | Pass |
+| Median simulated first-signal delay | <= 600 s | 600 s | Pass |
+| Action-eligible hard-negative incidents | 0 | 0 | Pass |
+| Baseline-leakage violations | 0 | 0 | Pass |
+| Evidence-reconciliation violations | 0 | 0 | Pass |
+
+The report covers 5,760 payment attempts and 10,676 normalized events. It
+records six predicted incidents, six true positives, no false positives and no
+false negatives. Required nullable fields were emitted; strict model reload and
+canonical byte reproduction both passed. The typed release decision is
+`qualified` and permits M4 integration review, but it does not activate a
+recovery path: report, decision, receipt and every incident retain
+`runtime_action_eligible=false`. These are synthetic benchmark results, not a
+production-performance claim. R5.5 must still complete the clean-checkout,
+repository, security and remote release gates.
+
+## Fresh-run rules and execution
+
+The v4 blind procedure was required to:
 
 1. accept one new 16–256 character public, non-secret nonce only after freeze;
 2. reject both consumed official nonces and all committed v2/v3 test nonces;
@@ -190,8 +225,10 @@ The future v4 blind procedure must:
 9. use create-only, repository-confined, append-only evidence paths;
 10. keep every failed or invalid result permanently action-ineligible.
 
-The R5.1 protocol and R5.3 freeze explicitly record that no fresh v4 nonce
-digest or run identity exists. R5.2 and R5.3 create neither.
+The R5.1 protocol and R5.3 freeze remain immutable precommit evidence and
+therefore correctly record no fresh v4 nonce digest or run identity. R5.4 does
+not rewrite them; its later append-only commitment and receipts carry the
+official run identity and public reveal.
 
 ## Unchanged release targets
 
@@ -203,11 +240,11 @@ digest or run identity exists. R5.2 and R5.3 create neither.
 - zero baseline-leakage violations;
 - zero evidence-reconciliation violations.
 
-These are synthetic benchmark targets, not production-performance claims. A
-qualified v4 result would still require M4 deterministic policy and external
+These are synthetic benchmark targets, not production-performance claims. The
+qualified v4 result still requires M4 deterministic policy and external
 merchant approval before any recovery action.
 
-## R5.1 through R5.3 verification
+## R5.1 through R5.4 verification
 
 ```bash
 uv run retryrail-v4-protocol --check
@@ -236,4 +273,8 @@ required-nullable output, strict reload, canonical byte reproduction, artifact
 drift and fail-closed writes. R5.3 tests add hierarchy/overlap evidence,
 candidate and runner source freezes, nonce absence, path confinement,
 prediction-first ordering, tamper and concurrency handling, append-only
-terminal states and report-contract failure behavior.
+terminal states and report-contract failure behavior. The official R5.4 check
+also validates the completed digest chain, public reveal, exact prediction
+reproduction, strict report bytes, qualified decision and disabled runtime
+action boundary. The reproducer verifies both deterministic git-ignored inputs
+against that chain.

@@ -150,14 +150,15 @@ pre-nonce freeze rather than adding a general exception.
   approval remain false. The separate post-run audit verifies the one known
   omission and rejects any other schema or digest difference without changing
   official evidence.
-- Detector-v4 R5.1 precommits the boundary, R5.2 implements the candidate and
-  R5.3 freezes the candidate plus blind runner.
+- Detector-v4 R5.1 precommits the boundary, R5.2 implements the candidate,
+  R5.3 freezes the candidate plus blind runner, and R5.4 consumes one official
+  synthetic blind slot only after remote freeze verification.
   The three revealed partitions are explicitly development-only, prediction
   bytes are created before truth loading, and canonical-cohort arbitration uses
   no labels or model output. The open-incident report emits `resolved_at=null`,
   strictly reloads and reproduces identical bytes. The protocol binds consumed
-  and test nonce digests for future reuse rejection, but publishes no fresh v4
-  nonce digest or run identity. Fifteen adversarial cases cover temporal,
+  and test nonce digests for future reuse rejection. Fifteen adversarial cases
+  cover temporal,
   hierarchy, overlap, ordering, hard-negative, provenance and serialization
   boundaries. The runner uses repository-confined create-only writes, exclusive
   stage locks, redacted failure receipts and prediction reproduction before
@@ -167,4 +168,8 @@ pre-nonce freeze rather than adding a general exception.
   reproduce exact bytes before completion. After a successful terminal run,
   the public-nonce reproducer creates only missing derived inputs, rejects
   symlinks and refuses to overwrite differing bytes. No new GitGuardian
-  exclusion is authorized.
+  exclusion is authorized. R5.4 run
+  `detector_v4_official_blind_5497598109b06d21c625` passes every unchanged
+  target and its strict report contract. The public reveal was scanned as
+  non-secret, the typed release is qualified for integration review, and all
+  runtime action flags remain false pending R5.5 and M4.

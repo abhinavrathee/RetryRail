@@ -212,9 +212,14 @@ revealed synthetic development partitions independently score 6 TP / 0 FP /
 incidents, zero leakage and zero reconciliation violations. The canonical
 writer emits an explicit `resolved_at=null` for the open-incident fixture,
 strictly reloads and reproduces exact bytes. R5.3 adds 15 passing adversarial
-cases and freezes the candidate and append-only blind runner. No nonce or
-official result exists, so the candidate remains action-ineligible and
-unqualified. See `docs/DETECTOR_V4_PROTOCOL.md` and
+cases and freezes the candidate and append-only blind runner. R5.4 then runs
+`detector_v4_official_blind_5497598109b06d21c625` only after remote freeze
+verification. Its 5,760-attempt synthetic blind report records 6 TP / 0 FP /
+0 FN, perfect precision, recall and top-1 attribution, a compliant 600-second
+median delay, and zero hard-negative, leakage or reconciliation violations.
+Strict report reload and canonical byte reproduction pass, so the decision is
+qualified for M4 integration review. Runtime actions remain disabled and R5.5
+release verification is still pending. See `docs/DETECTOR_V4_PROTOCOL.md` and
 `docs/DETECTOR_V4_CANDIDATE.md`.
 
 Committed evidence:
@@ -234,6 +239,10 @@ Committed evidence:
 - `evals/golden/detector_v4.blind_procedure.freeze.json`
 - `evals/reports/detector_v4.development.json`
 - `evals/reports/detector_v4.adversarial.json`
+- `evals/blind/detector_v4/runs/detector_v4_official_blind_5497598109b06d21c625/blind.predictions.v1.json`
+- `evals/blind/detector_v4/runs/detector_v4_official_blind_5497598109b06d21c625/blind.report.v1.json`
+- `evals/blind/detector_v4/runs/detector_v4_official_blind_5497598109b06d21c625/blind.release.v1.json`
+- `evals/blind/detector_v4/runs/detector_v4_official_blind_5497598109b06d21c625/completion.receipt.json`
 
 ## Verification
 

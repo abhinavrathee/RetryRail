@@ -146,4 +146,9 @@ append-only evidence contracts, repository-confined create-only paths,
 prediction reproduction before truth authorization, redacted terminal failure
 receipts, strict report read-back before completion and receipt-bound
 clean-checkout reproduction after public nonce reveal. No v4 nonce or official
-run exists yet; the frozen candidate remains action-ineligible and unqualified.
+run existed in that freeze. R5.4 later consumed one public-nonce synthetic blind
+slot. Its prediction-only commit precedes truth authorization, exact prediction
+reproduction and the terminal report in history. The run passes every unchanged
+detector target and strict serialization check. Its release decision permits M4
+integration review, but all runtime actions remain disabled and M4 stays behind
+the pending R5.5 release-verification gate.

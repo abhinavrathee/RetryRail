@@ -139,8 +139,12 @@ precision and recall and its report failed the frozen reload contract. Neither
 batch may be reused as held-out evidence. Detector v4 R5.2 uses the original v2
 development batch plus both revealed official batches as exactly three
 separately scored development partitions; each passes, but none is blind for
-v4. R5.3 freezes the candidate and runner without generating another dataset.
-Its one qualification partition requires a new nonce only after that freeze is
-committed and pushed. See
+v4. R5.3 froze the candidate and runner without generating another dataset.
+Only after that freeze was committed, pushed and remotely verified did R5.4
+create the fresh qualification partition
+`detector_v4_official_blind_5497598109b06d21c625`. It contains 5,760 attempts,
+was predicted before truth access, and now has a qualified terminal decision.
+That nonce-derived batch is consumed and must never be reused as held-out
+evidence for a later candidate. See
 `DETECTOR_V2_PROTOCOL.md`, `DETECTOR_V3_PROTOCOL.md`,
 `DETECTOR_V4_PROTOCOL.md` and `DETECTOR_V4_CANDIDATE.md`.

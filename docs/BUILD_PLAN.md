@@ -501,8 +501,10 @@ now; it cannot qualify a change designed after its result was known:
 3. **Complete:** hierarchy, overlap, serialization and temporal edge cases are
    covered; candidate, configuration, matcher, evaluator, contracts and the
    append-only runner are frozen before nonce creation;
-4. **Pending:** create one fresh public, non-sensitive nonce, persist and
-   reproduce predictions before authorizing and loading truth exactly once;
+4. **Complete — qualified:** one fresh public, non-sensitive nonce created
+   `detector_v4_official_blind_5497598109b06d21c625`; prediction evidence was
+   committed before truth access, its bytes reproduced exactly, and truth was
+   then authorized and loaded once. All unchanged release targets passed;
 5. **Pending:** preserve the append-only result and run all local, security,
    clean-checkout and remote release gates.
 
@@ -526,8 +528,14 @@ prediction-first, append-only runner. The runner verifies persisted prediction
 reproduction before truth authorization and requires strict report reload and
 canonical byte equality before completion. Its frozen reproducer restores only
 receipt-bound git-ignored inputs after public nonce reveal and refuses
-mismatched existing bytes. This is not blind evidence or release qualification.
-No fresh nonce or blind run exists; R5.4 is next and M4 remains blocked.
+mismatched existing bytes. R5.4 then consumed the single official v4 slot.
+Run `detector_v4_official_blind_5497598109b06d21c625` records 6 TP / 0 FP /
+0 FN, 1,000,000 ppm precision, recall and top-1 attribution, a 600-second
+median simulated detection delay, and zero hard-negative, baseline-leakage or
+evidence-reconciliation violations. Strict report reload and canonical byte
+reproduction passed. Its release decision is qualified for M4 integration
+review, while every runtime action remains disabled. R5.5 release verification
+is next, so M4 implementation remains blocked until that gate closes.
 
 ### M4 — Policy engine and deterministic recovery path
 
