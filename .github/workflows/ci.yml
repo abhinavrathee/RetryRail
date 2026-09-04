@@ -129,7 +129,7 @@ jobs:
   security:
     name: Static and dependency security checks
     runs-on: ubuntu-latest
-    timeout-minutes: 15
+    timeout-minutes: 25
     steps:
       - name: Check out repository
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
@@ -152,12 +152,16 @@ jobs:
         run: |
           uv sync --all-groups --frozen
           pnpm install --frozen-lockfile
-      - name: Run security gates
+      - name: Run static and repository security gates
         run: |
           uv run bandit -c pyproject.toml -r services/api/app
           uv run retryrail-security-scan
-          uv run pip-audit
-          pnpm audit --audit-level high
+      - name: Audit Python dependencies
+        run: uv run pip-audit
+      - name: Audit web dependencies
+        # A registry outage may be retried, but never converted into success.
+        # The helper also requires a structured report before returning zero.
+        run: uv run retryrail-pnpm-audit
 
   containers:
     name: Container build

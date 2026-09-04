@@ -35,7 +35,7 @@ a payment or customer-facing mutation.
 | Event history changed after acceptance | Database triggers reject update and delete | Migration immutability tests |
 | Demo replay exposed in production | Replay defaults off, production refuses enablement, API token compared in constant time | Configuration and replay-authentication tests |
 | Browser embedding or content sniffing | `DENY`, `nosniff`, no-referrer and no-store headers | Health response tests |
-| Vulnerable dependency | Locked dependency audits and high-severity CI gate | `pip-audit`, `pnpm audit --audit-level high` |
+| Vulnerable dependency | Locked dependency audits and high-severity CI gate | `pip-audit`, `retryrail-pnpm-audit` |
 | Supply-chain script execution | pnpm runs scripts only for reviewed `esbuild` and `styled-components` packages | `pnpm-workspace.yaml` allowlist |
 | CI action substitution | Third-party actions pinned to full commit SHAs | `.github/workflows/ci.yml` review |
 
@@ -65,8 +65,14 @@ prominently labelled synthetic.
 uv run bandit -c pyproject.toml -r services/api/app
 uv run retryrail-security-scan
 uv run pip-audit
-pnpm audit --audit-level high
+uv run retryrail-pnpm-audit
 ```
+
+The pnpm audit wrapper pins the public npm registry, discards inherited package
+manager configuration and credentials, disables audit-ignore modes, requires a
+structured registry report before it can succeed, and retries incomplete
+results at most three times. A high or critical vulnerability report fails
+immediately; abnormal exits, repeated timeouts and registry errors fail closed.
 
 The repository scan is intentionally first-party: it prunes `.git`, virtual
 environments, dependency stores and build output, then scans source/config text

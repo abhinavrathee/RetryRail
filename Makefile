@@ -148,6 +148,6 @@ security-check:
 	uv run bandit -c pyproject.toml -r services/api/app
 	uv run retryrail-security-scan
 	uv run pip-audit
-	pnpm audit --audit-level high
+	uv run retryrail-pnpm-audit
 
 check: lint typecheck test test-contract build test-e2e eval security-check
