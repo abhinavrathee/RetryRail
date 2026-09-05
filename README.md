@@ -38,6 +38,7 @@ loop:
 - [Razorpay Test Mode safety and one-link workflow](docs/RAZORPAY_TEST_MODE.md)
 - [M6 bounded incident analyst and evaluation](docs/INCIDENT_ANALYST.md)
 - [M7 merchant control room](docs/MERCHANT_UI.md)
+- [M8 release hardening and observability](docs/M8_RELEASE_HARDENING.md)
 - [Sanitized Razorpay Test Mode evidence receipt](evals/reports/razorpay_test_mode_receipt.v1.json)
 - [Razorpay submission checklist](docs/SUBMISSION_CHECKLIST.md)
 - [Repository instructions](AGENTS.md)
@@ -49,7 +50,7 @@ loop:
 - PostgreSQL with a transactional outbox
 - Explainable statistical detection, with a bounded LLM analyst
 - Razorpay Test Mode webhooks and Standard Payment Links
-- OpenTelemetry, Prometheus and Grafana
+- W3C trace context, durable trace lineage, Prometheus and Grafana
 - pytest, Playwright, golden-set evaluations and GitHub Actions
 
 The repository/release foundation (M0), deterministic contract/truth-data
@@ -115,6 +116,11 @@ evaluation. Its create-only three-model report selected
 control room and complete keyboard-tested browser story. Provider credentials
 never enter the browser, and neither milestone changes detector, policy,
 approval or execution authority.
+M8 adds standards-valid request trace propagation, immutable event-to-action
+lineage, recursive fail-closed log redaction, low-cardinality release metrics,
+an optional local Prometheus/Grafana profile and one consolidated failure
+matrix. These are operational evidence only; they grant no detection, approval
+or execution authority.
 See the [v4 protocol](docs/DETECTOR_V4_PROTOCOL.md) and
 [v4 candidate](docs/DETECTOR_V4_CANDIDATE.md), plus the
 [M4 recovery-boundary decision](docs/adr/0007-m4-policy-approval-recovery-contract-boundary.md)
@@ -124,6 +130,7 @@ the [M5 provider decision](docs/adr/0010-m5-durable-razorpay-test-mode-dispatch.
 the [M5 experiment decision](docs/adr/0011-m5-precommitted-recovery-experiment.md),
 the [M6 analyst decision](docs/adr/0012-m6-redacted-bounded-incident-analyst.md),
 the [M7 control-room decision](docs/adr/0013-m7-merchant-control-room.md),
+the [M8 observability decision](docs/adr/0014-m8-release-observability-and-trace-lineage.md),
 plus the [deterministic policy](docs/POLICY.md) and
 [complete recovery workflow](docs/RECOVERY_WORKFLOW.md).
 
@@ -157,6 +164,11 @@ is at <http://127.0.0.1:5173>, readiness is at
 <http://127.0.0.1:8000/metrics>, and development-only API documentation is at
 <http://127.0.0.1:8000/docs>.
 
+Start the optional local-only observability profile with
+`docker compose --profile observability up --build -d`. Grafana is then at
+<http://127.0.0.1:3000> and Prometheus at <http://127.0.0.1:9090>. Their local
+development defaults are not production credentials or a deployment recipe.
+
 ## Developer contract
 
 The completed repository should support:
@@ -181,6 +193,9 @@ make v4-blind-check # reproduce revealed inputs, then verify append-only v4 evid
 make analyst-corpus-check # verify the fixed 24-case M6 corpus
 make analyst-report-check # verify the committed key-backed model report
 make demo       # run the M7 backend replay and browser-story gates
+make observability-check # validate trace, metric and dashboard evidence
+make failure-matrix # run the mandatory bounded failure scenarios
+make m8-check   # run the consolidated M8 release-hardening gate
 make check      # run every implemented release gate
 ```
 
@@ -190,7 +205,7 @@ replay requires `RETRYRAIL_REPLAY_ENABLED=true` and the configured local token.
 it does not contact Razorpay or OpenAI. On Windows without GNU Make, run the
 underlying `uv` and `pnpm` commands shown in the Makefile.
 
-M0–M7 verification includes Python and TypeScript lint/typecheck, backend and
+M0–M8 verification includes Python and TypeScript lint/typecheck, backend and
 web unit tests, schema and truth-manifest drift, production web build, a
 Chromium smoke test, Bandit, credential/fixture scanning and Python/web
 dependency audits. Pipeline integration tests run hermetically on SQLite
@@ -198,7 +213,10 @@ locally and against PostgreSQL 16 in the Python CI job. The M4 workflow adds
 SQLite/PostgreSQL migration coverage, adversarial approval/action races and a
 literal model-unavailable detector-to-audit release test. M6 adds strict
 redaction, provider-failure and grounding cases; M7 adds API-boundary,
-responsive workflow and keyboard-only approval/rejection coverage.
+responsive workflow and keyboard-only approval/rejection coverage. M8 adds
+trace-continuation and lineage tests, dashboard/configuration validation,
+recursive log-redaction tests, a migration backfill/immutability check and the
+consolidated failure matrix.
 
 ## Official context
 
@@ -240,7 +258,9 @@ sanitized complete-audit receipt are committed. M6 implements the redacted
 single-provider boundary, deterministic fallback and fixed 24-case evaluation;
 its create-only report freezes `gpt-5.4-nano-2026-03-17` as the only candidate
 that passed every gate. M7 implements the merchant control room and primary
-browser story. See the current
+browser story. M8 implements durable cross-entity trace lineage, W3C request
+correlation, centrally redacted structured logs, release metrics, provisioned
+local dashboards and an explicit failure-matrix gate. See the current
 [project status and next-chat handoff](docs/PROJECT_STATUS.md),
 [v3 result](docs/DETECTOR_V3_PROTOCOL.md),
 [v4 protocol](docs/DETECTOR_V4_PROTOCOL.md),
@@ -249,6 +269,7 @@ browser story. See the current
 [detector](docs/DETECTOR.md), [policy](docs/POLICY.md),
 [recovery workflow](docs/RECOVERY_WORKFLOW.md), [incident analyst](docs/INCIDENT_ANALYST.md),
 [merchant UI](docs/MERCHANT_UI.md),
+[M8 release hardening](docs/M8_RELEASE_HARDENING.md),
 [architecture](docs/ARCHITECTURE.md),
 [dataset](docs/DATASET.md), [security](docs/SECURITY.md) and the
 [authoritative build plan](docs/BUILD_PLAN.md).

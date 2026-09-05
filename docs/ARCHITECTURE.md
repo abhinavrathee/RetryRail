@@ -2,10 +2,10 @@
 
 ## Current release boundary
 
-This document describes the implemented M0–M7 foundation, provider boundary,
-measurement evidence, bounded analyst and merchant control room. M5's external
-release gate is closed by one human-approved Test Mode execution and its
-committed sanitized receipt. The authoritative
+This document describes the implemented M0–M8 foundation, provider boundary,
+measurement evidence, bounded analyst, merchant control room and release
+observability. M5's external release gate is closed by one human-approved Test
+Mode execution and its committed sanitized receipt. The authoritative
 product behavior remains in `PRODUCT_REQUIREMENTS.md`; sequencing remains in
 `BUILD_PLAN.md`.
 
@@ -49,6 +49,15 @@ flowchart LR
     Adapter --> ProviderEvidence
     ProviderEvidence --> ActionEvidence[(Actions + append-only transitions)]
     ActionEvidence --> Audit[M4.5 audit completeness verifier]
+    Events --> TraceLedger[(M8 immutable trace lineage)]
+    Outbox --> TraceLedger
+    Incidents --> TraceLedger
+    PreviewEvidence --> TraceLedger
+    ActionEvidence --> TraceLedger
+    API --> Metrics[M8 low-cardinality metrics]
+    Worker --> Metrics
+    Metrics --> Prometheus[Optional local Prometheus]
+    Prometheus --> Grafana[Provisioned M8 dashboard]
     Blind[Qualified full synthetic blind batch] --> Assignment[M5 frozen stratified assignment]
     Assignment --> Outcomes[M5 attributed treatment/control outcomes]
     Outcomes --> Report[Incremental GMV + bootstrap uncertainty]
@@ -61,7 +70,7 @@ and remains unreachable until a fresh deterministic policy passes and a human
 merchant approval is atomically consumed. The review workflow used that
 authority once for the committed external Test Mode evidence link.
 
-## Decisions implemented in M0–M7
+## Decisions implemented in M0–M8
 
 - Python 3.12-compatible FastAPI modular monolith with typed Pydantic
   boundaries.
@@ -139,6 +148,15 @@ authority once for the committed external Test Mode evidence link.
 - A responsive control room for overview, incident evidence, policy preview,
   merchant approval, action/audit, incremental impact and isolated synthetic
   replay, with memory-only browser secrets and typed response validation.
+- Valid W3C version-00 HTTP trace propagation plus immutable database lineage
+  linking event, outbox, incident, recovery plan and action spans without using
+  identifiers as metric labels. Existing payment keys and the frozen
+  experiment assignment/outcome keys complete the cross-artifact correlation.
+- Recursive fail-closed structured-log redaction, release metrics for policy,
+  action, experiment and model behavior, and an optional digest-pinned local
+  Prometheus/Grafana profile with provisioned panels.
+- A consolidated failure matrix, trace backfill/immutability migration checks
+  and clean-release evidence that preserve every earlier authority boundary.
 - A threshold freeze plus committed tuning and held-out reports. Detector v1
   failed held-out targets and remains explicitly release-blocked through a
   machine-readable runtime decision.
@@ -188,6 +206,10 @@ authority once for the committed external Test Mode evidence link.
 15. M7 stores the merchant authorization and one-time approval bearer only in
     browser memory. Razorpay and OpenAI credentials remain server-only; replay
     controls are local-only and cannot cross the recovery approval boundary.
+16. M8 trace identifiers correlate already-authorized work but confer no
+    authority. Durable trace rows are append-only, logs are recursively
+    redacted and metric labels are fixed low-cardinality enums rather than
+    merchant, payment, incident, plan or action identifiers.
 
 ## Dependency boundary
 
@@ -314,3 +336,13 @@ The action receipt, lookup-only ambiguous state, complete audit, frozen
 incremental-impact report and isolated synthetic replay are distinct views.
 The browser receives no provider credential and contains no chat-based action
 surface.
+
+M8 adds operational correlation around that fixed product boundary. Each HTTP
+request receives a standards-valid trace context; accepted webhook work gains
+an immutable event/outbox root and detector/workflow processing adds incident,
+plan and action child links. Canonical payment IDs connect trace evidence to
+the frozen experiment assignment and outcome artifacts. Prometheus consumes
+fixed-cardinality API/worker signals and Grafana provisions six reviewer panels
+locally. Central recursive redaction and the mandatory failure matrix make
+absence-of-authority and failure behavior testable rather than inferred.
+ADR-0014 records the boundary.

@@ -15,6 +15,7 @@ from retryrail.db.tables import (
     IncidentRecord,
     OutboxMessageRecord,
     PaymentEventRecord,
+    TraceLinkRecord,
 )
 from retryrail.detection.runtime_activation import load_detector_v4_activation
 from retryrail.detection.service import DetectionService
@@ -116,6 +117,52 @@ async def _project_failed_evidence_payment(
         return source
 
 
+async def _assert_trace_lineage(
+    database: Database,
+    *,
+    incident_id: str,
+    plan_id: str,
+    action_id: str,
+) -> None:
+    async with database.sessions() as session:
+        incident_trace = await session.scalar(
+            select(TraceLinkRecord).where(
+                TraceLinkRecord.entity_type == "incident",
+                TraceLinkRecord.entity_id == incident_id,
+            )
+        )
+        plan_trace = await session.scalar(
+            select(TraceLinkRecord).where(
+                TraceLinkRecord.entity_type == "plan",
+                TraceLinkRecord.entity_id == plan_id,
+            )
+        )
+        action_trace = await session.scalar(
+            select(TraceLinkRecord).where(
+                TraceLinkRecord.entity_type == "action",
+                TraceLinkRecord.entity_id == action_id,
+            )
+        )
+        assert incident_trace is not None
+        assert plan_trace is not None
+        assert action_trace is not None
+        event_trace = await session.scalar(
+            select(TraceLinkRecord).where(
+                TraceLinkRecord.entity_type == "event",
+                TraceLinkRecord.span_id == incident_trace.parent_span_id,
+            )
+        )
+    assert event_trace is not None
+    assert {
+        event_trace.trace_id,
+        incident_trace.trace_id,
+        plan_trace.trace_id,
+        action_trace.trace_id,
+    } == {incident_trace.trace_id}
+    assert plan_trace.parent_span_id == incident_trace.span_id
+    assert action_trace.parent_span_id == plan_trace.span_id
+
+
 def test_m4_model_unavailable_detect_to_audited_receipt_release_gate(
     settings: Settings,
 ) -> None:
@@ -215,6 +262,13 @@ def test_m4_model_unavailable_detect_to_audited_receipt_release_gate(
             assert audit.complete is True
             assert audit.missing_facts == ()
             assert audit.terminal_state is ActionState.SUCCEEDED
+
+            await _assert_trace_lineage(
+                database,
+                incident_id=incident.incident_id,
+                plan_id=preview.preview.plan.plan_id,
+                action_id=execution.receipt.action_id,
+            )
         finally:
             await database.dispose()
 

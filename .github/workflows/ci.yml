@@ -16,10 +16,10 @@ jobs:
   python-quality:
     name: Python quality and contracts
     runs-on: ubuntu-latest
-    # The complete deterministic suite takes roughly 26 minutes on the
-    # reference Windows workstation. Keep every release gate enabled and allow
-    # enough headroom for slower hosted runners and dependency-cache misses.
-    timeout-minutes: 40
+    # The complete deterministic suite takes roughly 31 minutes on a cold
+    # hosted runner. Keep every release gate enabled and retain bounded
+    # headroom for migration setup and dependency-cache misses.
+    timeout-minutes: 55
     env:
       RETRYRAIL_TEST_DATABASE_URL: postgresql+psycopg://retryrail:ci-only-password@localhost:5432/retryrail_test
     services:
@@ -52,7 +52,11 @@ jobs:
       - name: Typecheck
         run: uv run mypy
       - name: Test with coverage
-        run: uv run pytest --cov=retryrail --cov-report=term-missing
+        run: |
+          uv run retryrail-v4-blind-reproduce
+          uv run pytest --cov=retryrail --cov-report=term-missing
+      - name: Verify M8 release-hardening matrix
+        run: make m8-check
       - name: Verify generated contracts
         run: |
           uv run retryrail-contracts --check
@@ -60,6 +64,8 @@ jobs:
           uv run retryrail-v2-data --check
           uv run retryrail-v3-protocol --check
           uv run retryrail-v4-protocol --check
+          uv run retryrail-experiment freeze --check
+          uv run retryrail-analyst-eval corpus --check
       - name: Verify frozen detector evaluation
         run: |
           uv run retryrail-eval --check
@@ -75,6 +81,8 @@ jobs:
           uv run retryrail-v4-freeze --check
           uv run retryrail-v4-blind-reproduce
           uv run retryrail-v4-blind --check
+          uv run retryrail-experiment evaluate --check
+          uv run retryrail-analyst-eval report --check
 
   web-quality:
     name: Web quality and production build
@@ -171,4 +179,7 @@ jobs:
       - name: Check out repository
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
       - name: Build local service images
-        run: docker compose build api worker web
+        run: |
+          docker compose --profile observability config --quiet
+          docker compose build api worker web
+          docker compose --profile observability pull prometheus grafana

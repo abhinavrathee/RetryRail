@@ -108,6 +108,12 @@ class PipelineMetrics:
             ("stage", "decision"),
             registry=self.registry,
         )
+        self.policy_decisions = Counter(
+            "retryrail_policy_decisions_total",
+            "Bounded policy-rule outcomes by aggregate decision and reason code.",
+            ("decision", "reason"),
+            registry=self.registry,
+        )
         self.recovery_approval_decisions = Counter(
             "retryrail_recovery_approval_decisions_total",
             "Authenticated merchant approval decision outcomes.",
@@ -124,6 +130,17 @@ class PipelineMetrics:
             "retryrail_recovery_action_executions_total",
             "Execute-once recovery outcomes by bounded state.",
             ("result", "state"),
+            registry=self.registry,
+        )
+        self.recovery_actions = Counter(
+            "retryrail_recovery_actions_total",
+            "Recovery execution results by bounded terminal or pending status.",
+            ("status",),
+            registry=self.registry,
+        )
+        self.duplicate_actions_prevented = Counter(
+            "retryrail_duplicate_actions_prevented_total",
+            "Execute-once replays that returned existing evidence without another mutation.",
             registry=self.registry,
         )
         self.recovery_action_reconciliations = Counter(
@@ -166,6 +183,12 @@ class PipelineMetrics:
             "Estimated synthetic incremental recovered GMV in integer subunits.",
             registry=self.registry,
         )
+        self.recovered_gmv = Gauge(
+            "retryrail_recovered_gmv_subunits",
+            "Observed synthetic recovered GMV in integer subunits by experiment arm.",
+            ("arm",),
+            registry=self.registry,
+        )
         self.experiment_net_recovered_value = Gauge(
             "retryrail_experiment_net_recovered_value_subunits",
             "Synthetic incremental value after action and false-intervention costs.",
@@ -183,9 +206,27 @@ class PipelineMetrics:
             ("result",),
             registry=self.registry,
         )
+        self.agent_requests = Counter(
+            "retryrail_agent_requests_total",
+            "Bounded advisory-model orchestration outcomes.",
+            ("result",),
+            registry=self.registry,
+        )
+        self.agent_fallbacks = Counter(
+            "retryrail_agent_fallback_total",
+            "Deterministic fallback activations by bounded reason code.",
+            ("reason",),
+            registry=self.registry,
+        )
         self.incident_analysis_latency = Histogram(
             "retryrail_incident_analysis_latency_seconds",
             "Provider wall time for one validated redacted incident analysis.",
+            buckets=(0.1, 0.25, 0.5, 1, 2, 5, 10, 20, 30),
+            registry=self.registry,
+        )
+        self.agent_latency = Histogram(
+            "retryrail_agent_latency_seconds",
+            "Provider wall time for one validated redacted advisory request.",
             buckets=(0.1, 0.25, 0.5, 1, 2, 5, 10, 20, 30),
             registry=self.registry,
         )
@@ -198,6 +239,11 @@ class PipelineMetrics:
         self.incident_analysis_estimated_cost = Counter(
             "retryrail_incident_analysis_estimated_cost_microusd_total",
             "Versioned public-price estimate for validated model analysis.",
+            registry=self.registry,
+        )
+        self.agent_estimated_cost = Counter(
+            "retryrail_agent_estimated_cost_microusd_total",
+            "Versioned estimated advisory-model cost in micro-US-dollars.",
             registry=self.registry,
         )
 

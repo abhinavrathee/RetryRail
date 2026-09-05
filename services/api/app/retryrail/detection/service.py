@@ -37,6 +37,13 @@ from retryrail.detection.v4_models import DetectorV4Config, V4DetectorRunResult
 from retryrail.events.ingestion import PROJECT_PAYMENT_TOPIC
 from retryrail.events.models import NormalizedPaymentEvent
 from retryrail.observability.metrics import PipelineMetrics
+from retryrail.observability.tracing import (
+    TraceEntity,
+    deterministic_trace_id,
+    ensure_child_trace_link,
+    ensure_root_trace_link,
+    get_trace_link,
+)
 
 LOGGER = structlog.get_logger(__name__)
 
@@ -171,6 +178,7 @@ class DetectionService:
             source_sha256=source_sha256,
             source_watermark=source_watermark,
             source_event_count=len(records),
+            source_records=records,
         )
         self._metrics.incident_detection_latency.observe(time.perf_counter() - started)
         self._metrics.detector_runs.labels(
@@ -249,6 +257,7 @@ class DetectionService:
         source_sha256: str,
         source_watermark: datetime,
         source_event_count: int,
+        source_records: tuple[PaymentEventRecord, ...],
     ) -> DetectionRefreshResult:
         now = datetime.now(tz=UTC)
         reused = False
@@ -268,6 +277,7 @@ class DetectionService:
                 opened, resolved = await self._upsert_incidents(
                     session,
                     run,
+                    source_records=source_records,
                     updated_at=now,
                 )
                 session.add(
@@ -387,6 +397,7 @@ class DetectionService:
         session: "AsyncSession",
         run: RuntimeDetectorRunResult,
         *,
+        source_records: tuple[PaymentEventRecord, ...],
         updated_at: datetime,
     ) -> tuple[int, int]:
         ids = tuple(item.incident_id for item in run.incidents)
@@ -415,6 +426,9 @@ class DetectionService:
             }
         opened = 0
         resolved = 0
+        source_by_external_id = {
+            item.razorpay_event_id: item for item in source_records
+        }
         for incident in run.incidents:
             record = existing.get(incident.incident_id)
             prior_status = record.status if record is not None else None
@@ -434,6 +448,12 @@ class DetectionService:
                 incident,
                 action_eligible=self._runtime_action_eligible and incident.synthetic,
                 updated_at=updated_at,
+            )
+            await self._ensure_incident_trace(
+                session,
+                incident=incident,
+                record=record,
+                source_by_external_id=source_by_external_id,
             )
             if prior_status == "open" and incident.status.value == "resolved":
                 resolved += 1
@@ -467,6 +487,58 @@ class DetectionService:
                 )
                 observation_keys.add(observation_key)
         return opened, resolved
+
+    @staticmethod
+    async def _ensure_incident_trace(
+        session: "AsyncSession",
+        *,
+        incident: RuntimeDetectedIncident,
+        record: IncidentRecord,
+        source_by_external_id: dict[str, PaymentEventRecord],
+    ) -> None:
+        if await get_trace_link(
+            session,
+            entity_type=TraceEntity.INCIDENT,
+            entity_id=incident.incident_id,
+        ) is not None:
+            return
+        source = next(
+            (
+                source_by_external_id[event_id]
+                for event_id in incident.peak_signal.evidence_event_ids
+                if event_id in source_by_external_id
+            ),
+            None,
+        )
+        if source is None:
+            await ensure_root_trace_link(
+                session,
+                merchant_id=incident.merchant_id,
+                entity_type=TraceEntity.INCIDENT,
+                entity_id=incident.incident_id,
+                created_at=record.created_at,
+            )
+            return
+        event_trace = await ensure_root_trace_link(
+            session,
+            merchant_id=source.merchant_id,
+            entity_type=TraceEntity.EVENT,
+            entity_id=source.internal_id,
+            created_at=source.created_at,
+            trace_id=deterministic_trace_id(
+                source.merchant_id,
+                TraceEntity.EVENT,
+                source.internal_id,
+            ),
+        )
+        await ensure_child_trace_link(
+            session,
+            merchant_id=incident.merchant_id,
+            entity_type=TraceEntity.INCIDENT,
+            entity_id=incident.incident_id,
+            parent=event_trace,
+            created_at=record.created_at,
+        )
 
 
 def _update_incident_record(

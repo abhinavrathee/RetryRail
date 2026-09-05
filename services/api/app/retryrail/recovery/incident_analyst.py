@@ -1,5 +1,6 @@
 """M6 orchestration: redacted provider analysis with deterministic fallback."""
 
+import time
 from collections.abc import Callable
 from datetime import UTC, datetime
 
@@ -91,12 +92,17 @@ class IncidentAnalyst:
             self._metrics.incident_analyses.labels(
                 result=AnalystModelStatus.UNAVAILABLE.value
             ).inc()
+            self._metrics.agent_requests.labels(
+                result=AnalystModelStatus.UNAVAILABLE.value
+            ).inc()
+            self._metrics.agent_fallbacks.labels(reason="ANALYST_NOT_CONFIGURED").inc()
             return await self._fallback_response(
                 merchant_id=merchant_id,
                 incident_id=incident_id,
                 status=AnalystModelStatus.UNAVAILABLE,
                 reason_code="ANALYST_NOT_CONFIGURED",
                 attempted_model=None,
+                provider_latency_ms=None,
             )
 
         # Persist a deterministic, content-bound baseline before any provider call.
@@ -113,12 +119,14 @@ class IncidentAnalyst:
         existing = await self._load_existing(snapshot)
         if existing is not None:
             self._metrics.incident_analyses.labels(result="replayed").inc()
+            self._metrics.agent_requests.labels(result="replayed").inc()
             return ModelIncidentAnalysisResponse(
                 disposition="replayed",
                 analysis=existing,
                 plan_fallback=_plan_fallback(snapshot),
             )
 
+        provider_started = time.perf_counter()
         try:
             provider_result = await self._provider.analyze(snapshot)
             _validate_provenance(
@@ -146,17 +154,25 @@ class IncidentAnalyst:
             )
             disposition, persisted = await self._persist(snapshot, analysis)
         except IncidentAnalystProviderError as error:
+            provider_latency_seconds = max(time.perf_counter() - provider_started, 0.0)
             self._metrics.incident_analyses.labels(result=error.status.value).inc()
+            self._metrics.agent_requests.labels(result=error.status.value).inc()
+            self._metrics.agent_fallbacks.labels(reason=error.reason_code).inc()
+            self._metrics.incident_analysis_latency.observe(provider_latency_seconds)
+            self._metrics.agent_latency.observe(provider_latency_seconds)
             return await self._fallback_response(
                 merchant_id=merchant_id,
                 incident_id=incident_id,
                 status=error.status,
                 reason_code=error.reason_code,
                 attempted_model=self._provider.model,
+                provider_latency_ms=round(provider_latency_seconds * 1_000),
             )
 
         self._metrics.incident_analyses.labels(result=disposition).inc()
+        self._metrics.agent_requests.labels(result=disposition).inc()
         self._metrics.incident_analysis_latency.observe(persisted.provenance.latency_ms / 1_000)
+        self._metrics.agent_latency.observe(persisted.provenance.latency_ms / 1_000)
         self._metrics.incident_analysis_tokens.labels(direction="input").inc(
             persisted.provenance.input_tokens
         )
@@ -167,6 +183,9 @@ class IncidentAnalyst:
             self._metrics.incident_analysis_estimated_cost.inc(
                 persisted.provenance.estimated_cost_microusd
             )
+            self._metrics.agent_estimated_cost.inc(
+                persisted.provenance.estimated_cost_microusd
+            )
         LOGGER.info(
             "incident_analysis_completed",
             merchant_id=merchant_id,
@@ -175,6 +194,8 @@ class IncidentAnalyst:
             model=persisted.provenance.model,
             result=disposition,
             fallback_used=False,
+            latency_ms=persisted.provenance.latency_ms,
+            estimated_cost_microusd=persisted.provenance.estimated_cost_microusd,
         )
         return ModelIncidentAnalysisResponse(
             disposition=disposition,
@@ -294,6 +315,7 @@ class IncidentAnalyst:
         status: AnalystModelStatus,
         reason_code: str,
         attempted_model: str | None,
+        provider_latency_ms: int | None,
     ) -> AnalystFallbackResponse:
         fallback = await self._fallback.analyze(
             merchant_id=merchant_id,
@@ -304,8 +326,11 @@ class IncidentAnalyst:
             merchant_id=merchant_id,
             incident_id=incident_id,
             model_status=status.value,
+            attempted_model=attempted_model,
             reason_code=reason_code,
             fallback_used=True,
+            latency_ms=provider_latency_ms,
+            estimated_cost_microusd=None,
         )
         return AnalystFallbackResponse(
             disposition=fallback.disposition.value,

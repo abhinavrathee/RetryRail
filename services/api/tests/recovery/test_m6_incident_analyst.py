@@ -450,11 +450,17 @@ def test_orchestrator_rejects_ungrounded_or_unbound_provider_results(
             "/api/v1/incidents/inc_m6_test/analyze",
             headers=_AUTHORIZATION,
         )
+        metrics = client.get("/metrics").text
 
     assert response.status_code == 200
     assert response.json()["fallback_used"] is True
     assert response.json()["model_status"] == "invalid_response"
     assert response.json()["fallback_reason_code"] == "ANALYST_RESPONSE_INVALID"
+    assert "retryrail_agent_latency_seconds_count 1.0" in metrics
+    assert (
+        'retryrail_agent_fallback_total{reason="ANALYST_RESPONSE_INVALID"} 1.0'
+        in metrics
+    )
 
     async def counts() -> tuple[int, int]:
         database = Database(settings.database_dsn())

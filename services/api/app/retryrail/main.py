@@ -22,6 +22,11 @@ from retryrail.experiments.service import ExperimentReportService
 from retryrail.observability.logging import configure_logging
 from retryrail.observability.metrics import PipelineMetrics
 from retryrail.observability.metrics import router as metrics_router
+from retryrail.observability.tracing import (
+    TraceContext,
+    bind_trace_context,
+    request_trace_context,
+)
 from retryrail.recovery.adapter import (
     DeterministicFakeRazorpayAdapter,
     RazorpayTestModeAdapter,
@@ -39,6 +44,38 @@ from retryrail.recovery.openai_analyst import (
 from retryrail.recovery.workflow import RecoveryWorkflowService
 
 RequestHandler = Callable[[Request], Awaitable[Response]]
+
+
+def _initialize_experiment_metrics(
+    metrics: PipelineMetrics,
+    service: ExperimentReportService,
+) -> None:
+    """Expose only frozen aggregate synthetic experiment evidence."""
+
+    metrics.experiment_eligible_payments.set(service.report.eligible_count)
+    metrics.experiment_incremental_recovered_gmv.set(
+        service.report.value.incremental_recovered_gmv_subunits
+    )
+    metrics.recovered_gmv.labels(arm="treatment").set(
+        service.report.treatment.recovered_gmv_subunits
+    )
+    metrics.recovered_gmv.labels(arm="control").set(
+        service.report.control.recovered_gmv_subunits
+    )
+    metrics.experiment_net_recovered_value.set(
+        service.report.value.net_recovered_value_subunits
+    )
+
+
+def _harden_response(response: Response, trace: TraceContext) -> None:
+    """Apply security and W3C correlation headers to every API response."""
+
+    response.headers["Cache-Control"] = "no-store"
+    response.headers["Referrer-Policy"] = "no-referrer"
+    response.headers["Traceparent"] = trace.traceparent
+    response.headers["X-Trace-Id"] = trace.trace_id
+    response.headers["X-Content-Type-Options"] = "nosniff"
+    response.headers["X-Frame-Options"] = "DENY"
 
 
 def create_app(
@@ -103,13 +140,7 @@ def create_app(
         )
         experiment_service = ExperimentReportService()
         application.state.experiment_report_service = experiment_service
-        resolved_metrics.experiment_eligible_payments.set(experiment_service.report.eligible_count)
-        resolved_metrics.experiment_incremental_recovered_gmv.set(
-            experiment_service.report.value.incremental_recovered_gmv_subunits
-        )
-        resolved_metrics.experiment_net_recovered_value.set(
-            experiment_service.report.value.net_recovered_value_subunits
-        )
+        _initialize_experiment_metrics(resolved_metrics, experiment_service)
         try:
             yield
         finally:
@@ -139,21 +170,26 @@ def create_app(
         allow_methods=["GET", "POST"],
         allow_headers=[
             "Content-Type",
+            "Traceparent",
             "X-Razorpay-Event-Id",
             "X-Razorpay-Signature",
             "X-RetryRail-Replay-Token",
             "X-RetryRail-Merchant-Authorization",
             "X-RetryRail-Approval-Token",
         ],
+        expose_headers=[
+            "Traceparent",
+            "X-Trace-Id",
+            "X-RetryRail-Domain-Trace-Id",
+        ],
     )
 
     @application.middleware("http")
     async def add_security_headers(request: Request, call_next: RequestHandler) -> Response:
-        response = await call_next(request)
-        response.headers["Cache-Control"] = "no-store"
-        response.headers["Referrer-Policy"] = "no-referrer"
-        response.headers["X-Content-Type-Options"] = "nosniff"
-        response.headers["X-Frame-Options"] = "DENY"
+        trace = request_trace_context(request.headers.get("traceparent"))
+        with bind_trace_context(trace):
+            response = await call_next(request)
+        _harden_response(response, trace)
         return response
 
     application.include_router(health_router)

@@ -8,7 +8,7 @@ from collections.abc import Callable, Mapping
 from dataclasses import dataclass
 from datetime import UTC, datetime
 from enum import StrEnum
-from typing import Any
+from typing import TYPE_CHECKING, Any
 
 import structlog
 from pydantic import SecretStr, TypeAdapter, ValidationError
@@ -19,8 +19,19 @@ from retryrail.db.session import Database
 from retryrail.db.tables import OutboxMessageRecord, PaymentEventRecord
 from retryrail.events.models import Identifier
 from retryrail.observability.metrics import PipelineMetrics
+from retryrail.observability.tracing import (
+    TraceEntity,
+    current_trace_context,
+    deterministic_trace_id,
+    ensure_child_trace_link,
+    ensure_root_trace_link,
+    get_trace_link,
+)
 from retryrail.webhooks.payloads import normalize_razorpay_payload, sanitize_razorpay_payload
 from retryrail.webhooks.signatures import WebhookSignatureError, verify_webhook_signature
+
+if TYPE_CHECKING:
+    from sqlalchemy.ext.asyncio import AsyncSession
 
 _IDENTIFIER_ADAPTER = TypeAdapter(Identifier)
 _IDENTITY_NAMESPACE = uuid.UUID("ae25a4b9-b4b5-51dd-b4bd-ef712bc97c94")
@@ -46,6 +57,7 @@ class IngestionResult:
     disposition: IngestionDisposition
     event_internal_id: str
     razorpay_event_id: str
+    trace_id: str
 
 
 class WebhookPayloadError(ValueError):
@@ -161,6 +173,16 @@ class EventIngestionService:
         payload_sha256 = _canonical_payload_hash(sanitized)
         internal_id = _event_internal_id(validated_merchant_id, validated_event_id)
         now = self._clock()
+        active_trace = current_trace_context()
+        trace_id = (
+            active_trace.trace_id
+            if active_trace is not None
+            else deterministic_trace_id(
+                validated_merchant_id,
+                TraceEntity.EVENT,
+                internal_id,
+            )
+        )
         try:
             result = await self._persist(
                 event=PaymentEventRecord(
@@ -199,6 +221,7 @@ class EventIngestionService:
                     created_at=now,
                 ),
                 payload_sha256=payload_sha256,
+                trace_id=trace_id,
             )
         except EventIdentityConflictError:
             self._metrics.webhook_requests.labels(result="identity_conflict").inc()
@@ -229,6 +252,7 @@ class EventIngestionService:
             event_internal_id=result.event_internal_id,
             merchant_id=validated_merchant_id,
             razorpay_event_id=validated_event_id,
+            trace_id=result.trace_id,
         )
         return result
 
@@ -238,6 +262,7 @@ class EventIngestionService:
         event: PaymentEventRecord,
         outbox: OutboxMessageRecord,
         payload_sha256: str,
+        trace_id: str,
     ) -> IngestionResult:
         async with self._database.sessions() as session, session.begin():
             existing = await session.scalar(
@@ -247,13 +272,39 @@ class EventIngestionService:
                 )
             )
             if existing is not None:
-                return self._existing_result(existing, payload_sha256)
+                existing_trace_id = await self._ensure_existing_trace(
+                    session,
+                    event=existing,
+                    trace_id=trace_id,
+                )
+                return self._existing_result(
+                    existing,
+                    payload_sha256,
+                    trace_id=existing_trace_id,
+                )
 
             try:
                 async with session.begin_nested():
                     session.add(event)
                     await session.flush()
                     session.add(outbox)
+                    await session.flush()
+                    event_trace = await ensure_root_trace_link(
+                        session,
+                        merchant_id=event.merchant_id,
+                        entity_type=TraceEntity.EVENT,
+                        entity_id=event.internal_id,
+                        created_at=event.created_at,
+                        trace_id=trace_id,
+                    )
+                    await ensure_child_trace_link(
+                        session,
+                        merchant_id=outbox.merchant_id,
+                        entity_type=TraceEntity.OUTBOX,
+                        entity_id=outbox.outbox_id,
+                        parent=event_trace,
+                        created_at=outbox.created_at,
+                    )
                     await session.flush()
             except IntegrityError:
                 existing = await session.scalar(
@@ -264,18 +315,68 @@ class EventIngestionService:
                 )
                 if existing is None:
                     raise
-                return self._existing_result(existing, payload_sha256)
+                existing_trace_id = await self._ensure_existing_trace(
+                    session,
+                    event=existing,
+                    trace_id=trace_id,
+                )
+                return self._existing_result(
+                    existing,
+                    payload_sha256,
+                    trace_id=existing_trace_id,
+                )
 
         return IngestionResult(
             disposition=IngestionDisposition.ACCEPTED,
             event_internal_id=event.internal_id,
             razorpay_event_id=event.razorpay_event_id,
+            trace_id=trace_id,
         )
+
+    async def _ensure_existing_trace(
+        self,
+        session: "AsyncSession",
+        *,
+        event: PaymentEventRecord,
+        trace_id: str,
+    ) -> str:
+        event_trace = await ensure_root_trace_link(
+            session,
+            merchant_id=event.merchant_id,
+            entity_type=TraceEntity.EVENT,
+            entity_id=event.internal_id,
+            created_at=event.created_at,
+            trace_id=trace_id,
+        )
+        outbox = await session.scalar(
+            select(OutboxMessageRecord).where(
+                OutboxMessageRecord.event_internal_id == event.internal_id,
+                OutboxMessageRecord.merchant_id == event.merchant_id,
+                OutboxMessageRecord.topic == PROJECT_PAYMENT_TOPIC,
+            )
+        )
+        if outbox is not None and await get_trace_link(
+            session,
+            entity_type=TraceEntity.OUTBOX,
+            entity_id=outbox.outbox_id,
+        ) is None:
+            await ensure_child_trace_link(
+                session,
+                merchant_id=outbox.merchant_id,
+                entity_type=TraceEntity.OUTBOX,
+                entity_id=outbox.outbox_id,
+                parent=event_trace,
+                created_at=outbox.created_at,
+            )
+        await session.flush()
+        return event_trace.trace_id
 
     @staticmethod
     def _existing_result(
         existing: PaymentEventRecord,
         payload_sha256: str,
+        *,
+        trace_id: str,
     ) -> IngestionResult:
         if existing.payload_sha256 != payload_sha256:
             raise EventIdentityConflictError
@@ -283,4 +384,5 @@ class EventIngestionService:
             disposition=IngestionDisposition.DUPLICATE,
             event_internal_id=existing.internal_id,
             razorpay_event_id=existing.razorpay_event_id,
+            trace_id=trace_id,
         )

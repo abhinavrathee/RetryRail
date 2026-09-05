@@ -53,6 +53,11 @@ from retryrail.events.models import (
     PaymentStatus,
 )
 from retryrail.observability.metrics import PipelineMetrics
+from retryrail.observability.tracing import (
+    TraceEntity,
+    ensure_child_trace_link,
+    ensure_root_trace_link,
+)
 from retryrail.policy import DETERMINISTIC_POLICY_VERSION, DeterministicPolicyEngine
 from retryrail.recovery.integrity import (
     canonical_sha256,
@@ -295,6 +300,22 @@ class RecoveryWorkflowService:
                             # SQLite and PostgreSQL enforce the same FK order.
                             session.add(plan_record)
                             await session.flush()
+                            incident_trace = await ensure_root_trace_link(
+                                session,
+                                merchant_id=plan.merchant_id,
+                                entity_type=TraceEntity.INCIDENT,
+                                entity_id=plan.incident_id,
+                                created_at=facts.incident.created_at,
+                            )
+                            await ensure_child_trace_link(
+                                session,
+                                merchant_id=plan.merchant_id,
+                                entity_type=TraceEntity.PLAN,
+                                entity_id=plan.plan_id,
+                                parent=incident_trace,
+                                created_at=created_at,
+                            )
+                            await session.flush()
                             session.add(policy_record)
                             await session.flush()
                     except IntegrityError:
@@ -332,6 +353,11 @@ class RecoveryWorkflowService:
                 stage=PolicyEvaluationStage.PREVIEW.value,
                 decision=decision,
             ).inc()
+            for rule_result in response.preview.policy_result.rule_results:
+                self._metrics.policy_decisions.labels(
+                    decision=decision,
+                    reason=rule_result.reason_code.value,
+                ).inc()
         LOGGER.info(
             "recovery_preview_recorded",
             disposition=response.disposition.value,

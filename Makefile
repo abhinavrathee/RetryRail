@@ -1,12 +1,16 @@
 .DEFAULT_GOAL := help
 
-.PHONY: help bootstrap install-security-hook dev migrate seed v2-data-check v2-candidate-check v2-blind-check v3-protocol-check v3-candidate-check v3-adversarial-check v3-freeze-check v3-blind-check v4-protocol-check v4-candidate-check v4-adversarial-check v4-freeze-check v4-blind-check experiment-freeze-check experiment-check analyst-corpus-check analyst-report-check replay detect demo lint typecheck test test-contract test-e2e build eval security-check check
+.PHONY: help bootstrap install-security-hook dev observability-up observability-check failure-matrix m8-check migrate seed v2-data-check v2-candidate-check v2-blind-check v3-protocol-check v3-candidate-check v3-adversarial-check v3-freeze-check v3-blind-check v4-protocol-check v4-candidate-check v4-adversarial-check v4-freeze-check v4-blind-check experiment-freeze-check experiment-check analyst-corpus-check analyst-report-check replay detect demo lint typecheck test test-contract test-e2e build eval security-check check
 
 help:
 	@echo "RetryRail commands"
 	@echo "  bootstrap       Install locked Python and web dependencies"
 	@echo "  install-security-hook Activate the fail-closed GitGuardian pre-push hook"
 	@echo "  dev             Start the local Docker Compose stack"
+	@echo "  observability-up Start the optional local Prometheus/Grafana profile"
+	@echo "  observability-check Validate M8 trace, metric and dashboard evidence"
+	@echo "  failure-matrix  Run every mandatory bounded failure scenario"
+	@echo "  m8-check        Run the consolidated M8 release-hardening gate"
 	@echo "  migrate         Upgrade the configured database to the current schema"
 	@echo "  seed            Regenerate deterministic synthetic truth data"
 	@echo "  v2-data-check   Verify the pre-blind v2 protocol and development data"
@@ -47,6 +51,37 @@ install-security-hook:
 
 dev:
 	docker compose up --build
+
+observability-up:
+	docker compose --profile observability up --build -d
+
+observability-check:
+	docker compose --profile observability config --quiet
+	uv run pytest -q services/api/tests/observability/test_m8_observability.py
+
+failure-matrix:
+	uv run retryrail-analyst-eval report --check
+	uv run pytest -q \
+		services/api/tests/integration/test_webhook_ingestion.py::test_invalid_or_modified_signature_is_rejected_before_persistence \
+		services/api/tests/integration/test_webhook_ingestion.py::test_triple_delivery_creates_one_event_and_one_outbox_chain \
+		services/api/tests/integration/test_outbox_projection.py::test_captured_before_authorized_never_regresses_projection \
+		services/api/tests/integration/test_outbox_projection.py::test_expired_worker_claim_is_recovered_without_event_loss \
+		services/api/tests/detection/test_engine.py::test_heldout_hard_negative_never_becomes_action_eligible \
+		services/api/tests/recovery/test_m6_incident_analyst.py::test_orchestrator_rejects_ungrounded_or_unbound_provider_results \
+		services/api/tests/recovery/test_m6_incident_analyst.py::test_openai_adapter_maps_refusal_and_timeout_without_body \
+		services/api/tests/recovery/test_m6_incident_analyst.py::test_openai_adapter_fails_closed_after_repair_limit \
+		services/api/tests/recovery/test_workflow.py::test_execution_revalidates_mutable_stop_conditions_without_provider_call \
+		services/api/tests/recovery/test_workflow.py::test_token_binding_and_atomic_single_use \
+		services/api/tests/recovery/test_workflow.py::test_test_mode_dispatch_survives_crash_and_reconciles_without_second_create \
+		services/api/tests/recovery/test_workflow.py::test_execution_revalidates_kill_switch_and_records_complete_denial
+
+m8-check: observability-check failure-matrix
+	uv run pytest -q \
+		services/api/tests/test_health.py::test_readiness_and_security_headers_are_present \
+		services/api/tests/test_worker.py::test_worker_exposes_redacted_metrics_and_shuts_down \
+		services/api/tests/integration/test_replay_and_migrations.py::test_migration_round_trip_and_immutable_event_trigger \
+		services/api/tests/integration/test_replay_and_migrations.py::test_m8_upgrade_backfills_event_to_outbox_trace_lineage \
+		services/api/tests/recovery/test_m4_release_gate.py::test_m4_model_unavailable_detect_to_audited_receipt_release_gate
 
 migrate:
 	uv run retryrail-db upgrade
@@ -127,6 +162,7 @@ typecheck:
 	pnpm typecheck
 
 test:
+	uv run retryrail-v4-blind-reproduce
 	uv run pytest --cov=retryrail --cov-report=term-missing
 	pnpm test
 
@@ -173,4 +209,4 @@ security-check:
 	uv run pip-audit
 	uv run retryrail-pnpm-audit
 
-check: lint typecheck test test-contract build test-e2e eval security-check
+check: lint typecheck test test-contract build test-e2e eval security-check m8-check

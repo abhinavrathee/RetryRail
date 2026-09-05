@@ -49,6 +49,11 @@ from retryrail.db.tables import (
 from retryrail.detection.runtime_activation import load_detector_v4_activation
 from retryrail.events.models import NormalizedPaymentEvent, PaymentEventType, PaymentStatus
 from retryrail.observability.metrics import PipelineMetrics
+from retryrail.observability.tracing import (
+    TraceEntity,
+    ensure_child_trace_link,
+    ensure_root_trace_link,
+)
 from retryrail.policy import DETERMINISTIC_POLICY_VERSION, DeterministicPolicyEngine
 from retryrail.recovery.adapter import (
     PaymentLinkCreateRequest,
@@ -239,17 +244,21 @@ class RecoveryExecutionService:
 
         if prepared.approval_consumed:
             self._metrics.approval_token_consumptions.labels(result="consumed").inc()
+        action_state = response.receipt.state.value if response.receipt else "blocked"
         self._metrics.recovery_action_executions.labels(
             result=response.disposition.value,
-            state=(response.receipt.state.value if response.receipt else "blocked"),
+            state=action_state,
         ).inc()
+        self._metrics.recovery_actions.labels(status=action_state).inc()
+        if response.disposition is RecoveryExecutionDisposition.REPLAYED:
+            self._metrics.duplicate_actions_prevented.inc()
         LOGGER.info(
             "recovery_execution_completed",
             disposition=response.disposition.value,
             merchant_id=merchant_id,
             plan_id=plan_id,
             action_id=(response.receipt.action_id if response.receipt else None),
-            state=(response.receipt.state.value if response.receipt else "blocked"),
+            state=action_state,
             provider_called=provider_called,
         )
         return response
@@ -614,6 +623,11 @@ class RecoveryExecutionService:
             stage=PolicyEvaluationStage.EXECUTION.value,
             decision=result.decision.value,
         ).inc()
+        for rule_result in result.rule_results:
+            self._metrics.policy_decisions.labels(
+                decision=result.decision.value,
+                reason=rule_result.reason_code.value,
+            ).inc()
         return result
 
     async def _build_execution_context(
@@ -772,6 +786,7 @@ class RecoveryExecutionService:
         )
         session.add(action)
         await session.flush()
+        await self._trace_action(session, resources=resources, action=action)
         for transition in self._initial_transition_values(resources, now=now)[:3]:
             self._add_transition(session, action=action, **transition)
         reason = (
@@ -811,10 +826,35 @@ class RecoveryExecutionService:
         )
         session.add(action)
         await session.flush()
+        await self._trace_action(session, resources=resources, action=action)
         for transition in self._initial_transition_values(resources, now=now):
             self._add_transition(session, action=action, **transition)
         await session.flush()
         return action
+
+    @staticmethod
+    async def _trace_action(
+        session: AsyncSession,
+        *,
+        resources: _ExecutionResources,
+        action: RecoveryActionRecord,
+    ) -> None:
+        plan_trace = await ensure_root_trace_link(
+            session,
+            merchant_id=action.merchant_id,
+            entity_type=TraceEntity.PLAN,
+            entity_id=action.plan_id,
+            created_at=resources.plan_record.created_at,
+        )
+        await ensure_child_trace_link(
+            session,
+            merchant_id=action.merchant_id,
+            entity_type=TraceEntity.ACTION,
+            entity_id=action.action_id,
+            parent=plan_trace,
+            created_at=action.created_at,
+        )
+        await session.flush()
 
     def _action_record(
         self,

@@ -2,12 +2,13 @@
 
 ## Scope
 
-M0–M7 contain no live-money Razorpay action or customer messaging. M5 adds a
+M0–M8 contain no live-money Razorpay action or customer messaging. M5 adds a
 Test Mode-only Standard Payment Link boundary and synthetic causal measurement.
 Its one external reviewer action was human-approved, carried no customer contact
 and used a Test key; the adapter cannot accept a live key. M6 permits an optional
 aggregate-only model call but grants it no policy, approval or provider
-authority. M7 keeps both provider credentials outside the browser.
+authority. M7 keeps both provider credentials outside the browser. M8 adds
+correlation and monitoring evidence without adding any execution authority.
 
 ## Threats and current controls
 
@@ -24,6 +25,8 @@ authority. M7 keeps both provider credentials outside the browser.
 | Model outage blocks recovery | Rules baseline persists before the call; timeout/refusal/invalid/provider error returns deterministic fallback | Provider-failure and full no-model workflow tests |
 | Browser persists a merchant or approval credential | Merchant authorization and one-time bearer remain in memory; lock/refresh clears the session and lock/execution clears the bearer | Component tests for secret clearing and execution lifecycle |
 | Gross or cherry-picked recovery is claimed as impact | Full qualified batch scan, remote pre-outcome assignment freeze, independent assignment/outcome namespaces, control subtraction and explicit uncertainty | `retryrail-experiment freeze --check` and `evaluate --check` |
+| Nested log context leaks a credential | Central recursive processor masks sensitive keys, authorization schemes, credential URLs and provider-looking values after context binding | M8 structured-log redaction regression tests |
+| Trace or metric identifiers become authority or cardinality hazards | Trace context is correlation-only; lineage is immutable and metric labels are fixed enums with no merchant/entity identifiers | M8 trace-lineage and metric-family tests |
 | PII/card data in fixtures or normalized events | Explicit field allowlist and prohibited-key scan | Sanitization and fixture scanner tests |
 | Evaluation-label leakage into runtime data | Physically separate truth artifacts and schemas | Split-isolation and forbidden-field tests |
 | Detector threshold changed after blind result | Committed config hash and byte-reproducible reports | `retryrail-eval --check` plus exact-result tests |
@@ -286,7 +289,25 @@ off and is rejected in production. It replays ingestion/detection only and
 cannot issue approval or call a provider. Synthetic labeling remains visible in
 the application shell and every impact statement.
 
-## Known M0–M7 limits
+## M8 observability boundary
+
+Inbound `traceparent` values are parsed as W3C version 00 and replaced when
+malformed or all-zero. Request identifiers are correlation data, never an
+authentication, approval or idempotency credential. The database keeps
+append-only event/outbox/incident/plan/action lineage, while metrics expose only
+fixed low-cardinality status, decision, arm and reason labels.
+
+Structured-log redaction walks nested mappings and sequences, rejects sensitive
+key names and masks credential-shaped or authorization-bearing values after
+context binding. Regression tests cover nested headers, URLs, provider-looking
+keys and values. The optional Prometheus/Grafana profile binds only to the local
+developer host and its defaults must not be used for an internet deployment.
+
+## Known M0–M8 limits
+
+- M8 does not ship a production trace exporter, hosted metrics backend, alert
+  routing, long-term retention or production Grafana authentication. Those are
+  deployment-specific M9/production integrations, not hidden release claims.
 
 - The M6 provider comparison is synthetic and requires an operator-owned
   OpenAI Platform key with billing. Production governance, regional processing

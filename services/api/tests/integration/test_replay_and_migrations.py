@@ -21,6 +21,7 @@ from retryrail.db.tables import (
     PaymentEventRecord,
     PaymentProjectionRecord,
     PaymentRecoveryControlRecord,
+    TraceLinkRecord,
 )
 from retryrail.events.ingestion import EventIngestionService
 from retryrail.events.models import NormalizedPaymentEvent
@@ -78,12 +79,34 @@ def test_migration_round_trip_and_immutable_event_trigger(settings: Settings) ->
                         created_at=now,
                     )
                 )
+                session.add(
+                    TraceLinkRecord(
+                        trace_link_id="1" * 64,
+                        trace_id="2" * 32,
+                        span_id="3" * 16,
+                        parent_span_id=None,
+                        entity_type="event",
+                        entity_id="00000000-0000-0000-0000-000000000001",
+                        merchant_id="merchant_synthetic_001",
+                        created_at=now,
+                    )
+                )
             async with database.sessions() as session:
                 with pytest.raises(SQLAlchemyError, match="immutable"):
                     await session.execute(
                         text(
                             "UPDATE payment_events SET payment_id='pay_mutated_001' "
                             "WHERE razorpay_event_id='event_immutable_001'"
+                        )
+                    )
+                await session.rollback()
+                with pytest.raises(SQLAlchemyError, match="immutable"):
+                    await session.execute(
+                        text(
+                            "UPDATE trace_links SET trace_id='44444444444444444444444444444444' "
+                            "WHERE trace_link_id="
+                            "'11111111111111111111111111111111"
+                            "11111111111111111111111111111111'"
                         )
                     )
                 await session.rollback()
@@ -98,6 +121,75 @@ def test_migration_round_trip_and_immutable_event_trigger(settings: Settings) ->
             await database.dispose()
 
     asyncio.run(assert_immutable())
+
+
+def test_m8_upgrade_backfills_event_to_outbox_trace_lineage(settings: Settings) -> None:
+    downgrade_database(settings.database_dsn(), "0007_m6_model_incident_analysis")
+    now = datetime.now(tz=UTC)
+
+    async def seed_pre_m8() -> None:
+        database = Database(settings.database_dsn())
+        try:
+            async with database.sessions() as session, session.begin():
+                session.add(
+                    PaymentEventRecord(
+                        internal_id="00000000-0000-0000-0000-000000000008",
+                        merchant_id=settings.merchant_id,
+                        razorpay_event_id="event_pre_m8_001",
+                        schema_version="1.0.0",
+                        signature_status="verified",
+                        event_type="payment.captured",
+                        payment_id="pay_pre_m8_001",
+                        occurred_at=now,
+                        received_at=now,
+                        payload_sha256="8" * 64,
+                        sanitized_payload={"synthetic": True},
+                        normalized_event={"synthetic": True},
+                        synthetic=True,
+                        created_at=now,
+                    )
+                )
+                await session.flush()
+                session.add(
+                    OutboxMessageRecord(
+                        outbox_id="00000000-0000-0000-0000-000000000009",
+                        merchant_id=settings.merchant_id,
+                        event_internal_id="00000000-0000-0000-0000-000000000008",
+                        topic="payment.project.v1",
+                        payload={"schema_version": "1.0.0"},
+                        idempotency_key="pre-m8-trace-backfill",
+                        status="completed",
+                        attempts=1,
+                        max_attempts=5,
+                        available_at=now,
+                        completed_at=now,
+                        created_at=now,
+                    )
+                )
+        finally:
+            await database.dispose()
+
+    asyncio.run(seed_pre_m8())
+    upgrade_database(settings.database_dsn())
+
+    async def assert_backfill() -> None:
+        database = Database(settings.database_dsn())
+        try:
+            async with database.sessions() as session:
+                links = tuple(
+                    (
+                        await session.scalars(
+                            select(TraceLinkRecord).order_by(TraceLinkRecord.entity_type)
+                        )
+                    ).all()
+                )
+            assert [link.entity_type for link in links] == ["event", "outbox"]
+            assert links[0].trace_id == links[1].trace_id
+            assert links[1].parent_span_id == links[0].span_id
+        finally:
+            await database.dispose()
+
+    asyncio.run(assert_backfill())
 
 
 def test_protected_replay_is_repeat_safe_and_metrics_are_redacted(

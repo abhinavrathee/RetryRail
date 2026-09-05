@@ -128,6 +128,11 @@ def test_triple_delivery_creates_one_event_and_one_outbox_chain(
         "duplicate",
         "duplicate",
     ]
+    domain_trace_ids = [
+        response.headers["x-retryrail-domain-trace-id"] for response in responses
+    ]
+    assert len(set(domain_trace_ids)) == 1
+    assert domain_trace_ids[0] == responses[0].headers["x-trace-id"]
     records, outbox_count = asyncio.run(_stored_records(settings))
     assert len(records) == 1
     assert outbox_count == 1

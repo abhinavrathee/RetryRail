@@ -63,6 +63,44 @@ class Base(DeclarativeBase):
     """Declarative metadata root used by Alembic and repositories."""
 
 
+class TraceLinkRecord(Base):
+    """Immutable, identifier-only lineage across asynchronous domain stages."""
+
+    __tablename__ = "trace_links"
+    __table_args__ = (
+        CheckConstraint("length(trace_id) = 32", name="ck_trace_links_trace_id"),
+        CheckConstraint("length(span_id) = 16", name="ck_trace_links_span_id"),
+        CheckConstraint(
+            "parent_span_id IS NULL OR length(parent_span_id) = 16",
+            name="ck_trace_links_parent_span_id",
+        ),
+        CheckConstraint(
+            "entity_type IN ('event', 'outbox', 'incident', 'plan', 'action')",
+            name="ck_trace_links_entity_type",
+        ),
+        UniqueConstraint(
+            "entity_type",
+            "entity_id",
+            name="uq_trace_links_entity",
+        ),
+        UniqueConstraint(
+            "trace_id",
+            "span_id",
+            name="uq_trace_links_trace_span",
+        ),
+        Index("ix_trace_links_merchant_trace", "merchant_id", "trace_id"),
+    )
+
+    trace_link_id: Mapped[str] = mapped_column(String(80), primary_key=True)
+    trace_id: Mapped[str] = mapped_column(String(32), nullable=False)
+    span_id: Mapped[str] = mapped_column(String(16), nullable=False)
+    parent_span_id: Mapped[str | None] = mapped_column(String(16), nullable=True)
+    entity_type: Mapped[str] = mapped_column(String(16), nullable=False)
+    entity_id: Mapped[str] = mapped_column(String(80), nullable=False)
+    merchant_id: Mapped[str] = mapped_column(String(80), nullable=False)
+    created_at: Mapped[datetime] = mapped_column(UTCDateTime(), nullable=False, default=utc_now)
+
+
 class PaymentEventRecord(Base):
     """Immutable authenticated event with sanitized and normalized forms."""
 

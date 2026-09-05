@@ -2,7 +2,7 @@
 
 from typing import Annotated, Literal
 
-from fastapi import APIRouter, Header, HTTPException, Path, Request, status
+from fastapi import APIRouter, Header, HTTPException, Path, Request, Response, status
 from pydantic import BaseModel, ConfigDict, StringConstraints
 
 from retryrail.config import Settings
@@ -82,6 +82,7 @@ async def _read_bounded_body(request: Request, maximum_bytes: int) -> bytes:
 )
 async def ingest_razorpay_webhook(
     request: Request,
+    response: Response,
     merchant_id: MerchantPath,
     razorpay_event_id: Annotated[EventHeader, Header(alias="X-Razorpay-Event-Id")],
     signature: Annotated[str | None, Header(alias="X-Razorpay-Signature")] = None,
@@ -114,6 +115,7 @@ async def ingest_razorpay_webhook(
     except EventPersistenceError as error:
         raise _http_error(status.HTTP_503_SERVICE_UNAVAILABLE, error.reason_code) from error
 
+    response.headers["X-RetryRail-Domain-Trace-Id"] = result.trace_id
     return WebhookReceipt(
         status=result.disposition.value,
         event_id=result.razorpay_event_id,

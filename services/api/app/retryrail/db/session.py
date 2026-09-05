@@ -12,7 +12,7 @@ from sqlalchemy.ext.asyncio import (
     create_async_engine,
 )
 
-MIGRATION_HEAD = "0007_m6_model_incident_analysis"
+MIGRATION_HEAD = "0008_m8_trace_lineage"
 
 
 @dataclass(frozen=True, slots=True)
