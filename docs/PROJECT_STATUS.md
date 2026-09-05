@@ -292,10 +292,12 @@ See `docs/DETECTOR_V4_PROTOCOL.md` for the full R5.5 evidence narrative.
   environments in 67.82 seconds, reproduced two intentionally ignored v4
   derived inputs from zero local cache, passed the clean 11-case M8 gate in
   49.13 seconds and remained byte-clean at the pushed commit.
-- [GitHub Actions run 33975902471](https://github.com/abhinavrathee/RetryRail/actions/runs/33975902471)
-  is the canonical five-job verification record for the implementation commit,
-  covering PostgreSQL, Python/contracts/evaluations, web/build, Chromium,
-  security/dependencies and all digest-pinned container images.
+- [GitHub Actions run 33976562151](https://github.com/abhinavrathee/RetryRail/actions/runs/33976562151)
+  passed all five jobs on M8 evidence commit
+  `30a2694cf00f406048152f0c62cf3d9ff9134a9d`. PostgreSQL ran all 514
+  Python tests in 31:42 at 85.48% branch-aware coverage, then passed the M8
+  matrix, generated contracts and frozen evaluations. Web/build, Chromium,
+  security/dependencies and all digest-pinned container images also passed.
 
 ## Safety boundary that must remain true
 
