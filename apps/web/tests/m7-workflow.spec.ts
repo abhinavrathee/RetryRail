@@ -317,9 +317,9 @@ test('primary M7 evidence-to-impact demo is operable by keyboard at approval', a
   await installApi(page, requests);
   await page.goto('/');
 
-  await expect(page.getByRole('heading', { name: /Detect payment degradation/ })).toBeVisible();
+  await expect(page.getByRole('heading', { name: /Revenue reliability/ })).toBeVisible();
   await page.getByRole('link', { name: 'Inspect evidence →' }).click();
-  await expect(page.getByRole('heading', { name: 'What we know—and what we do not' })).toBeVisible();
+  await expect(page.getByRole('heading', { name: 'Evidence classification' })).toBeVisible();
 
   await unlockWithKeyboard(page);
   await page.getByRole('button', { name: 'Generate grounded brief' }).click();
@@ -341,8 +341,8 @@ test('primary M7 evidence-to-impact demo is operable by keyboard at approval', a
   await expect(page.getByText('Audit chain complete')).toBeVisible();
 
   await page.getByRole('link', { name: 'Experiment impact' }).click();
-  await expect(page.getByRole('heading', { name: /Incremental recovered GMV/ })).toBeVisible();
-  await expect(page.getByText('Synthetic batch evidence')).toBeVisible();
+  await expect(page.getByRole('heading', { name: 'Recovery impact' })).toBeVisible();
+  await expect(page.getByText('Synthetic benchmark', { exact: true })).toBeVisible();
   await page.getByRole('link', { name: 'Demo controls' }).click();
   const demo = page.getByRole('button', { name: 'Run synthetic detection demo' });
   await demo.focus();

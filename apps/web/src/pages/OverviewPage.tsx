@@ -42,9 +42,9 @@ export function OverviewPage(): React.JSX.Element {
   return (
     <>
       <PageHeader
-        eyebrow="Reliability overview"
-        title="Detect payment degradation before revenue quietly disappears"
-        description="A deterministic detector compares merchant-local cohorts, preserves its evidence, and keeps recovery behind policy and human approval."
+        eyebrow="Operations"
+        title="Revenue reliability"
+        description="Merchant-local payment health, evidence and controlled recovery in one view."
         actions={(
           <div className="as-of">
             <span>Evidence as of</span>
@@ -55,25 +55,25 @@ export function OverviewPage(): React.JSX.Element {
 
       <div className="metric-grid">
         <MetricCard
-          label="GMV currently at risk"
+          label="GMV at risk"
           value={formatMoney(data.at_risk_gmv_subunits, data.currency)}
           detail={`${data.active_incidents.toString()} open deterministic incident${data.active_incidents === 1 ? '' : 's'}`}
           tone={data.at_risk_gmv_subunits > 0 ? 'danger' : 'good'}
         />
         <MetricCard
-          label="Action eligible"
+          label="Eligible for review"
           value={data.action_eligible_incidents.toString()}
           detail="Still requires authoritative preview + approval"
           tone="info"
         />
         <MetricCard
-          label="Detector release"
+          label="Detector"
           value={humanize(data.detector_release_status)}
           detail={data.detector_version}
           tone={data.detector_release_failed_targets.length === 0 ? 'good' : 'danger'}
         />
         <MetricCard
-          label="Incident history"
+          label="Incidents"
           value={data.total_incidents.toString()}
           detail="Open and resolved, merchant scoped"
         />
@@ -82,8 +82,8 @@ export function OverviewPage(): React.JSX.Element {
       <div className="overview-layout">
         <Panel
           className="incident-panel"
-          eyebrow="Current queue"
-          title="Incident evidence"
+          eyebrow="Current"
+          title="Open incidents"
           actions={<StatusChip value={data.active_incidents > 0 ? 'attention_required' : 'healthy'} tone={data.active_incidents > 0 ? 'danger' : 'good'} />}
         >
           {incidents.data.items.length === 0 ? (
@@ -127,12 +127,12 @@ export function OverviewPage(): React.JSX.Element {
         </Panel>
 
         <aside className="confidence-rail">
-          <Panel eyebrow="Control chain" title="Why this is actionable">
+          <Panel eyebrow="Controls" title="Decision path">
             <ol className="control-steps">
-              <li><span>1</span><div><strong>Detector decides</strong><p>Versioned statistics—not an LLM—open incidents.</p></div></li>
-              <li><span>2</span><div><strong>Evidence stays typed</strong><p>Facts, hypotheses and unknowns never collapse together.</p></div></li>
-              <li><span>3</span><div><strong>Policy gates recovery</strong><p>Fresh server-owned facts are checked at preview and execute.</p></div></li>
-              <li><span>4</span><div><strong>Impact uses a holdout</strong><p>Incremental GMV subtracts estimated natural recovery.</p></div></li>
+              <li><span>1</span><div><strong>Signal</strong><p>Versioned statistics open the incident.</p></div></li>
+              <li><span>2</span><div><strong>Evidence</strong><p>Facts, hypotheses and unknowns stay separate.</p></div></li>
+              <li><span>3</span><div><strong>Control</strong><p>Policy and merchant approval gate execution.</p></div></li>
+              <li><span>4</span><div><strong>Measurement</strong><p>A holdout isolates incremental value.</p></div></li>
             </ol>
           </Panel>
         </aside>

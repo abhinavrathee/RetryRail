@@ -160,8 +160,8 @@ export function AppShell({ children }: PropsWithChildren): React.JSX.Element {
       <a className="skip-link" href="#main-content">Skip to content</a>
       <aside className="side-rail" aria-label="Primary navigation">
         <NavLink className="rail-brand" to="/" aria-label="RetryRail overview">
-          <span className="rail-brand-mark" aria-hidden="true">R</span>
-          <span><strong>RetryRail</strong><small>Payment control room</small></span>
+          <span className="rail-brand-mark" aria-hidden="true">RR</span>
+          <span><strong>RetryRail</strong><small>Revenue reliability</small></span>
         </NavLink>
         <nav>
           {NAVIGATION.map((item) => (
@@ -178,7 +178,7 @@ export function AppShell({ children }: PropsWithChildren): React.JSX.Element {
         </nav>
         <div className="rail-trust">
           <span className="trust-dot" aria-hidden="true" />
-          <p><strong>Review first</strong><span>No AI output can mutate provider state.</span></p>
+          <p><strong>Merchant controlled</strong><span>Approval is required before any external Test Mode action.</span></p>
         </div>
       </aside>
 
@@ -203,8 +203,8 @@ export function AppShell({ children }: PropsWithChildren): React.JSX.Element {
         </header>
         <main id="main-content" className="main-content">{children}</main>
         <footer className="app-footer">
-          <span>RetryRail M7 reviewer surface</span>
-          <span>UTC timestamps · INR subunits · synthetic batch metrics</span>
+          <span>RetryRail control room</span>
+          <span>UTC · INR · synthetic benchmark</span>
         </footer>
       </div>
       {session.isDialogOpen ? <SessionDialog /> : null}

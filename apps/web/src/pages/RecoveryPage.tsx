@@ -87,9 +87,9 @@ export function RecoveryPage(): React.JSX.Element {
     return (
       <>
         <PageHeader
-          eyebrow="Recovery control"
-          title="Review before any Test Mode mutation"
-          description="The merchant authorization secret is required to reveal candidates, preview policy, approve, or execute."
+          eyebrow="Recovery"
+          title="Review before execution"
+          description="Unlock the local merchant session to inspect candidates, policy and approval controls."
         />
         <Panel eyebrow="Session locked" title="Unlock merchant actions">
           <div className="locked-state">
@@ -195,9 +195,9 @@ export function RecoveryPage(): React.JSX.Element {
         <Link to={`/incidents/${encodeURIComponent(incidentId)}`}>Incident</Link><span aria-hidden="true">/</span><span>Recovery</span>
       </nav>
       <PageHeader
-        eyebrow="Recovery control"
-        title="Preview the exact effect before approval"
-        description="The model has no role here. Server-owned evidence and 13 deterministic policy rules decide whether the plan may proceed."
+        eyebrow="Recovery"
+        title="Review before execution"
+        description="Exact effect, server-owned evidence and 13 deterministic checks. Approval remains a merchant decision."
         actions={<StatusChip value={candidates.data.action_eligible ? 'review_first' : 'analysis_only'} tone={candidates.data.action_eligible ? 'info' : 'warn'} />}
       />
 

@@ -486,7 +486,7 @@ describe('M7 merchant workflow', () => {
 
     expect((await screen.findAllByText('₹1,499.00')).length).toBeGreaterThanOrEqual(1);
     await user.click(screen.getByRole('link', { name: 'Inspect evidence →' }));
-    expect(await screen.findByRole('heading', { name: 'What we know—and what we do not' })).toBeInTheDocument();
+    expect(await screen.findByRole('heading', { name: 'Evidence classification' })).toBeInTheDocument();
 
     await unlock(user);
     await user.click(screen.getByRole('button', { name: 'Generate grounded brief' }));
@@ -507,7 +507,7 @@ describe('M7 merchant workflow', () => {
     expect(await screen.findByText('Audit chain complete')).toBeInTheDocument();
 
     await user.click(screen.getByRole('link', { name: 'Experiment impact' }));
-    expect(await screen.findByRole('heading', { name: /Incremental recovered GMV/ })).toBeInTheDocument();
+    expect(await screen.findByRole('heading', { name: 'Recovery impact' })).toBeInTheDocument();
     expect(screen.getAllByText('₹1,20,912.00').length).toBeGreaterThanOrEqual(1);
 
     await user.click(screen.getByRole('link', { name: 'Demo controls' }));
@@ -524,7 +524,7 @@ describe('M7 merchant workflow', () => {
     installHappyPathApi();
     const user = userEvent.setup();
     renderApp();
-    await screen.findByRole('heading', { name: /Detect payment degradation/ });
+    await screen.findByRole('heading', { name: /Revenue reliability/ });
 
     await user.click(screen.getByRole('button', { name: 'Unlock merchant actions' }));
     const dialog = screen.getByRole('dialog', { name: 'Unlock review actions' });

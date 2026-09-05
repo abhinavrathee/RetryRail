@@ -2,7 +2,7 @@
 
 **Last verified:** September 5, 2026
 
-**Current delivery boundary:** M0–M8 complete; next is M9 deployment and submission packaging
+**Current delivery boundary:** M0–M8 complete; M9 presentation work in progress, with deployment and final submission actions pending
 
 **Runtime recovery:** deterministic fake or human-approved Razorpay Test Mode for exact qualified synthetic v4 incidents; Razorpay Live Mode rejected
 
@@ -338,14 +338,17 @@ See `docs/DETECTOR_V4_PROTOCOL.md` for the full R5.5 evidence narrative.
 
 ## Start here next
 
-Begin M9 deployment and submission packaging. Preserve the exact M8 release
-commit and all M3–M8 authority/evidence boundaries. Do not make the repository
-public, create the final tag, publish a deployment or submit the form until the
-operator has reviewed the destinations and the signed-out checks are ready.
+Continue M9 deployment and submission packaging. The reviewer-first README,
+branded system map, deterministic pre-deployment UI captures, official
+Buildathon traceability dossier, testing catalogue and restrained M9 UI polish
+are complete in the working tree. Preserve the exact M8 release evidence and
+all M3–M8 authority boundaries. Do not make the repository public, create the
+final tag, publish a deployment or submit the form until the operator has
+reviewed the destinations and the signed-out checks are ready.
 
 ## What remains after M8
 
-- M9 only: choose and create the public deployment, rehearse and record the
-  five-minute video, make the GitHub repository public, freeze/tag the exact
-  submission commit, verify every public link signed out, finalize the form
-  text and submit.
+- M9 remaining: choose and create the public deployment, capture the final
+  deployment screenshots, rehearse and record the five-minute video, make the
+  GitHub repository public, freeze/tag the exact submission commit, verify
+  every public link signed out, finalize the form text and submit.

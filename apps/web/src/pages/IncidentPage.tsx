@@ -69,7 +69,7 @@ export function IncidentPage(): React.JSX.Element {
       </div>
 
       <div className="incident-detail-grid">
-        <Panel className="evidence-board" eyebrow="Diagnosis boundary" title="What we know—and what we do not">
+        <Panel className="evidence-board" eyebrow="Diagnosis" title="Evidence classification">
           <div className="evidence-columns">
             <section className="evidence-column evidence-column--verified">
               <div className="evidence-column-heading"><StatusChip value="verified_observation" tone="good" /><span>{summary.diagnosis.verified_attributions.length.toString()}</span></div>

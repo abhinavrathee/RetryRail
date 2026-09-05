@@ -127,9 +127,9 @@ relevant tests, ADRs or evaluation report in the public README.
 - [ ] Repository visibility is Public.
 - [ ] Default branch contains the exact submission commit.
 - [ ] A version tag such as `buildathon-submission-v1` marks the submission.
-- [ ] README begins with the problem, outcome and a 60-second demo path.
-- [ ] README contains an architecture diagram.
-- [ ] README states Test Mode and synthetic-data limitations prominently.
+- [x] README begins with the problem, outcome and a 60-second review/demo path.
+- [x] README contains a polished system map and a parseable recovery sequence.
+- [x] README states Test Mode and synthetic-data limitations prominently.
 - [x] Setup has been tested from a clean checkout.
 - [x] Lockfiles are committed.
 - [x] `.env.example` contains names and safe placeholders only.

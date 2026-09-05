@@ -1,0 +1,143 @@
+<svg width="1600" height="820" viewBox="0 0 1600 820" fill="none" xmlns="http://www.w3.org/2000/svg" role="img" aria-labelledby="title description">
+  <title id="title">RetryRail system map</title>
+  <desc id="description">A six-stage flow from authenticated payment events through deterministic detection, bounded explanation, policy and merchant control, Razorpay Test Mode recovery, and treatment-control measurement.</desc>
+  <defs>
+    <pattern id="grid" width="32" height="32" patternUnits="userSpaceOnUse">
+      <path d="M32 0H0V32" stroke="#26324A" stroke-width="1" opacity="0.26"/>
+    </pattern>
+    <filter id="shadow" x="-20%" y="-20%" width="140%" height="150%">
+      <feDropShadow dx="0" dy="14" stdDeviation="18" flood-color="#020617" flood-opacity="0.28"/>
+    </filter>
+    <marker id="arrow" markerWidth="10" markerHeight="10" refX="8" refY="5" orient="auto" markerUnits="strokeWidth">
+      <path d="M1 1L9 5L1 9" stroke="#6F7F9D" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+    </marker>
+  </defs>
+
+  <rect width="1600" height="820" rx="30" fill="#0B1220"/>
+  <rect x="1" y="1" width="1598" height="818" rx="29" stroke="#23304A" stroke-width="2"/>
+  <rect x="1" y="1" width="1598" height="818" rx="29" fill="url(#grid)"/>
+
+  <g transform="translate(68 54)">
+    <rect width="44" height="44" rx="10" stroke="#7184AD" fill="#111B2D"/>
+    <text x="22" y="28" text-anchor="middle" fill="#F8FAFC" font-family="Inter, Segoe UI, Arial, sans-serif" font-size="13" font-weight="700" letter-spacing="-0.4">RR</text>
+    <text x="62" y="19" fill="#F8FAFC" font-family="Inter, Segoe UI, Arial, sans-serif" font-size="18" font-weight="700" letter-spacing="-0.4">RetryRail</text>
+    <text x="62" y="40" fill="#8E9CB6" font-family="Inter, Segoe UI, Arial, sans-serif" font-size="13">Revenue reliability control plane</text>
+  </g>
+
+  <text x="68" y="166" fill="#F8FAFC" font-family="Inter, Segoe UI, Arial, sans-serif" font-size="44" font-weight="650" letter-spacing="-1.6">From payment signal to measured recovery.</text>
+  <text x="68" y="205" fill="#9EABC1" font-family="Inter, Segoe UI, Arial, sans-serif" font-size="18">Deterministic where authority matters. AI only where explanation helps.</text>
+
+  <g font-family="Inter, Segoe UI, Arial, sans-serif">
+    <path d="M272 381H318" stroke="#6F7F9D" stroke-width="2" marker-end="url(#arrow)"/>
+    <path d="M522 381H568" stroke="#6F7F9D" stroke-width="2" marker-end="url(#arrow)"/>
+    <path d="M772 381H818" stroke="#6F7F9D" stroke-width="2" marker-end="url(#arrow)"/>
+    <path d="M1022 381H1068" stroke="#6F7F9D" stroke-width="2" marker-end="url(#arrow)"/>
+    <path d="M1272 381H1318" stroke="#6F7F9D" stroke-width="2" marker-end="url(#arrow)"/>
+
+    <g filter="url(#shadow)">
+      <rect x="68" y="286" width="204" height="190" rx="16" fill="#111B2D" stroke="#2A3853"/>
+      <rect x="68" y="286" width="204" height="4" rx="2" fill="#7890FF"/>
+      <text x="88" y="323" fill="#7890FF" font-size="12" font-weight="700" letter-spacing="1.5">01 · INTAKE</text>
+      <text x="88" y="359" fill="#F8FAFC" font-size="22" font-weight="650">Authenticate</text>
+      <text x="88" y="390" fill="#9EABC1" font-size="14">Exact raw-body HMAC</text>
+      <text x="88" y="413" fill="#9EABC1" font-size="14">Immutable event + outbox</text>
+      <rect x="88" y="438" width="114" height="22" rx="11" fill="#192A48"/>
+      <text x="145" y="453" text-anchor="middle" fill="#AFC0FF" font-size="11" font-weight="650">DEDUPLICATED</text>
+    </g>
+
+    <g filter="url(#shadow)">
+      <rect x="318" y="286" width="204" height="190" rx="16" fill="#111B2D" stroke="#2A3853"/>
+      <rect x="318" y="286" width="204" height="4" rx="2" fill="#7890FF"/>
+      <text x="338" y="323" fill="#7890FF" font-size="12" font-weight="700" letter-spacing="1.5">02 · DETECT</text>
+      <text x="338" y="359" fill="#F8FAFC" font-size="22" font-weight="650">Find the loss</text>
+      <text x="338" y="390" fill="#9EABC1" font-size="14">Leakage-safe baselines</text>
+      <text x="338" y="413" fill="#9EABC1" font-size="14">Cohort + GMV evidence</text>
+      <rect x="338" y="438" width="128" height="22" rx="11" fill="#192A48"/>
+      <text x="402" y="453" text-anchor="middle" fill="#AFC0FF" font-size="11" font-weight="650">DETERMINISTIC</text>
+    </g>
+
+    <g filter="url(#shadow)">
+      <rect x="568" y="286" width="204" height="190" rx="16" fill="#111B2D" stroke="#2A3853"/>
+      <rect x="568" y="286" width="204" height="4" rx="2" fill="#E7B96B"/>
+      <text x="588" y="323" fill="#E7B96B" font-size="12" font-weight="700" letter-spacing="1.5">03 · EXPLAIN</text>
+      <text x="588" y="359" fill="#F8FAFC" font-size="22" font-weight="650">Ground evidence</text>
+      <text x="588" y="390" fill="#9EABC1" font-size="14">Rules-first analysis</text>
+      <text x="588" y="413" fill="#9EABC1" font-size="14">Optional typed model</text>
+      <rect x="588" y="438" width="112" height="22" rx="11" fill="#382D20"/>
+      <text x="644" y="453" text-anchor="middle" fill="#F4CD89" font-size="11" font-weight="650">ADVISORY</text>
+    </g>
+
+    <g filter="url(#shadow)">
+      <rect x="818" y="286" width="204" height="190" rx="16" fill="#111B2D" stroke="#2A3853"/>
+      <rect x="818" y="286" width="204" height="4" rx="2" fill="#58D3AC"/>
+      <text x="838" y="323" fill="#58D3AC" font-size="12" font-weight="700" letter-spacing="1.5">04 · CONTROL</text>
+      <text x="838" y="359" fill="#F8FAFC" font-size="22" font-weight="650">Gate the action</text>
+      <text x="838" y="390" fill="#9EABC1" font-size="14">13 policy rules</text>
+      <text x="838" y="413" fill="#9EABC1" font-size="14">One-time human approval</text>
+      <rect x="838" y="438" width="129" height="22" rx="11" fill="#17342F"/>
+      <text x="902.5" y="453" text-anchor="middle" fill="#82E4C5" font-size="11" font-weight="650">MERCHANT OWNED</text>
+    </g>
+
+    <g filter="url(#shadow)">
+      <rect x="1068" y="286" width="204" height="190" rx="16" fill="#111B2D" stroke="#2A3853"/>
+      <rect x="1068" y="286" width="204" height="4" rx="2" fill="#58D3AC"/>
+      <text x="1088" y="323" fill="#58D3AC" font-size="12" font-weight="700" letter-spacing="1.5">05 · RECOVER</text>
+      <text x="1088" y="359" fill="#F8FAFC" font-size="22" font-weight="650">Execute once</text>
+      <text x="1088" y="390" fill="#9EABC1" font-size="14">Durable dispatch first</text>
+      <text x="1088" y="413" fill="#9EABC1" font-size="14">Lookup-only ambiguity</text>
+      <rect x="1088" y="438" width="112" height="22" rx="11" fill="#17342F"/>
+      <text x="1144" y="453" text-anchor="middle" fill="#82E4C5" font-size="11" font-weight="650">TEST MODE</text>
+    </g>
+
+    <g filter="url(#shadow)">
+      <rect x="1318" y="286" width="214" height="190" rx="16" fill="#111B2D" stroke="#2A3853"/>
+      <rect x="1318" y="286" width="214" height="4" rx="2" fill="#B3A4FF"/>
+      <text x="1338" y="323" fill="#B3A4FF" font-size="12" font-weight="700" letter-spacing="1.5">06 · MEASURE</text>
+      <text x="1338" y="359" fill="#F8FAFC" font-size="22" font-weight="650">Prove the lift</text>
+      <text x="1338" y="390" fill="#9EABC1" font-size="14">Treatment vs holdout</text>
+      <text x="1338" y="413" fill="#9EABC1" font-size="14">Incremental GMV + CI</text>
+      <rect x="1338" y="438" width="119" height="22" rx="11" fill="#292547"/>
+      <text x="1397.5" y="453" text-anchor="middle" fill="#C9BEFF" font-size="11" font-weight="650">ATTRIBUTED</text>
+    </g>
+
+    <path d="M670 286V256" stroke="#E7B96B" stroke-width="1.5" stroke-dasharray="5 5"/>
+    <rect x="579" y="224" width="182" height="32" rx="16" fill="#211D19" stroke="#5A472B"/>
+    <circle cx="598" cy="240" r="4" fill="#E7B96B"/>
+    <text x="610" y="245" fill="#E8D5B3" font-size="12" font-weight="600">Optional AI · no authority</text>
+
+    <path d="M920 286V256" stroke="#58D3AC" stroke-width="1.5" stroke-dasharray="5 5"/>
+    <rect x="829" y="224" width="182" height="32" rx="16" fill="#142823" stroke="#295247"/>
+    <circle cx="848" cy="240" r="4" fill="#58D3AC"/>
+    <text x="860" y="245" fill="#B4E8D7" font-size="12" font-weight="600">Human approval required</text>
+  </g>
+
+  <g transform="translate(68 552)" font-family="Inter, Segoe UI, Arial, sans-serif">
+    <text x="0" y="0" fill="#71809B" font-size="11" font-weight="700" letter-spacing="1.8">AUTHORITY RAIL</text>
+    <rect x="0" y="24" width="1464" height="128" rx="18" fill="#0E1829" stroke="#26334C"/>
+
+    <circle cx="36" cy="65" r="7" fill="#7890FF"/>
+    <text x="56" y="61" fill="#F5F7FB" font-size="14" font-weight="650">Detector decides</text>
+    <text x="56" y="84" fill="#8F9DB5" font-size="12">No model can open an incident.</text>
+
+    <line x1="324" y1="48" x2="324" y2="128" stroke="#293650"/>
+    <circle cx="362" cy="65" r="7" fill="#E7B96B"/>
+    <text x="382" y="61" fill="#F5F7FB" font-size="14" font-weight="650">AI explains</text>
+    <text x="382" y="84" fill="#8F9DB5" font-size="12">Redacted, grounded, executable=false.</text>
+
+    <line x1="655" y1="48" x2="655" y2="128" stroke="#293650"/>
+    <circle cx="693" cy="65" r="7" fill="#58D3AC"/>
+    <text x="713" y="61" fill="#F5F7FB" font-size="14" font-weight="650">Policy + merchant authorize</text>
+    <text x="713" y="84" fill="#8F9DB5" font-size="12">Fresh facts. One approval. One winner.</text>
+
+    <line x1="1033" y1="48" x2="1033" y2="128" stroke="#293650"/>
+    <circle cx="1071" cy="65" r="7" fill="#B3A4FF"/>
+    <text x="1091" y="61" fill="#F5F7FB" font-size="14" font-weight="650">Evidence proves</text>
+    <text x="1091" y="84" fill="#8F9DB5" font-size="12">Append-only receipts, holdout, uncertainty.</text>
+
+    <rect x="18" y="106" width="1428" height="1" fill="#243149"/>
+    <text x="18" y="134" fill="#75839D" font-size="11">Razorpay Test Mode only · Synthetic benchmark outcomes · No live money · No model-controlled mutation</text>
+  </g>
+
+  <text x="68" y="770" fill="#66758F" font-family="Inter, Segoe UI, Arial, sans-serif" font-size="12">RETRYRAIL · TRACK 3 — AI REVENUE RECOVERY</text>
+  <text x="1532" y="770" text-anchor="end" fill="#66758F" font-family="Inter, Segoe UI, Arial, sans-serif" font-size="12">M0–M8 VERIFIED</text>
+</svg>

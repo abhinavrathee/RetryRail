@@ -17,7 +17,7 @@ export function ImpactPage(): React.JSX.Element {
   if (!session.isUnlocked) {
     return (
       <>
-        <PageHeader eyebrow="Experiment impact" title="Incremental recovered GMV, not a gross recovery claim" description="The report uses a frozen treatment/control assignment, same-payment attribution and a predeclared uncertainty interval." />
+        <PageHeader eyebrow="Measurement" title="Recovery impact" description="Incremental value from a frozen treatment/control study with same-payment attribution." />
         <Panel eyebrow="Session locked" title="Unlock the immutable report">
           <div className="locked-state"><span aria-hidden="true">⌁</span><div><p>The synthetic batch report is merchant-authenticated. Unlocking does not grant provider credentials.</p><button className="button button--primary" onClick={session.openDialog} type="button">Unlock local session</button></div></div>
         </Panel>
@@ -38,15 +38,15 @@ export function ImpactPage(): React.JSX.Element {
   return (
     <>
       <PageHeader
-        eyebrow="Experiment impact"
-        title="Incremental recovered GMV, not a gross recovery claim"
-        description={`Frozen synthetic batch · ${data.eligible_count.toString()} eligible payments · generated ${formatDateTime(data.generated_at)}`}
+        eyebrow="Measurement"
+        title="Recovery impact"
+        description={`Frozen treatment/control study · ${data.eligible_count.toString()} eligible payments · ${formatDateTime(data.generated_at)}`}
         actions={<StatusChip value={data.conclusion} tone={uncertainty.incremental_gmv_interval_includes_zero ? 'warn' : 'good'} />}
       />
 
       <div className="impact-scope-banner">
-        <strong>Synthetic batch evidence</strong>
-        <span>This is an evaluation result, not live merchant performance. Gross recovery is explicitly not incremental.</span>
+        <strong>Synthetic benchmark</strong>
+        <span>Evaluation evidence, not live merchant performance. Gross recovery is not incremental value.</span>
       </div>
 
       <div className="metric-grid impact-metrics">
@@ -57,7 +57,7 @@ export function ImpactPage(): React.JSX.Element {
       </div>
 
       <div className="impact-layout">
-        <Panel className="value-waterfall-panel" eyebrow="Value attribution" title="From gross treatment recovery to net value">
+        <Panel className="value-waterfall-panel" eyebrow="Attribution" title="Value bridge">
           <div className="value-waterfall">
             <div className="waterfall-row waterfall-row--gross"><span>Gross treatment recovered GMV</span><strong>{formatMoney(value.gross_treatment_recovered_gmv_subunits, value.currency)}</strong></div>
             <div className="waterfall-row waterfall-row--subtract"><span>Estimated natural recovery in treatment</span><strong>− {formatMoney(value.estimated_natural_recovery_in_treatment_subunits, value.currency)}</strong></div>
@@ -68,7 +68,7 @@ export function ImpactPage(): React.JSX.Element {
           </div>
         </Panel>
 
-        <Panel eyebrow="95% uncertainty" title="Bootstrap interval">
+        <Panel eyebrow="Uncertainty" title="95% bootstrap interval">
           <div className="interval-card">
             <div className="interval-scale" aria-label="Incremental GMV confidence interval">
               <span className="interval-line" /><span className="interval-point" />
@@ -80,7 +80,7 @@ export function ImpactPage(): React.JSX.Element {
         </Panel>
       </div>
 
-      <Panel eyebrow="Treatment vs control" title="Raw recovery outcomes remain visible">
+      <Panel eyebrow="Experiment arms" title="Treatment and holdout">
         <div className="arm-comparison">
           <article><div><StatusChip value="treatment" tone="info" /><strong>{formatPercentPpm(data.treatment.recovery_rate_ppm)}</strong></div><dl><div><dt>Eligible</dt><dd>{data.treatment.eligible_count.toString()}</dd></div><div><dt>Recovered</dt><dd>{data.treatment.recovered_count.toString()}</dd></div><div><dt>Gross GMV</dt><dd>{formatMoney(data.treatment.recovered_gmv_subunits, value.currency)}</dd></div><div><dt>Actions</dt><dd>{data.treatment.action_count.toString()}</dd></div></dl></article>
           <div className="versus">vs</div>

@@ -22,9 +22,9 @@ export function DemoPage(): React.JSX.Element {
   return (
     <>
       <PageHeader
-        eyebrow="Isolated demo controls"
-        title="Replay synthetic evidence through the real pipeline"
-        description="This local-only control replays a fixed synthetic tuning partition, drains the transactional outbox, and runs the deterministic detector. It is disabled in production."
+        eyebrow="Local demo"
+        title="Replay the evidence pipeline"
+        description="A fixed synthetic batch through authenticated ingestion, the outbox and deterministic detection. Disabled in production."
         actions={<StatusChip value="synthetic_only" tone="warn" />}
       />
       <div className="demo-layout">

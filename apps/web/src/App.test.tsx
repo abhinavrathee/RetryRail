@@ -71,7 +71,7 @@ describe('RetryRail merchant control room', () => {
     renderApp();
 
     expect(
-      await screen.findByRole('heading', { name: /detect payment degradation/i }),
+      await screen.findByRole('heading', { name: /revenue reliability/i }),
     ).toBeInTheDocument();
     expect(screen.getByText('Synthetic evidence')).toBeInTheDocument();
     expect(screen.getByText('No degradation incidents')).toBeInTheDocument();
