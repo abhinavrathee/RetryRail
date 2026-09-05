@@ -88,6 +88,25 @@ def _snapshot() -> Any:
     return build_snapshot(load_corpus().cases[0])
 
 
+def test_packaged_corpus_and_report_are_runtime_fallbacks(
+    monkeypatch: pytest.MonkeyPatch,
+    tmp_path: Path,
+) -> None:
+    packaged_corpus = analyst_eval._CORPUS_PATH  # noqa: SLF001
+    packaged_report = analyst_eval._REPORT_PATH  # noqa: SLF001
+    monkeypatch.setattr(analyst_eval, "_CORPUS_PATH", tmp_path / "missing-corpus.json")
+    monkeypatch.setattr(analyst_eval, "_REPORT_PATH", tmp_path / "missing-report.json")
+    monkeypatch.setattr(analyst_eval, "_PACKAGED_CORPUS_PATH", packaged_corpus)
+    monkeypatch.setattr(analyst_eval, "_PACKAGED_REPORT_PATH", packaged_report)
+
+    corpus = load_corpus()
+    report = check_report()
+
+    assert corpus.corpus_id == report.corpus_id
+    assert report.status == "passed"
+    assert report.selected_model == "gpt-5.4-nano-2026-03-17"
+
+
 def _draft(snapshot: Any, *, confidence_ppm: int = 900_000) -> ModelIncidentAnalysisDraft:
     evidence_id = snapshot.verified_attributions[0].evidence_event_ids[0]
     return ModelIncidentAnalysisDraft(

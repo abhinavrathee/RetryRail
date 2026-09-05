@@ -7,12 +7,14 @@ from pydantic import AnyHttpUrl, SecretStr, ValidationError
 
 from retryrail import main as main_module
 from retryrail.config import Environment, Settings
+from retryrail.recovery.openai_analyst import OpenAIIncidentAnalystProvider
 
 
 def test_development_accepts_safe_local_placeholders() -> None:
     settings = Settings()
 
     assert settings.environment is Environment.DEVELOPMENT
+    assert settings.openai_incident_model == "gpt-5.4-nano-2026-03-17"
     assert "local-only-password" in settings.database_dsn()
     assert "local-only-password" not in repr(settings)
 
@@ -226,3 +228,17 @@ def test_openai_runtime_requires_the_exact_passing_frozen_selection(
 
     with pytest.raises(RuntimeError, match="passing frozen M6 selection"):
         main_module._configured_incident_analyst_provider(settings)  # noqa: SLF001
+
+
+@pytest.mark.anyio
+async def test_openai_runtime_accepts_frozen_default_selection() -> None:
+    settings = Settings(
+        incident_analyst_target="openai",
+        openai_api_key=SecretStr("sk-unit-test-not-a-real-platform-api-key"),
+    )
+
+    provider = main_module._configured_incident_analyst_provider(settings)  # noqa: SLF001
+
+    assert isinstance(provider, OpenAIIncidentAnalystProvider)
+    assert provider.model == "gpt-5.4-nano-2026-03-17"
+    await provider.aclose()

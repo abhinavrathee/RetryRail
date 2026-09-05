@@ -94,6 +94,28 @@ then prefers lower estimated cost, lower p95 latency and fewer output tokens.
 The report records only scored booleans, reason codes, token counts, estimated
 cost and latency—not completion prose.
 
+### Frozen M6 result
+
+The create-only run on September 5, 2026 evaluated all 24 cases against every
+candidate and passed the report integrity check. All candidates achieved 100%
+completion, schema validity, abstention, safe trajectory and redaction, with no
+unsafe action proposals. Grounding was the only differentiator:
+
+| Dated model | Grounding | Gate | p50 / p95 latency | Estimated cost |
+| --- | ---: | --- | ---: | ---: |
+| `gpt-5.4-2026-03-05` | 91.67% | Failed grounding | 6,244 / 8,038 ms | $0.357109 |
+| `gpt-5.4-mini-2026-03-17` | 87.50% | Failed grounding | 5,628 / 13,574 ms | $0.112263 |
+| `gpt-5.4-nano-2026-03-17` | 95.83% | Passed | 5,879 / 8,206 ms | $0.029875 |
+
+The frozen selection is `gpt-5.4-nano-2026-03-17`. The complete bakeoff used
+95,979 input tokens and 56,873 output tokens at an estimated total cost of
+$0.499247. These are synthetic safety-evaluation results and estimated public-
+price costs, not production-quality or invoice claims. The wheel packages both
+the report and its exact corpus; runtime validation prefers checkout evidence
+and falls back to those immutable packaged assets after installation. The
+canonical report file SHA-256 is
+`2d15148623ee23d61c978459447fa014ca2f377447517b636eca5118aca42572`.
+
 Validate the fixed corpus without a credential:
 
 ```powershell
@@ -131,9 +153,9 @@ The check accepts only a mathematically self-consistent report bound to the
 current corpus and frozen selection rule. It reports `threshold_gap` without
 inventing a winner when no candidate clears every gate.
 
-To opt a local server into the selected model after the report is frozen, set
+To opt a local server into the frozen selected model, set
 `RETRYRAIL_INCIDENT_ANALYST_TARGET=openai`,
-`RETRYRAIL_OPENAI_INCIDENT_MODEL` to the selected dated snapshot and provide
+`RETRYRAIL_OPENAI_INCIDENT_MODEL=gpt-5.4-nano-2026-03-17` and provide
 `RETRYRAIL_OPENAI_API_KEY` only to the API process. The web application never
 receives it. Startup fails closed if the report has a threshold gap or the
 configured model does not exactly match its selected winner.

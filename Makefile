@@ -165,6 +165,7 @@ eval:
 	uv run retryrail-experiment freeze --check
 	uv run retryrail-experiment evaluate --check
 	uv run retryrail-analyst-eval corpus --check
+	uv run retryrail-analyst-eval report --check
 
 security-check:
 	uv run bandit -c pyproject.toml -r services/api/app

@@ -81,6 +81,8 @@ packages = ["services/api/app/retryrail"]
 "evals/blind/detector_v4/runs/detector_v4_official_blind_5497598109b06d21c625/blind.release.v1.json" = "retryrail/detection/assets/detector_v4.blind.release.v1.json"
 "evals/blind/detector_v4/runs/detector_v4_official_blind_5497598109b06d21c625/blind.report.v1.json" = "retryrail/detection/assets/detector_v4.blind.report.v1.json"
 "evals/reports/recovery_experiment_v1.report.json" = "retryrail/experiments/assets/recovery_experiment_v1.report.json"
+"evals/golden/incident_analyst_v1.cases.json" = "retryrail/recovery/assets/incident_analyst_v1.cases.json"
+"evals/reports/incident_analyst_bakeoff.v1.json" = "retryrail/recovery/assets/incident_analyst_bakeoff.v1.json"
 
 [tool.pytest.ini_options]
 addopts = "--strict-config --strict-markers -ra"

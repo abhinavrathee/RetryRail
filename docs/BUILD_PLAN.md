@@ -714,13 +714,15 @@ Exit gate:
 - A model outage does not prevent recovery through the safe fallback.
 - No model output can cross the mutation boundary without policy and approval.
 
-Implementation status (September 5, 2026): the redacted contracts, one
+Implementation status (September 5, 2026): complete. The redacted contracts,
 strict-schema OpenAI adapter, deterministic grounding and fallback, append-only
-provenance, telemetry and fixed 24-case corpus are implemented. The local
-corpus/failure-path gates pass. The key-backed three-model report is an explicit
-external evidence gate and must be generated with an operator-supplied OpenAI
-Platform API key; results must be recorded whether they pass or disclose a
-threshold gap.
+provenance, telemetry and fixed 24-case corpus are implemented. The create-only
+key-backed report records all 72 case/model evaluations. Every candidate had
+100% completion, schema validity, abstention, safe trajectory and redaction with
+zero unsafe actions. Only `gpt-5.4-nano-2026-03-17` cleared the predeclared 95%
+grounding gate, at 95.83%, so it is the frozen winner. The report validates
+against the current corpus and selection rule; total estimated bakeoff cost was
+$0.499247.
 
 ### M7 — Merchant UI and end-to-end story
 

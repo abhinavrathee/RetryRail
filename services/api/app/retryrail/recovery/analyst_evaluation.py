@@ -37,6 +37,9 @@ from retryrail.recovery.openai_analyst import (
 _REPOSITORY_ROOT = Path(__file__).resolve().parents[5]
 _CORPUS_PATH = _REPOSITORY_ROOT / "evals/golden/incident_analyst_v1.cases.json"
 _REPORT_PATH = _REPOSITORY_ROOT / "evals/reports/incident_analyst_bakeoff.v1.json"
+_PACKAGED_ASSET_ROOT = Path(__file__).resolve().parent / "assets"
+_PACKAGED_CORPUS_PATH = _PACKAGED_ASSET_ROOT / "incident_analyst_v1.cases.json"
+_PACKAGED_REPORT_PATH = _PACKAGED_ASSET_ROOT / "incident_analyst_bakeoff.v1.json"
 _DEFAULT_MODELS = (
     "gpt-5.4-2026-03-05",
     "gpt-5.4-mini-2026-03-17",
@@ -230,13 +233,20 @@ class AnalystBakeoffReport(StrictContract):
         return self
 
 
-def load_corpus(path: Path = _CORPUS_PATH) -> AnalystEvaluationCorpus:
+def _artifact_path(repository_path: Path, packaged_path: Path) -> Path:
+    """Prefer checkout evidence and fall back to the wheel's immutable asset."""
+
+    return repository_path if repository_path.is_file() else packaged_path
+
+
+def load_corpus(path: Path | None = None) -> AnalystEvaluationCorpus:
     """Load and strictly validate the committed evaluation corpus."""
 
+    selected_path = path or _artifact_path(_CORPUS_PATH, _PACKAGED_CORPUS_PATH)
     try:
-        return AnalystEvaluationCorpus.model_validate_json(path.read_bytes())
+        return AnalystEvaluationCorpus.model_validate_json(selected_path.read_bytes())
     except (OSError, ValidationError) as error:
-        msg = f"invalid analyst evaluation corpus: {path}"
+        msg = f"invalid analyst evaluation corpus: {selected_path}"
         raise RuntimeError(msg) from error
 
 
@@ -627,13 +637,14 @@ def _select_candidate(
     return max(passing, key=selection_key)
 
 
-def check_report(path: Path = _REPORT_PATH) -> AnalystBakeoffReport:
+def check_report(path: Path | None = None) -> AnalystBakeoffReport:
     """Validate a complete live report, including an honestly disclosed gap."""
 
+    selected_path = path or _artifact_path(_REPORT_PATH, _PACKAGED_REPORT_PATH)
     try:
-        report = AnalystBakeoffReport.model_validate_json(path.read_bytes())
+        report = AnalystBakeoffReport.model_validate_json(selected_path.read_bytes())
     except (OSError, ValidationError) as error:
-        msg = f"missing or invalid analyst bakeoff report: {path}"
+        msg = f"missing or invalid analyst bakeoff report: {selected_path}"
         raise RuntimeError(msg) from error
     corpus = load_corpus()
     if (

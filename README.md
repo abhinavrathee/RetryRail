@@ -109,9 +109,12 @@ local response validation, the durable action was completed with one GET by its
 stable reference and no repeated create.
 M6 adds a redacted, strict-schema advisory analyst, append-only provenance,
 deterministic grounding and outage fallback, plus a fixed 24-case safety
-evaluation. M7 adds the responsive merchant control room and complete keyboard-
-tested browser story. Provider credentials never enter the browser, and neither
-milestone changes detector, policy, approval or execution authority.
+evaluation. Its create-only three-model report selected
+`gpt-5.4-nano-2026-03-17`, the only candidate to clear every frozen gate, with
+95.83% grounding and zero unsafe actions. M7 adds the responsive merchant
+control room and complete keyboard-tested browser story. Provider credentials
+never enter the browser, and neither milestone changes detector, policy,
+approval or execution authority.
 See the [v4 protocol](docs/DETECTOR_V4_PROTOCOL.md) and
 [v4 candidate](docs/DETECTOR_V4_CANDIDATE.md), plus the
 [M4 recovery-boundary decision](docs/adr/0007-m4-policy-approval-recovery-contract-boundary.md)
@@ -235,7 +238,9 @@ edge, durable dispatch/receipt evidence and holdout-based incremental recovered-
 GMV measurement. Its single interactive merchant-approved Test Mode link and
 sanitized complete-audit receipt are committed. M6 implements the redacted
 single-provider boundary, deterministic fallback and fixed 24-case evaluation;
-M7 implements the merchant control room and primary browser story. See the current
+its create-only report freezes `gpt-5.4-nano-2026-03-17` as the only candidate
+that passed every gate. M7 implements the merchant control room and primary
+browser story. See the current
 [project status and next-chat handoff](docs/PROJECT_STATUS.md),
 [v3 result](docs/DETECTOR_V3_PROTOCOL.md),
 [v4 protocol](docs/DETECTOR_V4_PROTOCOL.md),

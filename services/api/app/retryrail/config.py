@@ -86,7 +86,7 @@ class Settings(BaseSettings):
     incident_analyst_target: Literal["deterministic_rules", "openai"] = "deterministic_rules"
     openai_api_key: SecretStr | None = None
     openai_incident_model: str = Field(
-        default="gpt-5.4-2026-03-05",
+        default="gpt-5.4-nano-2026-03-17",
         min_length=3,
         max_length=80,
         pattern=r"^gpt-[A-Za-z0-9.:-]+-\d{4}-\d{2}-\d{2}$",

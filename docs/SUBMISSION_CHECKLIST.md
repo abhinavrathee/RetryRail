@@ -137,7 +137,7 @@ relevant tests, ADRs or evaluation report in the public README.
   present in Git history.
 - [ ] `make seed`, `make demo` and `make check` work as documented.
 - [ ] Held-out detector report is committed.
-- [ ] Agent golden/adversarial evaluation report is committed.
+- [x] Agent golden/adversarial evaluation report is committed.
 - [ ] Screenshots show the final current UI.
 - [ ] Known limitations and unresolved exceptions are honest.
 - [ ] License and attribution are present.
