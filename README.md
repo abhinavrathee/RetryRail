@@ -36,7 +36,7 @@ incremental.
 | **Action boundary** | Thirteen deterministic policy checks plus a short-lived, single-use merchant approval. |
 | **Provider** | Deterministic fake by default; protected Razorpay Test Mode Standard Payment Link adapter for external evidence. |
 | **Impact method** | Frozen 80/20 treatment/control assignment, same-payment attribution and a 10,000-replicate bootstrap interval. |
-| **Delivery status** | M0–M8 complete. M9 deployment, public tag, signed-out checks and five-minute video remain. |
+| **Delivery status** | M0–M8 complete. M9 deployment package is locally verified; publication, public tag, signed-out checks and five-minute video remain. |
 
 ## Review in 60 seconds
 
@@ -462,6 +462,24 @@ no-secret-in-repo process in [RAZORPAY_TEST_MODE.md](docs/RAZORPAY_TEST_MODE.md)
 The OpenAI analyst is similarly optional and documented in
 [INCIDENT_ANALYST.md](docs/INCIDENT_ANALYST.md).
 
+## Reviewer deployment
+
+RetryRail ships with a one-Blueprint Render deployment for the compiled control
+room, FastAPI, dedicated outbox worker and PostgreSQL 16. The public reviewer
+profile is deliberately synthetic and fail-closed: generated secrets, private
+database ingress, same-origin browser calls, mandatory recovery kill switch,
+deterministic provider and deterministic analyst fallback.
+
+```text
+GitHub checks pass → Render pre-deploy migration → API + UI health gate
+                                             ↘ durable worker → PostgreSQL
+```
+
+The exact click path, expected cost, signed-out verification, rollback steps
+and UptimeRobot `GET /health/ready` configuration are in
+[DEPLOYMENT.md](docs/DEPLOYMENT.md). Razorpay and OpenAI keys are intentionally
+not part of the public deployment.
+
 ## Repository map
 
 ```text
@@ -475,11 +493,12 @@ RetryRail/
 │   ├── experiments/           Protocol, assignment freeze and outcomes
 │   ├── golden/                Fixed model and detector cases
 │   └── reports/               Canonical machine-readable evidence
-├── infra/                     Prometheus, Grafana and security-hook assets
+├── infra/                     Render, Prometheus, Grafana and security assets
 ├── docs/                      Requirements, ADRs, operations and proof dossiers
 ├── .github/workflows/ci.yml   Five-job release pipeline
 ├── AGENTS.md                  Repository contract for humans and coding agents
 ├── docker-compose.yml         Local application and observability topology
+├── render.yaml                Judge-ready Render Blueprint
 ├── Makefile                   Reproducible development and release gates
 └── .env.example               Safe, credential-free default configuration
 ```
@@ -490,9 +509,9 @@ M0–M8 are implemented. The exact code/evidence snapshot is in
 [PROJECT_STATUS.md](docs/PROJECT_STATUS.md); the authoritative sequence is in
 [BUILD_PLAN.md](docs/BUILD_PLAN.md).
 
-M9 remains intentionally explicit:
+M9 deployment infrastructure is ready; these operator-owned actions remain:
 
-- choose and create the public deployment;
+- apply the reviewed Render Blueprint and verify the assigned URL;
 - capture final deployment screenshots;
 - freeze and tag the submission commit;
 - record and publish the five-minute pitch;
@@ -520,6 +539,7 @@ Known limits:
 | [BUILDATHON_REQUIREMENTS_TRACEABILITY.md](docs/BUILDATHON_REQUIREMENTS_TRACEABILITY.md) | Official requirement → proof mapping |
 | [ARCHITECTURE.md](docs/ARCHITECTURE.md) | Components, decisions and trust boundaries |
 | [TESTING.md](docs/TESTING.md) | Test catalogue and verification semantics |
+| [DEPLOYMENT.md](docs/DEPLOYMENT.md) | Render, health monitoring and signed-out verification |
 | [PROJECT_STATUS.md](docs/PROJECT_STATUS.md) | Latest verified implementation snapshot |
 | [EVENT_PIPELINE.md](docs/EVENT_PIPELINE.md) | Webhook, event, outbox and replay behavior |
 | [DETECTOR_V4_PROTOCOL.md](docs/DETECTOR_V4_PROTOCOL.md) | Blind procedure and qualified release |

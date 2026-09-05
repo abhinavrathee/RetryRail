@@ -22,9 +22,9 @@ export function DemoPage(): React.JSX.Element {
   return (
     <>
       <PageHeader
-        eyebrow="Local demo"
+        eyebrow="Reviewer sandbox"
         title="Replay the evidence pipeline"
-        description="A fixed synthetic batch through authenticated ingestion, the outbox and deterministic detection. Disabled in production."
+        description="A fixed synthetic batch through authenticated ingestion, the outbox and deterministic detection. Available only in local or isolated review environments."
         actions={<StatusChip value="synthetic_only" tone="warn" />}
       />
       <div className="demo-layout">
@@ -57,7 +57,7 @@ export function DemoPage(): React.JSX.Element {
 
         <Panel eyebrow="Operational guardrails" title="What this control cannot do">
           <ul className="guardrail-list">
-            <li><span>×</span>It cannot run in production.</li>
+            <li><span>×</span>It cannot run in a merchant production environment.</li>
             <li><span>×</span>It cannot access Razorpay or OpenAI credentials.</li>
             <li><span>×</span>It cannot approve or execute recovery.</li>
             <li><span>×</span>It cannot alter held-out evaluation truth.</li>

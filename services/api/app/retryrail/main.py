@@ -14,7 +14,7 @@ from retryrail.api.incidents import router as incidents_router
 from retryrail.api.recovery import router as recovery_router
 from retryrail.api.replay import router as replay_router
 from retryrail.api.webhooks import router as webhook_router
-from retryrail.config import Settings, get_settings
+from retryrail.config import Environment, Settings, get_settings
 from retryrail.db.session import Database
 from retryrail.detection.service import DetectionService
 from retryrail.events.ingestion import EventIngestionService
@@ -42,6 +42,7 @@ from retryrail.recovery.openai_analyst import (
     OpenAIIncidentAnalystProvider,
 )
 from retryrail.recovery.workflow import RecoveryWorkflowService
+from retryrail.web import install_compiled_web
 
 RequestHandler = Callable[[Request], Awaitable[Response]]
 
@@ -67,15 +68,31 @@ def _initialize_experiment_metrics(
     )
 
 
-def _harden_response(response: Response, trace: TraceContext) -> None:
+def _harden_response(
+    response: Response,
+    trace: TraceContext,
+    settings: Settings,
+) -> None:
     """Apply security and W3C correlation headers to every API response."""
 
-    response.headers["Cache-Control"] = "no-store"
+    if "Cache-Control" not in response.headers:
+        response.headers["Cache-Control"] = "no-store"
+    response.headers["Content-Security-Policy"] = (
+        "default-src 'self'; base-uri 'self'; connect-src 'self'; "
+        "font-src 'self' data:; frame-ancestors 'none'; img-src 'self' data:; "
+        "object-src 'none'; script-src 'self'; style-src 'self' 'unsafe-inline'"
+    )
+    response.headers["Cross-Origin-Resource-Policy"] = "same-origin"
+    response.headers["Permissions-Policy"] = (
+        "camera=(), geolocation=(), microphone=(), payment=(), usb=()"
+    )
     response.headers["Referrer-Policy"] = "no-referrer"
     response.headers["Traceparent"] = trace.traceparent
     response.headers["X-Trace-Id"] = trace.trace_id
     response.headers["X-Content-Type-Options"] = "nosniff"
     response.headers["X-Frame-Options"] = "DENY"
+    if settings.environment.value in {"production", "review"}:
+        response.headers["Strict-Transport-Security"] = "max-age=31536000; includeSubDomains"
 
 
 def create_app(
@@ -153,13 +170,17 @@ def create_app(
             if owns_database:
                 await resolved_database.dispose()
 
+    interactive_docs = resolved_settings.environment in {
+        Environment.DEVELOPMENT,
+        Environment.TEST,
+    }
     application = FastAPI(
         title="RetryRail API",
         summary="Payment reliability and bounded revenue recovery",
         version=__version__,
-        docs_url="/docs" if resolved_settings.environment != "production" else None,
+        docs_url="/docs" if interactive_docs else None,
         redoc_url=None,
-        openapi_url=("/openapi.json" if resolved_settings.environment != "production" else None),
+        openapi_url="/openapi.json" if interactive_docs else None,
         lifespan=lifespan,
     )
 
@@ -189,7 +210,7 @@ def create_app(
         trace = request_trace_context(request.headers.get("traceparent"))
         with bind_trace_context(trace):
             response = await call_next(request)
-        _harden_response(response, trace)
+        _harden_response(response, trace, resolved_settings)
         return response
 
     application.include_router(health_router)
@@ -199,6 +220,8 @@ def create_app(
     application.include_router(recovery_router)
     application.include_router(experiments_router)
     application.include_router(metrics_router)
+    if resolved_settings.serve_web:
+        install_compiled_web(application, resolved_settings.web_dist_path)
     return application
 
 

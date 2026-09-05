@@ -143,6 +143,30 @@ relevant tests, ADRs or evaluation report in the public README.
 - [x] License and attribution are present.
 - [ ] Repository opens and renders correctly when signed out of GitHub.
 
+### 4.1 Reviewer deployment gate
+
+- [x] A versioned Render Blueprint provisions the API/UI, dedicated worker and
+  PostgreSQL in one region.
+- [x] The deployment image builds the exact locked frontend and backend, then
+  serves them from one origin.
+- [x] The `review` environment requires strong distinct secrets, a PostgreSQL
+  store, deterministic adapters and an enabled recovery kill switch.
+- [x] Database migrations run before the web rollout and readiness checks the
+  exact Alembic head.
+- [x] Synthetic tuning data is seeded through authenticated ingestion rather
+  than inserted around the application boundary.
+- [x] The deployment and UptimeRobot procedure is documented in
+  `docs/DEPLOYMENT.md`.
+- [x] The exact deployment image, empty-database migration, API/UI/worker
+  startup, review-mode security surface and full synthetic initial hook were
+  rehearsed locally with zero replay expectation mismatches.
+- [ ] Render shows the web service, worker and database as healthy.
+- [ ] `GET /health/ready` returns HTTP 200 from the assigned public hostname.
+- [ ] UptimeRobot monitors `/health/ready` and has a working alert contact.
+- [ ] The deployed root and a nested incident URL work in a signed-out browser.
+- [ ] Final screenshots were recaptured from the verified deployment URL.
+- [ ] The verified deployment URL is linked from the README.
+
 ## 5. Product proof gate
 
 - [ ] The demo begins from a healthy baseline.

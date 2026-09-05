@@ -2,6 +2,7 @@
 
 from enum import StrEnum
 from functools import lru_cache
+from pathlib import Path
 from typing import Literal
 
 from pydantic import AnyHttpUrl, Field, SecretStr, model_validator
@@ -13,6 +14,7 @@ class Environment(StrEnum):
 
     DEVELOPMENT = "development"
     TEST = "test"
+    REVIEW = "review"
     PRODUCTION = "production"
 
 
@@ -21,7 +23,9 @@ _INSECURE_SECRET_VALUES = frozenset(
         "",
         "change-me",
         "local-development-only",
+        "local-replay-token-not-for-production",
         "replace-with-a-random-local-approval-secret",
+        "replace-with-a-random-local-replay-token",
         "replace-with-a-random-local-token-hmac-key",
         "replace-with-a-random-local-test-secret",
     }
@@ -113,6 +117,8 @@ class Settings(BaseSettings):
     replay_enabled: bool = False
     replay_token: SecretStr = SecretStr("local-replay-token-not-for-production")
     cors_origins: list[AnyHttpUrl] = [AnyHttpUrl("http://localhost:5173")]
+    serve_web: bool = False
+    web_dist_path: Path = Path("apps/web/dist")
 
     @model_validator(mode="after")
     def reject_unsafe_production_configuration(self) -> "Settings":
@@ -121,22 +127,36 @@ class Settings(BaseSettings):
         self._validate_razorpay_test_mode_configuration()
         self._validate_incident_analyst_configuration()
 
-        if self.environment is not Environment.PRODUCTION:
+        if self.environment not in {Environment.PRODUCTION, Environment.REVIEW}:
             return self
 
+        self._validate_hosted_configuration()
+        if self.environment is Environment.REVIEW:
+            self._validate_review_configuration()
+        return self
+
+    def _validate_hosted_configuration(self) -> None:
+        """Apply the shared fail-closed boundary to review and production."""
+
         if self.webhook_secret.get_secret_value() in _INSECURE_SECRET_VALUES:
-            msg = "RETRYRAIL_WEBHOOK_SECRET must be replaced in production"
+            msg = "RETRYRAIL_WEBHOOK_SECRET must be replaced when hosted"
             raise ValueError(msg)
         if not self.database_url.get_secret_value().startswith(
             ("postgresql://", "postgresql+psycopg://")
         ):
-            msg = "production requires a PostgreSQL database URL"
+            msg = "hosted environments require a PostgreSQL database URL"
             raise ValueError(msg)
-        if self.replay_enabled:
+        if self.environment is Environment.PRODUCTION and self.replay_enabled:
             msg = "synthetic replay cannot be enabled in production"
             raise ValueError(msg)
+        if (
+            self.replay_enabled
+            and self.replay_token.get_secret_value() in _INSECURE_SECRET_VALUES
+        ):
+            msg = "RETRYRAIL_REPLAY_TOKEN must be replaced when hosted"
+            raise ValueError(msg)
         if any(origin.host in {"localhost", "127.0.0.1"} for origin in self.cors_origins):
-            msg = "production CORS origins cannot target localhost"
+            msg = "hosted CORS origins cannot target localhost"
             raise ValueError(msg)
         approval_secrets = {
             self.merchant_approval_secret.get_secret_value(),
@@ -150,11 +170,24 @@ class Settings(BaseSettings):
             self.merchant_approval_secret.get_secret_value(),
             self.approval_token_hmac_key.get_secret_value(),
             *((self.openai_api_key.get_secret_value(),) if self.openai_api_key is not None else ()),
+            *((self.replay_token.get_secret_value(),) if self.replay_enabled else ()),
         )
         if len(set(runtime_secret_values)) != len(runtime_secret_values):
             msg = "all runtime secrets must be distinct"
             raise ValueError(msg)
-        return self
+
+    def _validate_review_configuration(self) -> None:
+        """Keep the public synthetic sandbox unable to call external providers."""
+
+        if not self.recovery_kill_switch:
+            msg = "review deployments require the recovery kill switch"
+            raise ValueError(msg)
+        if self.recovery_execution_target != "deterministic_fake":
+            msg = "review deployments cannot call an external recovery provider"
+            raise ValueError(msg)
+        if self.incident_analyst_target != "deterministic_rules":
+            msg = "review deployments cannot call an external incident analyst"
+            raise ValueError(msg)
 
     def _validate_incident_analyst_configuration(self) -> None:
         """Require a plausible secret and pinned snapshot for external analysis."""
@@ -210,7 +243,10 @@ class Settings(BaseSettings):
     def database_dsn(self) -> str:
         """Reveal the database URL only at the connection boundary."""
 
-        return self.database_url.get_secret_value()
+        database_url = self.database_url.get_secret_value()
+        if database_url.startswith("postgresql://"):
+            return database_url.replace("postgresql://", "postgresql+psycopg://", 1)
+        return database_url
 
 
 @lru_cache(maxsize=1)

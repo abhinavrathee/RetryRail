@@ -133,6 +133,83 @@ def test_production_accepts_separate_runtime_approval_secrets() -> None:
     assert settings.environment is Environment.PRODUCTION
 
 
+def test_render_postgres_url_is_normalized_at_the_driver_boundary() -> None:
+    settings = Settings(database_url="postgresql://service:value@db.internal/retryrail")
+
+    assert settings.database_dsn() == (
+        "postgresql+psycopg://service:value@db.internal/retryrail"
+    )
+
+
+def test_review_environment_is_hardened_but_allows_bounded_synthetic_replay() -> None:
+    settings = Settings(
+        environment=Environment.REVIEW,
+        database_url="postgresql://service:value@db.internal/retryrail",
+        webhook_secret=SecretStr("review-runtime-webhook-value"),
+        merchant_approval_secret=SecretStr("review-runtime-merchant-approval-value"),
+        approval_token_hmac_key=SecretStr("review-runtime-token-hmac-key-value"),
+        replay_enabled=True,
+        replay_token=SecretStr("review-runtime-replay-value"),
+        recovery_kill_switch=True,
+        cors_origins=[],
+    )
+
+    assert settings.environment is Environment.REVIEW
+    assert settings.replay_enabled is True
+    assert settings.recovery_execution_target == "deterministic_fake"
+    assert settings.incident_analyst_target == "deterministic_rules"
+
+
+@pytest.mark.parametrize(
+    ("overrides", "expected_message"),
+    [
+        ({"recovery_kill_switch": False}, "kill switch"),
+        (
+            {"replay_token": SecretStr("local-replay-token-not-for-production")},
+            "REPLAY_TOKEN",
+        ),
+        (
+            {
+                "recovery_execution_target": "razorpay_test_mode",
+                "razorpay_key_id": SecretStr("rzp_test_review_identifier"),
+                "razorpay_key_secret": SecretStr("review-provider-value"),
+            },
+            "external recovery provider",
+        ),
+        (
+            {
+                "incident_analyst_target": "openai",
+                "openai_api_key": SecretStr("sk-review-not-a-real-platform-api-key"),
+            },
+            "external incident analyst",
+        ),
+    ],
+)
+def test_review_environment_rejects_unbounded_external_actions(
+    overrides: dict[str, object],
+    expected_message: str,
+) -> None:
+    configuration: dict[str, object] = {
+        "environment": Environment.REVIEW,
+        "database_url": "postgresql://service:value@db.internal/retryrail",
+        "webhook_secret": SecretStr("review-runtime-webhook-value"),
+        "merchant_approval_secret": SecretStr(
+            "review-runtime-merchant-approval-value"
+        ),
+        "approval_token_hmac_key": SecretStr(
+            "review-runtime-token-hmac-key-value"
+        ),
+        "replay_enabled": True,
+        "replay_token": SecretStr("review-runtime-replay-value"),
+        "recovery_kill_switch": True,
+        "cors_origins": [],
+    }
+    configuration.update(overrides)
+
+    with pytest.raises(ValidationError, match=expected_message):
+        Settings(**configuration)  # type: ignore[arg-type]
+
+
 def test_razorpay_test_mode_requires_complete_test_credentials() -> None:
     with pytest.raises(ValidationError, match="requires an API key id and secret"):
         Settings(recovery_execution_target="razorpay_test_mode")

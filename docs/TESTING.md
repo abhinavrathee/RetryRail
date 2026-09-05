@@ -32,6 +32,27 @@ positive and negative executable evidence.
 | Containers | Digest policy, API/worker/web builds, non-root runtime and local observability configuration passed |
 | Clean checkout | Locked install took 67.82 seconds; the focused clean M8 gate took 49.13 seconds; checkout remained byte-clean |
 
+### Reviewer-deployment candidate rehearsal
+
+Before publishing the public service, the exact `infra/render/Dockerfile` image
+and `render.yaml` topology were rehearsed locally against PostgreSQL 16:
+
+| Check | Observed result |
+| --- | --- |
+| Blueprint contract | `render.yaml` validates against Render's published Blueprint JSON Schema |
+| Immutable build | Locked Node and Python stages completed and produced the combined API/UI image |
+| Database lifecycle | Alembic upgraded an empty PostgreSQL database through `0008_m8_trace_lineage` |
+| Public surface | `/health/ready`, `/`, a nested incident route and a fingerprinted asset returned HTTP 200 |
+| Fail-closed surface | `/docs`, `/openapi.json`, `/.env` and a missing asset returned HTTP 404 in `review` mode |
+| Browser caching/security | Fingerprinted assets emitted immutable caching; CSP and HSTS were present |
+| Initial data hook | 2,722 synthetic inputs selected; 2,717 accepted, 3 deduplicated, 2 rejected as designed and 0 expectation mismatches |
+| Worker convergence | The dedicated worker projected the batch through `2026-09-01T23:59:59Z` and reproduced 2 resolved synthetic incidents |
+| Focused regression | 30 configuration, health, SPA-hosting and security-header tests passed; Ruff and strict mypy passed |
+
+This is pre-deployment evidence for the current working tree, not proof that a
+public Render hostname exists. The public URL, Render health state, UptimeRobot
+monitor and signed-out browser pass remain operator-owned M9 evidence.
+
 The authoritative narrative is
 `docs/PROJECT_STATUS.md#verified-m8-completion-snapshot`. Historical sections in
 that file intentionally retain smaller test counts from earlier milestones and
@@ -291,4 +312,3 @@ directly; availability of individual commands must be reported honestly.
 7. No skipped, unimplemented or pretend command is described as passing.
 8. A changed README/UI still requires its relevant lint, type, unit, build and
    browser checks before the new commit can be called release-ready.
-

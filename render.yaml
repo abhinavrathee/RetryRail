@@ -1,0 +1,103 @@
+# Render Blueprint for the isolated, synthetic RetryRail reviewer sandbox.
+# Real Razorpay and OpenAI credentials are intentionally not accepted here.
+services:
+  - type: web
+    name: retryrail-review
+    runtime: docker
+    plan: 0.5c-512mb
+    region: singapore
+    dockerContext: .
+    dockerfilePath: ./infra/render/Dockerfile
+    preDeployCommand: retryrail-db upgrade
+    initialDeployHook: retryrail-replay --mode tuning
+    healthCheckPath: /health/ready
+    autoDeployTrigger: checksPass
+    maxShutdownDelaySeconds: 30
+    envVars:
+      - key: RETRYRAIL_ENVIRONMENT
+        value: review
+      - key: RETRYRAIL_DATABASE_URL
+        fromDatabase:
+          name: retryrail-review-db
+          property: connectionString
+      - key: RETRYRAIL_MERCHANT_ID
+        value: merchant_synthetic_001
+      - key: RETRYRAIL_WEBHOOK_SECRET
+        generateValue: true
+      - key: RETRYRAIL_MERCHANT_APPROVAL_SECRET
+        generateValue: true
+      - key: RETRYRAIL_APPROVAL_TOKEN_HMAC_KEY
+        generateValue: true
+      - key: RETRYRAIL_MERCHANT_APPROVER_ID
+        value: reviewer_operator
+      - key: RETRYRAIL_RECOVERY_MODE
+        value: review_first
+      - key: RETRYRAIL_RECOVERY_KILL_SWITCH
+        value: "true"
+      - key: RETRYRAIL_RECOVERY_EXECUTION_TARGET
+        value: deterministic_fake
+      - key: RETRYRAIL_INCIDENT_ANALYST_TARGET
+        value: deterministic_rules
+      - key: RETRYRAIL_REPLAY_ENABLED
+        value: "true"
+      - key: RETRYRAIL_REPLAY_TOKEN
+        generateValue: true
+      - key: RETRYRAIL_CORS_ORIGINS
+        value: "[]"
+      - key: RETRYRAIL_SERVE_WEB
+        value: "true"
+      - key: RETRYRAIL_WEB_DIST_PATH
+        value: /app/apps/web/dist
+
+  - type: worker
+    name: retryrail-review-worker
+    runtime: docker
+    plan: 0.5c-512mb
+    region: singapore
+    dockerContext: .
+    dockerfilePath: ./infra/render/Dockerfile
+    dockerCommand: python -m retryrail.worker
+    autoDeployTrigger: checksPass
+    maxShutdownDelaySeconds: 30
+    envVars:
+      - key: RETRYRAIL_ENVIRONMENT
+        value: review
+      - key: RETRYRAIL_DATABASE_URL
+        fromDatabase:
+          name: retryrail-review-db
+          property: connectionString
+      - key: RETRYRAIL_MERCHANT_ID
+        value: merchant_synthetic_001
+      - key: RETRYRAIL_WEBHOOK_SECRET
+        generateValue: true
+      - key: RETRYRAIL_MERCHANT_APPROVAL_SECRET
+        generateValue: true
+      - key: RETRYRAIL_APPROVAL_TOKEN_HMAC_KEY
+        generateValue: true
+      - key: RETRYRAIL_RECOVERY_KILL_SWITCH
+        value: "true"
+      - key: RETRYRAIL_RECOVERY_EXECUTION_TARGET
+        value: deterministic_fake
+      - key: RETRYRAIL_INCIDENT_ANALYST_TARGET
+        value: deterministic_rules
+      - key: RETRYRAIL_REPLAY_ENABLED
+        value: "true"
+      - key: RETRYRAIL_REPLAY_TOKEN
+        generateValue: true
+      - key: RETRYRAIL_CORS_ORIGINS
+        value: "[]"
+      - key: RETRYRAIL_SERVE_WEB
+        value: "false"
+      - key: RETRYRAIL_WORKER_METRICS_HOST
+        value: 0.0.0.0
+
+databases:
+  - name: retryrail-review-db
+    plan: 0.1c-256mb
+    region: singapore
+    postgresMajorVersion: "16"
+    databaseName: retryrail
+    user: retryrail
+    diskSizeGB: 1
+    storageAutoscalingEnabled: false
+    ipAllowList: []

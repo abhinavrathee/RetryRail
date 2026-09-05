@@ -2,7 +2,7 @@
 
 **Last verified:** September 5, 2026
 
-**Current delivery boundary:** M0–M8 complete; M9 presentation work in progress, with deployment and final submission actions pending
+**Current delivery boundary:** M0–M8 complete; the M9 reviewer deployment is implemented and locally rehearsed, with publication and final submission actions pending
 
 **Runtime recovery:** deterministic fake or human-approved Razorpay Test Mode for exact qualified synthetic v4 incidents; Razorpay Live Mode rejected
 
@@ -340,15 +340,40 @@ See `docs/DETECTOR_V4_PROTOCOL.md` for the full R5.5 evidence narrative.
 
 Continue M9 deployment and submission packaging. The reviewer-first README,
 branded system map, deterministic pre-deployment UI captures, official
-Buildathon traceability dossier, testing catalogue and restrained M9 UI polish
-are complete in the working tree. Preserve the exact M8 release evidence and
-all M3–M8 authority boundaries. Do not make the repository public, create the
-final tag, publish a deployment or submit the form until the operator has
-reviewed the destinations and the signed-out checks are ready.
+Buildathon traceability dossier, testing catalogue, restrained M9 UI polish and
+Render Blueprint/runbook are complete in the working tree. Preserve the exact
+M8 release evidence and all M3–M8 authority boundaries. Do not make the
+repository public, create the final tag, publish a deployment or submit the
+form until the operator has reviewed the destinations and the signed-out checks
+are ready.
+
+## Verified M9 deployment-candidate rehearsal
+
+- The schema-validated root `render.yaml` provisions one paid web service, one
+  dedicated worker and PostgreSQL 16 in the same Singapore region. The compiled
+  React control room and FastAPI routes share one origin.
+- The exact digest-pinned `infra/render/Dockerfile` image built successfully.
+  Against an empty PostgreSQL database, Alembic reached
+  `0008_m8_trace_lineage`; API and worker containers then started from that
+  image.
+- Review-mode readiness, root SPA, nested incident routing and a fingerprinted
+  asset returned HTTP 200. Interactive docs, OpenAPI, `/.env` and a missing
+  asset returned HTTP 404. CSP, HSTS and immutable asset caching were observed.
+- The deployment initial hook selected 2,722 synthetic inputs: 2,717 were
+  accepted, 3 were deduplicated, 2 were rejected as designed and there were
+  zero expectation mismatches. The worker converged at the final dataset
+  timestamp and reproduced both resolved synthetic incidents.
+- Thirty focused deployment/configuration tests, Ruff and strict mypy passed.
+  `docs/DEPLOYMENT.md` contains the exact Blueprint, billing, UptimeRobot,
+  signed-out verification and rollback procedure.
+
+These are local deployment-candidate results. No public URL, external monitor
+or Render-account health claim is made until the operator applies the Blueprint
+and the signed-out checks are captured.
 
 ## What remains after M8
 
-- M9 remaining: choose and create the public deployment, capture the final
+- M9 remaining: apply and verify the prepared public deployment, capture the final
   deployment screenshots, rehearse and record the five-minute video, make the
   GitHub repository public, freeze/tag the exact submission commit, verify
   every public link signed out, finalize the form text and submit.
