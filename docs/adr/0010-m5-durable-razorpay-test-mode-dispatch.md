@@ -58,6 +58,10 @@ both as audit facts.
   false, reminders are false, and no customer object is sent.
 - Only provider ID, reference, status, amount, currency, HTTPS short URL and
   timestamps are admitted into the sanitized receipt.
+- Provider and RetryRail clocks are independent. A positive provider-clock skew
+  of at most five minutes is normalized by setting verification time no earlier
+  than provider creation; a larger skew is a typed invalid response. On create
+  it remains ambiguous and therefore permits lookup only, never another POST.
 - Determinate 4xx failures are typed. Transport errors, 5xx responses and an
   invalid successful response are ambiguous and require lookup rather than
   POST retry.
@@ -69,8 +73,12 @@ under duplicate requests, timeouts and post-create crashes. No distributed
 system can claim exactly-once remote execution without provider idempotency;
 the stable reference plus lookup-only recovery is the explicit safety strategy.
 
-The real Test Mode link still requires the normal non-model merchant approval.
-Test Mode is not production and its receipt is not evidence of live revenue.
+The real Test Mode link required and received the normal non-model merchant
+approval. The first POST returned 200, but a 2.5-second positive provider-clock
+skew exposed the response-ordering guard before its receipt transaction. The
+durable `executing` action then recovered that same link by GET reference lookup
+without a second POST. Test Mode is not production and its receipt is not
+evidence of live revenue.
 The current single-merchant shared-secret authorization remains a bounded demo
 control rather than production IAM.
 

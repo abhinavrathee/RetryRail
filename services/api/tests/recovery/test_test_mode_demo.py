@@ -1,9 +1,12 @@
 """Human approval and credential-boundary tests for the one-link M5 demo."""
 
 import asyncio
+import hashlib
+import json
 from pathlib import Path
 
 import pytest
+from jsonschema import Draft202012Validator
 from pydantic import SecretStr
 from sqlalchemy import func, select
 
@@ -22,7 +25,10 @@ from retryrail.recovery.adapter import (
     PaymentLinkCreateRequest,
     PaymentLinkResult,
 )
-from retryrail.recovery.models import ProviderVerificationSource
+from retryrail.recovery.models import (
+    ProviderVerificationSource,
+    RazorpayTestModeEvidenceReceipt,
+)
 from retryrail.recovery.test_mode_demo import (
     TestModeDemoError,
     _database_url,
@@ -51,6 +57,37 @@ def test_credential_csv_is_parsed_without_exposing_values(tmp_path: Path) -> Non
     assert parsed_secret.get_secret_value() == key_secret
     assert key_id not in repr(parsed_id)
     assert key_secret not in repr(parsed_secret)
+
+
+def test_committed_test_mode_evidence_matches_schema_and_safety_contract() -> None:
+    repository_root = Path(__file__).resolve().parents[4]
+    evidence_path = repository_root / "evals/reports/razorpay_test_mode_receipt.v1.json"
+    schema_path = repository_root / "contracts/domain/razorpay_test_mode_evidence.v1.schema.json"
+    assert (
+        hashlib.sha256(evidence_path.read_bytes()).hexdigest()
+        == "97036d8b227ad7e724b34c02bc90aa73ed781aec8bd83503cb63f4b10e33fe65"
+    )
+    document = json.loads(evidence_path.read_text(encoding="utf-8"))
+    schema = json.loads(schema_path.read_text(encoding="utf-8"))
+
+    Draft202012Validator(schema, format_checker=Draft202012Validator.FORMAT_CHECKER).validate(
+        document
+    )
+    evidence = RazorpayTestModeEvidenceReceipt.model_validate(document)
+
+    assert evidence.scope == "razorpay_test_mode_no_real_money"
+    assert evidence.synthetic is True
+    assert evidence.credentials_persisted is False
+    assert evidence.raw_provider_response_persisted is False
+    assert evidence.external_notifications_enabled is False
+    assert evidence.audit.complete is True
+    assert evidence.audit.missing_facts == ()
+    assert evidence.audit.terminal_state.value == "succeeded"
+    assert evidence.provider_receipt.execution_target.value == "razorpay_test_mode"
+    assert (
+        evidence.provider_receipt.verification_source is ProviderVerificationSource.REFERENCE_LOOKUP
+    )
+    assert evidence.provider_receipt.external_notifications_enabled is False
 
 
 @pytest.mark.parametrize(
@@ -178,9 +215,7 @@ def test_execute_demo_requires_the_full_authority_chain_and_exports_safe_evidenc
     credential_path = tmp_path / "razorpay.csv"
     key_id = "rzp" + "_test_demo_id"
     credential_path.write_text(
-        "Key Type,Value\n"
-        f"Test Key ID,{key_id}\n"
-        "Test Key Secret,unit-test-demo-secret\n",
+        f"Key Type,Value\nTest Key ID,{key_id}\nTest Key Secret,unit-test-demo-secret\n",
         encoding="utf-8",
     )
     upgrade_database(_database_url(database_path))
@@ -196,9 +231,7 @@ def test_execute_demo_requires_the_full_authority_chain_and_exports_safe_evidenc
         lambda _preview: None,
     )
 
-    evidence = asyncio.run(
-        test_mode_demo.execute_demo(database_path, credential_path)
-    )
+    evidence = asyncio.run(test_mode_demo.execute_demo(database_path, credential_path))
 
     assert evidence.scope == "razorpay_test_mode_no_real_money"
     assert evidence.credentials_persisted is False

@@ -2,11 +2,11 @@
 
 ## Current release boundary
 
-This document describes the implemented M0–M4 foundation and M5 provider and
-measurement boundary. The sole remaining M5 external release gate is a human-
-approved Test Mode execution and its committed sanitized receipt. The
-authoritative product behavior remains in `PRODUCT_REQUIREMENTS.md`; sequencing
-remains in `BUILD_PLAN.md`.
+This document describes the implemented M0–M5 foundation, provider boundary and
+measurement evidence. M5's external release gate is closed by one human-approved
+Test Mode execution and its committed sanitized receipt. The authoritative
+product behavior remains in `PRODUCT_REQUIREMENTS.md`; sequencing remains in
+`BUILD_PLAN.md`.
 
 ```mermaid
 flowchart LR
@@ -54,8 +54,8 @@ flowchart LR
 All arrows are implemented behavior. The M4.2 evaluator remains pure. The
 network adapter accepts Test Mode credentials only, carries no customer contact,
 and remains unreachable until a fresh deterministic policy passes and a human
-merchant approval is atomically consumed. The review workflow has not yet used
-that authority to create its one external Test Mode evidence link.
+merchant approval is atomically consumed. The review workflow used that
+authority once for the committed external Test Mode evidence link.
 
 ## Decisions implemented in M0–M5
 
@@ -273,5 +273,7 @@ sanitized receipt tables plus the no-retry Test Mode adapter. An interrupted
 the outcome-free protocol/assignment freeze and the later synthetic impact
 stage. The official report separates ₹200,884 gross treatment recovery from
 ₹120,912 estimated incremental recovered GMV and includes its 95% bootstrap
-interval. One human-approved Test Mode action and receipt remain before the M5
-external exit gate can be closed.
+interval. The human-approved Test Mode POST created one link; a small positive
+provider-clock skew interrupted local result parsing, and the durable
+`executing` action completed by reference-only GET without repeating create.
+Its sanitized, complete-audit receipt closes the M5 external exit gate.

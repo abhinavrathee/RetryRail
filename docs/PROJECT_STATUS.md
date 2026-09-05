@@ -2,7 +2,7 @@
 
 **Last verified:** September 5, 2026
 
-**Current delivery boundary:** M4 complete; M5 code and synthetic measurement complete; one human-approved Test Mode receipt remains
+**Current delivery boundary:** M4 and M5 complete; one human-approved Test Mode link and its sanitized complete-audit receipt are committed
 
 **Runtime recovery:** deterministic fake or human-approved Razorpay Test Mode for exact qualified synthetic v4 incidents; Razorpay Live Mode rejected
 
@@ -31,7 +31,7 @@ this document records the verified implementation boundary.
 | M4.3 | Authenticated, server-owned plan preview and merchant approve/reject workflow persists canonical source evidence, plans and policy decisions append-only; approval bearers are short-lived, single-use, returned once and stored only as a keyed digest; this milestone intentionally introduced no execute route |
 | M4.4 | Fresh execution-stage policy, atomic approval consumption, immutable execute-once actions/transitions, exact replay, lookup-only ambiguity reconciliation and a typed synthetic-only fake Payment Link adapter |
 | M4.5 | Verified-citation rules brief, no-model plan fallback, complete action-audit verifier and exact hash-bound activation of the qualified v4 detector without altering frozen evidence |
-| M5 provider edge | Test-key-only Standard Payment Link adapter, immutable pre-network dispatch and sanitized provider receipts, no-create replay, lookup-only crash/timeout reconciliation and an exact interactive human gate for the one reviewer action |
+| M5 provider edge | Test-key-only Standard Payment Link adapter, immutable pre-network dispatch, one human-approved INR 1,499.00 link, no-create replay, real GET-only crash-equivalent recovery and a sanitized complete-audit receipt |
 | M5 measurement | Remotely frozen 224/56 stratified assignment over all 280 eligible blind-batch rows, same-payment outcome attribution, gross/natural/incremental/net value separation, deterministic 10,000-replicate uncertainty and an authenticated hash-bound report API |
 
 The v4 figures are synthetic benchmark evidence, not production-performance
@@ -178,7 +178,7 @@ See `docs/DETECTOR_V4_PROTOCOL.md` for the full R5.5 evidence narrative.
   behind `make check` was run directly. Standalone Docker Compose v5.1.3 was
   available for the isolated runtime verification.
 
-## M5 implementation checkpoint
+## Verified M5 completion snapshot
 
 - M4 was reviewed and secured in commit `d16e802`; the full local release gate
   passed before that commit was pushed to `origin/main`.
@@ -200,11 +200,22 @@ See `docs/DETECTOR_V4_PROTOCOL.md` for the full R5.5 evidence narrative.
 - The supplied Test Mode credential pair authenticated with a read-only Razorpay
   list request. Its values remain only in the downloaded CSV outside Git and
   were never printed, logged or copied into repository configuration.
-- The final POST is deliberately not model-authorized. A prepared disposable
-  database and exact terminal phrase must be reviewed by the human merchant
-  operator; until that happens, no Test Mode Payment Link or external receipt is
-  claimed.
-- The exact backend release command passes 475 tests with 85.24% branch-aware
+- A human merchant operator reviewed the prepared INR 1,499.00 synthetic plan
+  and typed its exact interactive approval phrase. The durable dispatch committed
+  before the only POST, which Razorpay accepted with HTTP 200.
+- Razorpay's creation clock was about 2.5 seconds ahead of the local clock. The
+  original strict ordering validator stopped after the remote create and before
+  the local receipt transaction. RetryRail did not repeat POST: the still-
+  `executing` action was recovered by one GET using its durable reference, then
+  received one provider receipt and terminal `succeeded` transition.
+- `evals/reports/razorpay_test_mode_receipt.v1.json` records
+  `verification_source=reference_lookup`, complete audit, notifications off,
+  synthetic/no-real-money scope, and explicit absence of persisted credentials
+  and raw provider content. Its canonical committed file SHA-256 is
+  `97036d8b227ad7e724b34c02bc90aa73ed781aec8bd83503cb63f4b10e33fe65`.
+  Regression tests normalize only bounded positive clock skew and preserve typed
+  lookup-only behavior for larger skew.
+- The exact backend release command passes 480 tests with 85.24% branch-aware
   coverage. Ruff, mypy over 135 source files, 69 contract tests, all 19 schema
   drift checks, the M1/v2/v3/v4 data and evaluation gates, both M5 experiment
   stages, Bandit, repository secret scanning and both dependency audits pass.
@@ -247,19 +258,17 @@ See `docs/DETECTOR_V4_PROTOCOL.md` for the full R5.5 evidence narrative.
 - The GitHub repository is currently private. Public visibility and signed-out
   verification are deliberate M9 submission actions, not assumptions.
 
-## Start here next: close the M5 external gate
+## Start here next: M6 bounded AI analyst
 
-The provider and measurement work is implemented. Prepare one fresh disposable
-demo database, show its exact synthetic amount/reference/expiry to the merchant
-operator, and let that human type the plan-specific approval phrase in an
-interactive terminal. Commit only the generated sanitized receipt after its
-provider lookup, complete audit, schema, security scan and full release gates
-pass. Never retry the create; an interruption resumes through `reconcile`.
+The provider, external Test Mode proof and synthetic causal-measurement work are
+complete. Begin M6 with a redacted model input contract and evaluation protocol;
+preserve the existing deterministic detector, policy, approval, execution and
+rules-only fallback boundaries. The LLM may explain evidence and propose only
+pre-authorized interventions. It must never detect degradation, approve an
+action or cross the provider boundary.
 
-## What remains after the M5 implementation checkpoint
+## What remains after M5
 
-- M5: one human-approved Razorpay Test Mode link, committed sanitized receipt,
-  and final full-gate verification of that external evidence.
 - M6: bounded AI analyst, redacted inputs, deterministic fallback and agent
   golden/adversarial evaluations.
 - M7: merchant UI and complete browser story.

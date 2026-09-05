@@ -150,14 +150,14 @@ relevant tests, ADRs or evaluation report in the public README.
 - [ ] The incident shows measured evidence and at-risk GMV.
 - [ ] The AI explanation cites evidence and uncertainty.
 - [ ] The plan preview shows action effects and stopping rules.
-- [ ] Approval occurs outside the model.
-- [ ] One real Razorpay Test Mode Standard Payment Link is created.
-- [ ] Duplicate replay produces no duplicate logical action.
-- [ ] Ambiguous timeout is reconciled safely.
-- [ ] Treatment/control results show incremental recovered GMV.
-- [ ] Synthetic outcome labels are visible.
-- [ ] A complete audit receipt is visible.
-- [ ] Model-unavailable fallback has been tested.
+- [x] Approval occurs outside the model.
+- [x] One real Razorpay Test Mode Standard Payment Link is created.
+- [x] Duplicate replay produces no duplicate logical action.
+- [x] Ambiguous timeout is reconciled safely.
+- [x] Treatment/control results show incremental recovered GMV.
+- [x] Synthetic outcome labels are visible.
+- [x] A complete audit receipt is visible.
+- [x] Model-unavailable fallback has been tested.
 
 ## 6. Five-minute video gate
 
@@ -212,18 +212,19 @@ Recommended timing:
 | Root-cause accuracy | V1 held-out remains unscorable after the miss; v2/v3 official evidence records 1,000,000 ppm top-1 attribution but failed other release gates. The qualified v4 official synthetic blind report records 1,000,000 ppm top-1 attribution |
 | Agent grounding/safety | `evals/reports/agent-golden.json` |
 | No duplicate action | `services/api/tests/recovery/test_workflow.py` concurrent execute/replay cases and immutable action receipt |
-| Timeout reconciliation | `services/api/tests/recovery/test_workflow.py` before/after-create ambiguity cases; M4 uses fake lookup-only proof, M5 still needs redacted Test Mode evidence |
-| Incremental recovered GMV | Versioned experiment report |
-| Razorpay integration | Redacted Test Mode action receipt |
-| Complete audit | `services/api/tests/recovery/test_m4_release_gate.py` and `docs/RECOVERY_WORKFLOW.md`; reviewer UI timeline remains M7 |
+| Timeout reconciliation | `services/api/tests/recovery/test_workflow.py` before/after-create ambiguity cases plus the committed Test Mode receipt: the one accepted POST was followed by a crash-equivalent parse failure and recovered by GET only |
+| Incremental recovered GMV | `evals/reports/recovery_experiment_v1.report.json` |
+| Razorpay integration | `evals/reports/razorpay_test_mode_receipt.v1.json` |
+| Complete audit | The committed Test Mode receipt plus `services/api/tests/recovery/test_m4_release_gate.py`; reviewer UI timeline remains M7 |
 | Clean release | Public CI run for tagged commit |
 
 Later-milestone paths remain required targets. V4's qualifying synthetic
 detector decision, R5.5 verification and M4's deterministic model-unavailable
 fake recovery loop are complete. The fake receipt is explicitly simulated;
-Razorpay Test Mode execution and the treatment/control experiment remain M5
-work. If any strong component metric is used in the application, its synthetic
-limitation and relevant blocked predecessor context must appear beside it. V3's
+the one human-approved Razorpay Test Mode execution and the treatment/control
+experiment now close M5. If any strong component metric is used in the
+application, its synthetic limitation and relevant blocked predecessor context
+must appear beside it. V3's
 report-contract defect must still be disclosed wherever its official metrics
 appear. V4 R5.2 results remain revealed development evidence;
 only the append-only R5.4 run may be described as v4 blind qualification.

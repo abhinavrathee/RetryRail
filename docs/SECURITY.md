@@ -4,8 +4,8 @@
 
 M0–M5 contain no live-money Razorpay action, customer messaging or model call.
 M5 adds a Test Mode-only Standard Payment Link boundary and synthetic causal
-measurement. Its one external reviewer action remains human-gated; it carries
-no customer contact and cannot accept a live key.
+measurement. Its one external reviewer action was human-approved, carried no
+customer contact and used a Test key; the adapter cannot accept a live key.
 
 ## Threats and current controls
 
@@ -213,6 +213,12 @@ reference, description and expiry. Partial payments, SMS, email and reminders
 are disabled. Known 4xx results become typed terminal failures; a transport,
 5xx or malformed-success response is ambiguous and can only be reconciled with
 GET by the stored reference.
+
+The completed external proof exercised that recovery boundary: the sole POST
+returned 200, but positive provider-clock skew stopped local result validation.
+The durable action remained `executing` and was completed with one GET by its
+stable reference, with no repeated create. Bounded skew is now normalized while
+larger skew remains typed and lookup-only after a create response.
 
 The pre-network transaction consumes the hash-bound approval, increments the
 bounded attempt control and appends the action plus provider dispatch. Only

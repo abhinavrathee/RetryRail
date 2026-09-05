@@ -193,8 +193,11 @@ identity, append-only enforcement, raw-token non-persistence, missing audit
 evidence and the literal qualified-detector-to-audited-receipt path with no model
 provider. Test Mode coverage adds credential/live-key rejection, exact bounded
 request and response parsing, redirects, 4xx/5xx classification, oversized and
-malformed responses, pre-network durability and process-crash replay. All 13
-policy rules retain paired allow/deny and property coverage.
+malformed responses, bounded provider-clock skew, pre-network durability and
+process-crash replay. The completed external proof also demonstrates a 200
+create followed by crash-equivalent local parsing failure and GET-only recovery
+of the same reference. All 13 policy rules retain paired allow/deny and property
+coverage.
 
 The complete release-gate command results are recorded in
 `docs/PROJECT_STATUS.md`; commands are listed only as passing when they were
@@ -208,8 +211,8 @@ actually run.
 - The fake provider is process-local and stores no durable external object; it
   is deterministic test evidence, not a Razorpay integration claim.
 - The real adapter is deliberately Test Mode-only. One human-approved external
-  link and its sanitized receipt are required before the M5 exit gate is closed;
-  a credential-authentication probe alone is not action evidence.
+  link and its sanitized complete-audit receipt close the M5 exit gate; neither
+  is evidence of live money or production recovery performance.
 - The committed impact report uses deterministic synthetic outcomes and must not
   be generalized to live merchant performance.
 - The reviewer-facing incident, approval and audit UI begins in M7.

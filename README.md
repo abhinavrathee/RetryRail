@@ -36,6 +36,7 @@ loop:
 - [Detector-v4 development candidate](docs/DETECTOR_V4_CANDIDATE.md)
 - [M5 recovery experiment and official synthetic result](docs/M5_EXPERIMENT_PROTOCOL.md)
 - [Razorpay Test Mode safety and one-link workflow](docs/RAZORPAY_TEST_MODE.md)
+- [Sanitized Razorpay Test Mode evidence receipt](evals/reports/razorpay_test_mode_receipt.v1.json)
 - [Razorpay submission checklist](docs/SUBMISSION_CHECKLIST.md)
 - [Repository instructions](AGENTS.md)
 
@@ -55,8 +56,10 @@ machinery are implemented. Detector v1 deliberately remains release-blocked:
 it passed tuning but scored 0 precision and 0 recall on the frozen held-out
 batch. A generated, hash-bound release decision keeps every v1 incident
 action-ineligible. M4 proves the full model-independent fake execution path. M5
-now adds the real Test Mode provider edge and a frozen synthetic impact report;
-only the one human-approved external Test Mode receipt remains to close M5.
+adds the real Test Mode provider edge, a frozen synthetic impact report and one
+human-approved external Test Mode receipt recovered safely by reference lookup.
+M5 is complete; Test Mode evidence is not live-money or merchant-performance
+evidence.
 
 Detector-v2 remediation completed its one-time, nonce-derived synthetic blind
 run with byte-reproducible, append-only evidence. The frozen candidate found
@@ -99,6 +102,9 @@ dispatch, a no-create-retry Test Mode adapter, reference-only reconciliation,
 and a remotely frozen 224/56 treatment/control experiment. Its official full-
 batch synthetic report estimates ₹120,912 incremental recovered GMV with a 95%
 interval of ₹44,447–₹189,391; this is not a live merchant-performance claim.
+The sole approved Test Mode POST returned 200; when provider clock skew stopped
+local response validation, the durable action was completed with one GET by its
+stable reference and no repeated create.
 See the [v4 protocol](docs/DETECTOR_V4_PROTOCOL.md) and
 [v4 candidate](docs/DETECTOR_V4_CANDIDATE.md), plus the
 [M4 recovery-boundary decision](docs/adr/0007-m4-policy-approval-recovery-contract-boundary.md)

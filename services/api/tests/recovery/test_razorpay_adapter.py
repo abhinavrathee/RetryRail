@@ -102,6 +102,40 @@ def test_create_uses_one_pii_free_non_notifying_test_mode_request() -> None:
     assert _KEY_SECRET not in result.model_dump_json()
 
 
+def test_create_normalizes_bounded_positive_provider_clock_skew() -> None:
+    adapter = RazorpayTestModeAdapter(
+        key_id=SecretStr(_KEY_ID),
+        key_secret=SecretStr(_KEY_SECRET),
+        transport=httpx.MockTransport(lambda _request: httpx.Response(200, json=_link_payload())),
+        clock=lambda: _CREATED_AT - timedelta(milliseconds=750),
+    )
+    try:
+        result = asyncio.run(adapter.create_standard_payment_link(_request()))
+    finally:
+        asyncio.run(adapter.aclose())
+
+    assert result.provider_created_at == _CREATED_AT
+    assert result.verified_at == _CREATED_AT
+
+
+def test_create_rejects_excessive_provider_clock_skew_as_ambiguous() -> None:
+    adapter = RazorpayTestModeAdapter(
+        key_id=SecretStr(_KEY_ID),
+        key_secret=SecretStr(_KEY_SECRET),
+        transport=httpx.MockTransport(lambda _request: httpx.Response(200, json=_link_payload())),
+        clock=lambda: _CREATED_AT - timedelta(minutes=6),
+    )
+    try:
+        with pytest.raises(ProviderOutcomeAmbiguousError) as captured:
+            asyncio.run(adapter.create_standard_payment_link(_request()))
+    finally:
+        asyncio.run(adapter.aclose())
+
+    assert captured.value.error.reconciliation_required is True
+    assert captured.value.error.retry_permitted is False
+    assert captured.value.error.reason_code == "RAZORPAY_CREATED_AT_FUTURE_OUTCOME_AMBIGUOUS"
+
+
 @pytest.mark.parametrize(
     ("status_code", "category", "reason_code"),
     [
@@ -184,9 +218,7 @@ def test_create_transport_timeout_is_ambiguous_and_called_once() -> None:
 def test_create_rejects_malformed_or_rebound_success_as_ambiguous(
     payload: dict[str, object],
 ) -> None:
-    adapter = _adapter(
-        httpx.MockTransport(lambda _request: httpx.Response(200, json=payload))
-    )
+    adapter = _adapter(httpx.MockTransport(lambda _request: httpx.Response(200, json=payload)))
     try:
         with pytest.raises(ProviderOutcomeAmbiguousError):
             asyncio.run(adapter.create_standard_payment_link(_request()))
@@ -213,11 +245,54 @@ def test_reconcile_is_lookup_only_and_requires_one_exact_reference() -> None:
     assert methods == ["GET"]
 
 
+def test_reconcile_normalizes_bounded_positive_provider_clock_skew() -> None:
+    methods: list[str] = []
+
+    def handler(request: httpx.Request) -> httpx.Response:
+        methods.append(request.method)
+        return httpx.Response(200, json={"payment_links": [_link_payload()]})
+
+    adapter = RazorpayTestModeAdapter(
+        key_id=SecretStr(_KEY_ID),
+        key_secret=SecretStr(_KEY_SECRET),
+        transport=httpx.MockTransport(handler),
+        clock=lambda: _CREATED_AT - timedelta(milliseconds=750),
+    )
+    try:
+        result = asyncio.run(adapter.reconcile(_REFERENCE_ID))
+    finally:
+        asyncio.run(adapter.aclose())
+
+    assert result is not None
+    assert result.verified_at == _CREATED_AT
+    assert methods == ["GET"]
+
+
+def test_reconcile_rejects_excessive_provider_clock_skew_as_typed_failure() -> None:
+    adapter = RazorpayTestModeAdapter(
+        key_id=SecretStr(_KEY_ID),
+        key_secret=SecretStr(_KEY_SECRET),
+        transport=httpx.MockTransport(
+            lambda _request: httpx.Response(
+                200,
+                json={"payment_links": [_link_payload()]},
+            )
+        ),
+        clock=lambda: _CREATED_AT - timedelta(minutes=6),
+    )
+    try:
+        with pytest.raises(ProviderError) as captured:
+            asyncio.run(adapter.reconcile(_REFERENCE_ID))
+    finally:
+        asyncio.run(adapter.aclose())
+
+    assert not isinstance(captured.value, ProviderOutcomeAmbiguousError)
+    assert captured.value.error.reason_code == "RAZORPAY_CREATED_AT_FUTURE"
+
+
 def test_reconcile_returns_none_for_confirmed_absence() -> None:
     adapter = _adapter(
-        httpx.MockTransport(
-            lambda _request: httpx.Response(200, json={"payment_links": []})
-        )
+        httpx.MockTransport(lambda _request: httpx.Response(200, json={"payment_links": []}))
     )
     try:
         assert asyncio.run(adapter.reconcile(_REFERENCE_ID)) is None

@@ -68,10 +68,10 @@ uv run retryrail-m5-demo execute --database-path "$env:TEMP\retryrail-m5-review.
 ```
 
 The command requires an interactive terminal and prints a plan-specific phrase.
-A human merchant operator must type that phrase exactly. It cannot be piped,
-approximated or supplied by a model. Only after the match does RetryRail issue
-and atomically consume its short-lived approval credential, persist the
-provider dispatch, and make the one POST.
+A human merchant operator must type that phrase exactly. It cannot be piped or
+approximated, and the model cannot perform the approving terminal keystroke.
+Only after the match does RetryRail issue and atomically consume its short-lived
+approval credential, persist the provider dispatch, and make the one POST.
 
 On verified success, the command writes the sanitized, schema-validated audit
 artifact to `evals/reports/razorpay_test_mode_receipt.v1.json`. The artifact has
@@ -87,3 +87,23 @@ uv run retryrail-m5-demo reconcile --database-path "$env:TEMP\retryrail-m5-revie
 `reconcile` issues a GET by the already-durable reference. It never issues a
 replacement POST. Do not delete the disposable database until the sanitized
 evidence is committed and verified.
+
+## Completed M5 evidence
+
+On September 5, 2026, the human-approved command created one synthetic INR
+1,499.00 Test Mode link. Razorpay returned HTTP 200 to the sole POST. Its
+second-resolution creation timestamp was about 2.5 seconds ahead of the local
+host, so the strict initial result validator stopped before storing a receipt.
+The already-committed dispatch remained in `executing`; RetryRail did not retry
+the POST. The dedicated command performed one GET by reference, found the same
+provider entity and appended a complete `reference_lookup` receipt and terminal
+`succeeded` transition.
+
+The committed evidence is
+`evals/reports/razorpay_test_mode_receipt.v1.json`. It is explicitly synthetic,
+Test Mode-only and no-real-money; it records notifications off, complete audit,
+`credentials_persisted=false` and `raw_provider_response_persisted=false`.
+Regression coverage now admits at most five minutes of positive provider-clock
+skew by preserving provider creation time and normalizing verification ordering;
+larger skew remains a typed failure and a create response remains lookup-only
+ambiguous.

@@ -3,7 +3,7 @@
 import asyncio
 import hashlib
 from collections.abc import Callable
-from datetime import UTC, datetime
+from datetime import UTC, datetime, timedelta
 from enum import StrEnum
 from typing import Annotated, Any, Literal, Protocol, Self
 
@@ -29,6 +29,7 @@ from retryrail.events.models import Currency, Identifier
 
 RAZORPAY_API_BASE_URL = "https://api.razorpay.com"
 _MAX_PROVIDER_RESPONSE_BYTES = 262_144
+_MAX_PROVIDER_CLOCK_SKEW = timedelta(minutes=5)
 _HTTP_OK = 200
 _HTTP_TOO_MANY_REQUESTS = 429
 
@@ -275,9 +276,7 @@ class RazorpayTestModeAdapter:
         try:
             response = await self._client.post("/v1/payment_links", json=payload)
         except httpx.HTTPError as error:
-            raise ProviderOutcomeAmbiguousError(
-                _ambiguous_error("RAZORPAY_TEST_MODE")
-            ) from error
+            raise ProviderOutcomeAmbiguousError(_ambiguous_error("RAZORPAY_TEST_MODE")) from error
         if response.status_code in {200, 201}:
             return self._parse_single_response(
                 response,
@@ -312,7 +311,7 @@ class RazorpayTestModeAdapter:
             return None
         if len(exact) != 1:
             raise ProviderError(_upstream_error("RAZORPAY_REFERENCE_NOT_UNIQUE"))
-        return self._to_result(exact[0])
+        return self._to_result(exact[0], ambiguous=False)
 
     async def aclose(self) -> None:
         """Release the bounded HTTP connection pool owned by this adapter."""
@@ -336,32 +335,60 @@ class RazorpayTestModeAdapter:
             raise ProviderOutcomeAmbiguousError(
                 _ambiguous_error("RAZORPAY_CREATE_REFERENCE_MISMATCH")
             )
-        return self._to_result(link)
+        return self._to_result(link, ambiguous=True)
 
-    def _to_result(self, link: _RazorpayPaymentLink) -> PaymentLinkResult:
+    def _to_result(
+        self,
+        link: _RazorpayPaymentLink,
+        *,
+        ambiguous: bool,
+    ) -> PaymentLinkResult:
         try:
             created_at = datetime.fromtimestamp(link.created_at, tz=UTC)
         except (OverflowError, OSError, ValueError) as error:
-            raise ProviderError(_upstream_error("RAZORPAY_CREATED_AT_INVALID")) from error
-        return PaymentLinkResult(
-            provider_action_id=link.id,
-            reference_id=link.reference_id,
-            status=link.status,
-            amount_subunits=link.amount,
-            currency=link.currency,
-            short_url=link.short_url,
-            provider_created_at=created_at,
-            verified_at=self._clock_utc(),
-            synthetic=True,
-        )
+            raise self._result_error(
+                ambiguous=ambiguous,
+                reason_code="RAZORPAY_CREATED_AT_INVALID",
+            ) from error
+        verified_at = self._clock_utc()
+        if created_at - verified_at > _MAX_PROVIDER_CLOCK_SKEW:
+            raise self._result_error(
+                ambiguous=ambiguous,
+                reason_code="RAZORPAY_CREATED_AT_FUTURE",
+            )
+        # Razorpay and the local host have independent clocks. Preserve the
+        # provider's second-resolution creation fact while preventing a small,
+        # bounded positive skew from creating an impossible audit ordering.
+        verified_at = max(verified_at, created_at)
+        try:
+            return PaymentLinkResult(
+                provider_action_id=link.id,
+                reference_id=link.reference_id,
+                status=link.status,
+                amount_subunits=link.amount,
+                currency=link.currency,
+                short_url=link.short_url,
+                provider_created_at=created_at,
+                verified_at=verified_at,
+                synthetic=True,
+            )
+        except ValidationError as error:
+            raise self._result_error(
+                ambiguous=ambiguous,
+                reason_code="RAZORPAY_PROVIDER_RESULT_INVALID",
+            ) from error
+
+    @staticmethod
+    def _result_error(*, ambiguous: bool, reason_code: str) -> ProviderError:
+        if ambiguous:
+            return ProviderOutcomeAmbiguousError(_ambiguous_error(reason_code))
+        return ProviderError(_upstream_error(reason_code))
 
     @staticmethod
     def _safe_json(response: httpx.Response, *, ambiguous: bool) -> Any:
         if len(response.content) > _MAX_PROVIDER_RESPONSE_BYTES:
             if ambiguous:
-                raise ProviderOutcomeAmbiguousError(
-                    _ambiguous_error("RAZORPAY_RESPONSE_TOO_LARGE")
-                )
+                raise ProviderOutcomeAmbiguousError(_ambiguous_error("RAZORPAY_RESPONSE_TOO_LARGE"))
             raise ProviderError(_upstream_error("RAZORPAY_RESPONSE_TOO_LARGE"))
         try:
             return response.json()
@@ -418,9 +445,7 @@ class RazorpayTestModeAdapter:
                     retry_permitted=True,
                 )
             )
-        raise ProviderOutcomeAmbiguousError(
-            _ambiguous_error("RAZORPAY_LOOKUP_UNAVAILABLE")
-        )
+        raise ProviderOutcomeAmbiguousError(_ambiguous_error("RAZORPAY_LOOKUP_UNAVAILABLE"))
 
     def _clock_utc(self) -> datetime:
         now = self._clock()
