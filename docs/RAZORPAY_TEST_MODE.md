@@ -45,3 +45,45 @@ POST.
 
 The API key does not replace merchant approval. The final Test Mode POST remains
 behind RetryRail's external approval token and should be performed only once.
+
+## One-link reviewer evidence workflow
+
+This workflow intentionally separates preparation from authority. `prepare`
+builds a fresh synthetic incident, rules-only analysis and eligible plan in a
+disposable SQLite database outside the repository. It prints the exact amount,
+reference, expiry and notification state, but creates no approval, dispatch or
+provider call.
+
+On Windows PowerShell, choose a fresh path and run:
+
+```powershell
+uv run retryrail-m5-demo prepare --database-path "$env:TEMP\retryrail-m5-review.sqlite3"
+```
+
+Review the printed fields. Then run `execute` with that same database and the
+downloaded Razorpay CSV:
+
+```powershell
+uv run retryrail-m5-demo execute --database-path "$env:TEMP\retryrail-m5-review.sqlite3" --credential-csv "C:\path\outside\the\repo\razorpay_test_api_keys.csv"
+```
+
+The command requires an interactive terminal and prints a plan-specific phrase.
+A human merchant operator must type that phrase exactly. It cannot be piped,
+approximated or supplied by a model. Only after the match does RetryRail issue
+and atomically consume its short-lived approval credential, persist the
+provider dispatch, and make the one POST.
+
+On verified success, the command writes the sanitized, schema-validated audit
+artifact to `evals/reports/razorpay_test_mode_receipt.v1.json`. The artifact has
+no API key, authorization header, customer data or raw provider response.
+
+If the process stops after dispatch or reports an ambiguous provider outcome,
+run lookup-only recovery with the same files:
+
+```powershell
+uv run retryrail-m5-demo reconcile --database-path "$env:TEMP\retryrail-m5-review.sqlite3" --credential-csv "C:\path\outside\the\repo\razorpay_test_api_keys.csv"
+```
+
+`reconcile` issues a GET by the already-durable reference. It never issues a
+replacement POST. Do not delete the disposable database until the sanitized
+evidence is committed and verified.

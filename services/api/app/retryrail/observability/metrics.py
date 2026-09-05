@@ -150,6 +150,27 @@ class PipelineMetrics:
             ("target", "result"),
             registry=self.registry,
         )
+        self.experiment_report_reads = Counter(
+            "retryrail_experiment_report_reads_total",
+            "Authenticated reads of the immutable synthetic experiment report.",
+            ("result",),
+            registry=self.registry,
+        )
+        self.experiment_eligible_payments = Gauge(
+            "retryrail_experiment_eligible_payments",
+            "Eligible payments in the frozen synthetic experiment.",
+            registry=self.registry,
+        )
+        self.experiment_incremental_recovered_gmv = Gauge(
+            "retryrail_experiment_incremental_recovered_gmv_subunits",
+            "Estimated synthetic incremental recovered GMV in integer subunits.",
+            registry=self.registry,
+        )
+        self.experiment_net_recovered_value = Gauge(
+            "retryrail_experiment_net_recovered_value_subunits",
+            "Synthetic incremental value after action and false-intervention costs.",
+            registry=self.registry,
+        )
         self.rules_fallback_analyses = Counter(
             "retryrail_rules_fallback_analyses_total",
             "Content-addressed incident briefs produced without a model provider.",

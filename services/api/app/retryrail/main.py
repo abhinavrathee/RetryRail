@@ -8,6 +8,7 @@ from fastapi import FastAPI, Request, Response
 from fastapi.middleware.cors import CORSMiddleware
 
 from retryrail import __version__
+from retryrail.api.experiments import router as experiments_router
 from retryrail.api.health import router as health_router
 from retryrail.api.incidents import router as incidents_router
 from retryrail.api.recovery import router as recovery_router
@@ -17,6 +18,7 @@ from retryrail.config import Settings, get_settings
 from retryrail.db.session import Database
 from retryrail.detection.service import DetectionService
 from retryrail.events.ingestion import EventIngestionService
+from retryrail.experiments.service import ExperimentReportService
 from retryrail.observability.logging import configure_logging
 from retryrail.observability.metrics import PipelineMetrics
 from retryrail.observability.metrics import router as metrics_router
@@ -92,6 +94,17 @@ def create_app(
             resolved_settings,
             execution,
         )
+        experiment_service = ExperimentReportService()
+        application.state.experiment_report_service = experiment_service
+        resolved_metrics.experiment_eligible_payments.set(
+            experiment_service.report.eligible_count
+        )
+        resolved_metrics.experiment_incremental_recovered_gmv.set(
+            experiment_service.report.value.incremental_recovered_gmv_subunits
+        )
+        resolved_metrics.experiment_net_recovered_value.set(
+            experiment_service.report.value.net_recovered_value_subunits
+        )
         try:
             yield
         finally:
@@ -139,6 +152,7 @@ def create_app(
     application.include_router(webhook_router)
     application.include_router(replay_router)
     application.include_router(recovery_router)
+    application.include_router(experiments_router)
     application.include_router(metrics_router)
     return application
 

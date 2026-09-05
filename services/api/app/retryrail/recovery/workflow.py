@@ -54,7 +54,11 @@ from retryrail.events.models import (
 )
 from retryrail.observability.metrics import PipelineMetrics
 from retryrail.policy import DETERMINISTIC_POLICY_VERSION, DeterministicPolicyEngine
-from retryrail.recovery.integrity import canonical_sha256, stable_identifier
+from retryrail.recovery.integrity import (
+    canonical_sha256,
+    payment_link_reference_id,
+    stable_identifier,
+)
 from retryrail.recovery.models import (
     ApprovalBearer,
     ApprovalDecisionResponse,
@@ -1102,6 +1106,11 @@ def materialize_preview(
             currency=policy.context.proposed_currency,
             template=template,
             execution_target=policy.context.execution_target,
+            provider_reference_id=payment_link_reference_id(
+                plan.merchant_id,
+                plan_record.payment_id,
+                plan.plan_id,
+            ),
             effect=template.effect,
             plan_sha256=plan_sha256,
             source_evidence=source_evidence,

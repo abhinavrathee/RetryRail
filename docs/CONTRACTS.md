@@ -15,11 +15,18 @@ schema's meaning.
 | Action receipt (M1) | Idempotency identity and legally chained action-state history | Evidence only |
 | Recovery template (M4.1) | Sole P0 effect, allowed non-production targets and fixed safety properties | None |
 | Policy result (M4.1–M4.4) | PII-free input snapshot, complete rule results and derived decision | Evaluation has none; preview and execution stages are immutable internal evidence |
-| Approval record (M4.1/M4.3–M4.4) | Merchant decision, plan/policy digest binding and hashed single-use token lifecycle | Append-only decision/consumption writes; consumption is atomic with fake action creation |
-| Recovery action (M4.1/M4.4) | Payment-bound request, authority bindings, target-specific state history and typed outcome | Explicitly synthetic fake mutation in M4; Razorpay Test Mode mutation in M5 |
+| Approval record (M4.1/M4.3–M5) | Merchant decision, plan/policy digest binding and hashed single-use token lifecycle | Append-only decision/consumption writes; consumption is atomic with action and dispatch creation |
+| Recovery action (M4.1/M4.4–M5) | Payment-bound request, authority bindings, target-specific state history and typed outcome | Explicitly synthetic fake mutation or approved Razorpay Test Mode mutation; never production |
+| Provider dispatch (M5) | Immutable sanitized request intent and digest committed before network I/O | Durable internal write; authorizes at most one provider POST |
+| Provider receipt (M5) | Allowlisted create/lookup result bound to dispatch, action and request/response digests | Durable internal evidence only |
+| Razorpay Test Mode evidence (M5) | Complete provider receipt plus end-to-end audit, with explicit credential/raw-response exclusions | Reviewer artifact only; no provider call |
 | Detector evaluation | Held-out confusion counts and top-1/top-3 attribution results | None |
 | Attempt ground truth | Evaluation-only payment label, physically separated from runtime events | None |
 | Experiment design | Eligibility, allocation, strata and outcome assumptions frozen before results | None |
+| Recovery experiment protocol (M5) | Qualified source identities, eligibility, estimands, uncertainty and cost assumptions | None |
+| Recovery assignment freeze (M5) | Complete stratified treatment/control allocation made without outcome access | None |
+| Recovery outcome batch (M5) | Same-payment attributed outcomes for every frozen assignment | Deterministic synthetic generation only |
+| Recovery experiment report (M5) | Gross, natural, incremental and net recovery with confidence intervals | Read-only measurement evidence |
 | Synthetic manifest | Complete batch identity, scenario truth and artifact digests | None |
 
 ## Contract invariants
@@ -59,12 +66,25 @@ schema's meaning.
 - Execution revalidates current facts, and any denied rule prevents approval
   consumption, action creation and provider access. Exact replay returns the
   original receipt; ambiguous create outcomes permit lookup-only reconciliation.
+- A provider dispatch is flushed in the same pre-network transaction as approval
+  consumption and action creation. Its target/reference pair and action link are
+  unique, its request is PII-free, and it is update/delete protected.
+- A provider receipt must reproduce the dispatch request digest, exact action
+  amount/currency/reference and an allowlisted provider result. Test Mode short
+  URLs must use HTTPS; credentials and raw responses are not fields.
 - A deterministic-fake provider cannot attest a Razorpay Test Mode transition,
   and every fake action is explicitly synthetic.
 - The M4.5 rules brief is content-addressed internal audit evidence rather than
   model authority. Every incident citation must resolve to a verified,
   merchant-scoped event before the brief is persisted.
 - Experiment assignment and simulated outcome draws use independent namespaces.
+- The M5 assignment freeze covers all eligible source rows and states that
+  outcomes were unobserved. Outcome and report digests bind back to that freeze;
+  treatment plus control must reconcile to eligibility.
+- Gross treatment recovery cannot equal or substitute for incremental recovery.
+  Natural control recovery, action cost and false-intervention cost remain
+  separate, and the conclusion is determined by the precommitted primary 95%
+  interval.
 - Unknown fields fail validation at domain boundaries.
 
 ## Schema locations
@@ -93,4 +113,6 @@ complete threat and side-effect boundary is in ADR-0007.
 The executable truth table and time boundaries are documented in
 `docs/POLICY.md`; the complete authoritative-source, approval, execute-once,
 fallback and audit boundary is documented in `docs/RECOVERY_WORKFLOW.md`,
-ADR-0008 and ADR-0009.
+ADR-0008 and ADR-0009. The M5 external boundary and experiment evidence chain
+are documented in ADR-0010, ADR-0011, `docs/RAZORPAY_TEST_MODE.md` and
+`docs/M5_EXPERIMENT_PROTOCOL.md`.

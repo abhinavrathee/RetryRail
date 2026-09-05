@@ -2,9 +2,10 @@
 
 ## Scope
 
-M0–M3 contain no live Razorpay action, customer messaging or model call. M3
-adds deterministic aggregates, diagnosis and incident reads; it cannot initiate
-a payment or customer-facing mutation.
+M0–M5 contain no live-money Razorpay action, customer messaging or model call.
+M5 adds a Test Mode-only Standard Payment Link boundary and synthetic causal
+measurement. Its one external reviewer action remains human-gated; it carries
+no customer contact and cannot accept a live key.
 
 ## Threats and current controls
 
@@ -13,6 +14,10 @@ a payment or customer-facing mutation.
 | Forged or modified webhook | Bounded exact-byte read, HMAC-SHA256 before parsing and constant-time comparison | Missing, malformed, wrong and modified-after-signing tests |
 | Parser ambiguity or memory exhaustion | Duplicate JSON keys rejected; content length and streamed bytes capped | Duplicate-key and oversized-body integration tests |
 | Secret or secret-shaped identifier committed to Git | Environment-only configuration, provider patterns, sensitive-key entropy scan and fail-closed GitGuardian pre-push hook | `retryrail-security-scan` plus `retryrail-pre-push` |
+| Live credential reaches the Test Mode adapter | Configuration and adapter both require `rzp_test_` and reject any configured `rzp_live_` identifier | Configuration and adapter negative tests |
+| Crash or timeout causes a duplicate Payment Link | Approval, action, attempt and immutable dispatch commit before network I/O; execute replay never re-POSTs and recovery is GET-only by stable reference | Crash-after-dispatch, timeout-before/after-create and replay tests |
+| Provider secret, PII or raw response enters evidence | Process-only masked secrets, PII-free request contract, notifications off and allowlisted bounded response models | Credential-redaction, request-shape, response-validation and schema tests |
+| Gross or cherry-picked recovery is claimed as impact | Full qualified batch scan, remote pre-outcome assignment freeze, independent assignment/outcome namespaces, control subtraction and explicit uncertainty | `retryrail-experiment freeze --check` and `evaluate --check` |
 | PII/card data in fixtures or normalized events | Explicit field allowlist and prohibited-key scan | Sanitization and fixture scanner tests |
 | Evaluation-label leakage into runtime data | Physically separate truth artifacts and schemas | Split-isolation and forbidden-field tests |
 | Detector threshold changed after blind result | Committed config hash and byte-reproducible reports | `retryrail-eval --check` plus exact-result tests |
@@ -44,7 +49,11 @@ a payment or customer-facing mutation.
 
 - `.env` and every `.env.*` variant except `.env.example` are ignored.
 - `.env.example` contains names and conspicuous local placeholders only.
-- Razorpay keys are not required before M5 and must never use a `VITE_` prefix.
+- Razorpay keys are required only by the approved M5 Test Mode provider process
+  and must never use a `VITE_` prefix.
+- The reviewer CLI reads Razorpay's two-row CSV directly from an operator path
+  outside the repository. It validates exact row labels, file size and the Test
+  key prefix; values are held as masked secrets and are never copied into `.env`.
 - Production secrets must be injected by an approved secret provider; they may
   not appear in Compose files, logs, screenshots, fixtures, prompts or tests.
 - Database URLs are held as masked secret values and revealed only to the
@@ -195,16 +204,53 @@ only open, synthetic incidents with the exact activated version/configuration
 identity can pass recovery policy. Failed v1–v3 identities and forged v4 hashes
 remain denied.
 
-## Known M0–M4 limits
+## M5 Test Mode and measurement boundary
+
+ADR-0010 adds the network edge without moving the trust boundary into Razorpay.
+The fixed HTTPS client disables redirects and automatic create retries, bounds
+timeouts and response size, and sends only amount, INR currency, stable
+reference, description and expiry. Partial payments, SMS, email and reminders
+are disabled. Known 4xx results become typed terminal failures; a transport,
+5xx or malformed-success response is ambiguous and can only be reconciled with
+GET by the stored reference.
+
+The pre-network transaction consumes the hash-bound approval, increments the
+bounded attempt control and appends the action plus provider dispatch. Only
+after that transaction commits may the adapter perform one POST. A second
+transaction stores the allowlisted result and SHA-256-bound provider receipt.
+Both provider tables are update/delete protected. Neither table has a column for
+an API key, authorization header, customer object or unbounded response body.
+
+The reviewer CLI creates no authority during `prepare`. `execute` requires an
+exact plan-specific phrase from an interactive terminal before issuing the
+merchant approval token. A model response, pipe or API key alone cannot satisfy
+that step. The sanitized evidence contract requires Test Mode, complete audit,
+notifications off, synthetic scope and explicit `credentials_persisted=false`
+and `raw_provider_response_persisted=false` values.
+
+ADR-0011 separates the experiment into outcome-free freeze and outcome/report
+stages. Commit `191ec3f` is the remote boundary containing the protocol and all
+assignments before official outcomes. Every result is deterministically
+reproducible and structurally labelled
+`synthetic_batch_not_live_merchant_performance`; it cannot be represented as
+observed merchant performance.
+
+## Known M0–M5 limits
 
 - The P0 API currently serves one configured merchant. Recovery writes require
   a shared merchant authorization secret, but per-user sessions, roles,
   revocation and database row-level security are not yet implemented. This is a
   bounded demo control, not a production IAM claim.
-- Edge/WAF rate limiting, per-user IAM, durable network dispatch, Razorpay Test
-  Mode execution and customer-facing recovery do not exist yet. M4 action
-  receipts describe only a local deterministic fake and must never be presented
-  as external provider evidence.
+- Edge/WAF rate limiting, per-user IAM and customer-facing recovery do not exist
+  yet. Durable dispatch and Test Mode execution are implemented, but only the
+  separately typed, sanitized Test Mode receipt may be presented as external
+  provider evidence; fake receipts remain simulated-only.
+- The Test Mode credential is currently operator-supplied from a local CSV for
+  the one reviewer action. Production secret-manager integration, credential
+  rotation automation and multi-account key selection are later hardening work.
+- The M5 impact result is a versioned synthetic benchmark, not a live merchant
+  experiment. Production inference requires prospective traffic, a population-
+  appropriate design and operational consent/governance.
 - Dead letters are retained and observable but have no operator requeue API;
   manual database mutation is intentionally not documented as a workflow.
 - Local Compose placeholders are development-only and are rejected by the
@@ -256,4 +302,5 @@ remain denied.
   non-secret, the typed release is qualified for integration review, and R5.5
   release verification passed. Its frozen historical action flags remain false;
   the separate hash-bound M4 activation permits only the exact qualified v4
-  identity to enter the synthetic fake recovery boundary.
+  identity to enter the synthetic fake or human-approved Test Mode recovery
+  boundary.

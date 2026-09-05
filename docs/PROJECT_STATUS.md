@@ -2,9 +2,9 @@
 
 **Last verified:** September 5, 2026
 
-**Current delivery boundary:** M4 complete; M5 is next
+**Current delivery boundary:** M4 complete; M5 code and synthetic measurement complete; one human-approved Test Mode receipt remains
 
-**Runtime recovery:** deterministic fake only for exact qualified synthetic v4 incidents; Razorpay disabled
+**Runtime recovery:** deterministic fake or human-approved Razorpay Test Mode for exact qualified synthetic v4 incidents; Razorpay Live Mode rejected
 
 This file is the durable handoff for a new project chat. Read `AGENTS.md`,
 `docs/PRODUCT_REQUIREMENTS.md`, `docs/BUILD_PLAN.md`, and then this file before
@@ -31,6 +31,8 @@ this document records the verified implementation boundary.
 | M4.3 | Authenticated, server-owned plan preview and merchant approve/reject workflow persists canonical source evidence, plans and policy decisions append-only; approval bearers are short-lived, single-use, returned once and stored only as a keyed digest; this milestone intentionally introduced no execute route |
 | M4.4 | Fresh execution-stage policy, atomic approval consumption, immutable execute-once actions/transitions, exact replay, lookup-only ambiguity reconciliation and a typed synthetic-only fake Payment Link adapter |
 | M4.5 | Verified-citation rules brief, no-model plan fallback, complete action-audit verifier and exact hash-bound activation of the qualified v4 detector without altering frozen evidence |
+| M5 provider edge | Test-key-only Standard Payment Link adapter, immutable pre-network dispatch and sanitized provider receipts, no-create replay, lookup-only crash/timeout reconciliation and an exact interactive human gate for the one reviewer action |
+| M5 measurement | Remotely frozen 224/56 stratified assignment over all 280 eligible blind-batch rows, same-payment outcome attribution, gross/natural/incremental/net value separation, deterministic 10,000-replicate uncertainty and an authenticated hash-bound report API |
 
 The v4 figures are synthetic benchmark evidence, not production-performance
 claims. Detector v2 and v3 artifacts are immutable historical failures and must
@@ -176,6 +178,47 @@ See `docs/DETECTOR_V4_PROTOCOL.md` for the full R5.5 evidence narrative.
   behind `make check` was run directly. Standalone Docker Compose v5.1.3 was
   available for the isolated runtime verification.
 
+## M5 implementation checkpoint
+
+- M4 was reviewed and secured in commit `d16e802`; the full local release gate
+  passed before that commit was pushed to `origin/main`.
+- Commit `191ec3f` was then pushed with the real Test Mode adapter, migration
+  `0006_m5_provider_dispatch`, crash-safe execution coordinator, provider tests,
+  protocol and complete assignment freeze. It contains no outcome artifact and
+  records `outcomes_observed=false`.
+- The later official synthetic stage covers all 280 eligible failed incident
+  payments: 224 treatment and 56 control. It records 116 versus 7 recoveries,
+  39.29 percentage points of recovery-rate uplift, ₹120,912 incremental recovered
+  GMV and ₹120,140 net value after modeled costs.
+- The 95% deterministic-bootstrap interval for incremental recovered GMV is
+  ₹44,447–₹189,391, so the precommitted conclusion is statistically positive.
+  These are synthetic benchmark results, not live merchant performance or
+  Razorpay pricing.
+- The result API validates the exact report SHA-256 before startup and exposes
+  the typed report only behind merchant authentication. Gross treatment recovery
+  (₹200,884) remains a different field from incremental recovery.
+- The supplied Test Mode credential pair authenticated with a read-only Razorpay
+  list request. Its values remain only in the downloaded CSV outside Git and
+  were never printed, logged or copied into repository configuration.
+- The final POST is deliberately not model-authorized. A prepared disposable
+  database and exact terminal phrase must be reviewed by the human merchant
+  operator; until that happens, no Test Mode Payment Link or external receipt is
+  claimed.
+- The exact backend release command passes 475 tests with 85.24% branch-aware
+  coverage. Ruff, mypy over 135 source files, 69 contract tests, all 19 schema
+  drift checks, the M1/v2/v3/v4 data and evaluation gates, both M5 experiment
+  stages, Bandit, repository secret scanning and both dependency audits pass.
+- The web passes lint, strict type checking, three covered unit tests, production
+  build/budget (145,621-byte entry, 750,224-byte Blade chunk, 895,845-byte total)
+  and Chromium end-to-end.
+- A clean wheel contains and loads the exact activated M5 report outside the
+  source checkout. An isolated Compose build reaches migration
+  `0006_m5_provider_dispatch`, creates both provider tables and all four
+  update/delete protection triggers, and runs API/worker as UID 10001. API,
+  worker and web health pass; anonymous experiment access returns 401 and the
+  authenticated packaged endpoint returns the expected 280-row synthetic
+  report. The isolated containers, network and disposable volume were removed.
+
 ## Safety boundary that must remain true
 
 - Frozen detector artifacts retain their historical
@@ -185,6 +228,9 @@ See `docs/DETECTOR_V4_PROTOCOL.md` for the full R5.5 evidence narrative.
 - M4 execution targets only the injected deterministic fake. It accepts no
   contact data or Razorpay credential, forces notifications off and labels the
   outcome `simulated_external_mutation`.
+- M5 can replace that provider edge only with a Test-key-only adapter after the
+  same fresh policy and single-use approval chain. The dispatch commits before
+  network I/O; credentials and raw responses are never persistent fields.
 - M4.1 contracts describe the full boundary but grant no provider authority.
 - M4.2 evaluates supplied internal facts but performs no I/O and cannot approve,
   persist or execute an action.
@@ -201,31 +247,19 @@ See `docs/DETECTOR_V4_PROTOCOL.md` for the full R5.5 evidence narrative.
 - The GitHub repository is currently private. Public visibility and signed-out
   verification are deliberate M9 submission actions, not assumptions.
 
-## Start here next: M5
+## Start here next: close the M5 external gate
 
-M4's deterministic, model-unavailable fake recovery proof is complete. M5 must
-replace only the provider edge while preserving detector, policy, approval,
-idempotency and append-only evidence boundaries:
+The provider and measurement work is implemented. Prepare one fresh disposable
+demo database, show its exact synthetic amount/reference/expiry to the merchant
+operator, and let that human type the plan-specific approval phrase in an
+interactive terminal. Commit only the generated sanitized receipt after its
+provider lookup, complete audit, schema, security scan and full release gates
+pass. Never retry the create; an interruption resumes through `reconcile`.
 
-1. Implement the Razorpay Standard Payment Link adapter in Test Mode with a
-   durable dispatch record before network I/O.
-2. Reconcile timeouts by stable reference and provider lookup; never repeat an
-   uncertain create.
-3. Freeze treatment/control assignment before outcomes, record both arms and
-   calculate incremental recovered GMV from the versioned batch rather than a
-   selected payment.
-4. Preserve fake-adapter tests as the deterministic release proof and add
-   credential-redaction, provider-error and process-crash coverage for the real
-   edge.
+## What remains after the M5 implementation checkpoint
 
-Do not present a fake receipt, at-risk opportunity or raw recovery count as
-incremental recovered GMV. That claim is permitted only after the M5 held-out
-experiment gate passes.
-
-## What remains after M4
-
-- M5: Razorpay Test Mode adapter, timeout reconciliation, treatment/control and
-  incremental recovered-GMV measurement.
+- M5: one human-approved Razorpay Test Mode link, committed sanitized receipt,
+  and final full-gate verification of that external evidence.
 - M6: bounded AI analyst, redacted inputs, deterministic fallback and agent
   golden/adversarial evaluations.
 - M7: merchant UI and complete browser story.

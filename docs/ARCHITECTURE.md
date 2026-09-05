@@ -2,10 +2,11 @@
 
 ## Current release boundary
 
-This document describes the implemented M0–M3 foundation and complete M4
-model-independent recovery boundary, not the complete target system. The
-authoritative product behavior remains in
-`PRODUCT_REQUIREMENTS.md`; sequencing remains in `BUILD_PLAN.md`.
+This document describes the implemented M0–M4 foundation and M5 provider and
+measurement boundary. The sole remaining M5 external release gate is a human-
+approved Test Mode execution and its committed sanitized receipt. The
+authoritative product behavior remains in `PRODUCT_REQUIREMENTS.md`; sequencing
+remains in `BUILD_PLAN.md`.
 
 ```mermaid
 flowchart LR
@@ -33,20 +34,30 @@ flowchart LR
     Recovery --> PreviewEvidence[(Immutable plans + policy results)]
     Merchant[Authenticated merchant API client] -->|approve or reject| Recovery
     Recovery --> ApprovalEvidence[(Immutable decisions + consumptions)]
-    ApprovalEvidence --> Executor[M4.4 execute-once coordinator]
+    ApprovalEvidence --> Executor[Execute-once coordinator]
     Policy --> Executor
+    Executor --> Dispatch[(Durable pre-network dispatch)]
     Executor --> Fake[Deterministic fake provider]
-    Fake --> ActionEvidence[(Actions + append-only transitions)]
+    Dispatch --> Adapter[Razorpay Test Mode adapter]
+    Adapter -->|one POST only| Razorpay
+    Adapter -->|GET by stable reference| Razorpay
+    Fake --> ProviderEvidence[(Sanitized provider receipts)]
+    Adapter --> ProviderEvidence
+    ProviderEvidence --> ActionEvidence[(Actions + append-only transitions)]
     ActionEvidence --> Audit[M4.5 audit completeness verifier]
-    Executor -. M5 network adapter not implemented .-> Razorpay
+    Blind[Qualified full synthetic blind batch] --> Assignment[M5 frozen stratified assignment]
+    Assignment --> Outcomes[M5 attributed treatment/control outcomes]
+    Outcomes --> Report[Incremental GMV + bootstrap uncertainty]
+    Report -->|authenticated read only| API
 ```
 
-Solid arrows are implemented behavior. The dashed arrow marks the absent M5
-Razorpay Test Mode adapter. The M4.2 evaluator remains pure, and M4 execution is
-restricted to an explicitly synthetic, no-notification fake target. No current
-component can call Razorpay or mutate a customer-facing payment action.
+All arrows are implemented behavior. The M4.2 evaluator remains pure. The
+network adapter accepts Test Mode credentials only, carries no customer contact,
+and remains unreachable until a fresh deterministic policy passes and a human
+merchant approval is atomically consumed. The review workflow has not yet used
+that authority to create its one external Test Mode evidence link.
 
-## Decisions implemented in M0–M4
+## Decisions implemented in M0–M5
 
 - Python 3.12-compatible FastAPI modular monolith with typed Pydantic
   boundaries.
@@ -98,9 +109,21 @@ component can call Razorpay or mutate a customer-facing payment action.
 - A deterministic fake Payment Link adapter with typed success, known failure,
   timeout-before-create and timeout-after-create behavior plus lookup-only
   reconciliation by stable reference.
+- A Test Mode-only Razorpay adapter that performs one bounded Standard Payment
+  Link POST, admits only allowlisted response fields and uses reference-filtered
+  GET for every ambiguous or crash recovery path.
+- A two-transaction execution boundary: approval consumption, attempt advance,
+  action and immutable dispatch commit before network I/O; the sanitized provider
+  receipt commits afterward. Re-entry never repeats the POST.
 - A no-model rules analyst that grounds every citation in verified merchant
   events and an audit verifier that requires the complete source-to-terminal
   action chain.
+- A pre-outcome, hash-bound 80/20 treatment/control assignment over all 280
+  eligible rows in the qualified synthetic blind batch, followed by same-payment
+  attribution, separate gross/natural/incremental/net value, and a deterministic
+  10,000-replicate bootstrap interval.
+- An authenticated read-only experiment endpoint serving the exact packaged
+  report only after its activated SHA-256 and strict contract validate.
 - A threshold freeze plus committed tuning and held-out reports. Detector v1
   failed held-out targets and remains explicitly release-blocked through a
   machine-readable runtime decision.
@@ -135,9 +158,14 @@ component can call Razorpay or mutate a customer-facing payment action.
     merchant approval.
 11. M4 rebuilds policy facts from server records, returns an approval bearer
     once, stores only its keyed digest, and couples its single consumption to a
-    fresh execution policy and immutable action. The sole provider is a local,
-    explicitly synthetic fake with notifications disabled; Razorpay remains
-    unreachable.
+    fresh execution policy and immutable action.
+12. The M5 provider boundary rejects live keys and redirects, forces
+    notifications/reminders off, never stores credentials or raw provider
+    responses, and persists an immutable request digest before any Test Mode
+    network I/O. An uncertain create can proceed only to reference lookup.
+13. M5 assignment and outcome namespaces are independent. Protocol and
+    assignment were committed remotely before outcomes, all eligible rows are
+    retained, and every report remains structurally labelled synthetic.
 
 ## Dependency boundary
 
@@ -156,7 +184,7 @@ The workspace overrides it to 8.0.0 and redirects Blade's removed default
 export through a four-line compatibility module. An unsafe-key regression test,
 production build and Chromium test are release gates for that adapter.
 
-## Next architecture increment
+## Delivery evolution
 
 Detector-v2 R1 precommits the remediation protocol, development batch and
 nonce-derived blind generator. R2 provides a frozen hierarchical,
@@ -238,5 +266,12 @@ persisting a content-addressed brief. The audit verifier requires source,
 incident, pre-action brief, plan, both policy stages, merchant authority,
 consumption, terminal provider evidence and bounded attempt control. ADR-0009
 records the qualified-detector activation and fake-only transaction boundary.
-Razorpay Test Mode, durable network dispatch and causal recovery measurement are
-the next M5 increment.
+
+M5 replaces only the provider edge. ADR-0010 records the immutable dispatch and
+sanitized receipt tables plus the no-retry Test Mode adapter. An interrupted
+`executing` action is resumable only through reference lookup. ADR-0011 records
+the outcome-free protocol/assignment freeze and the later synthetic impact
+stage. The official report separates ₹200,884 gross treatment recovery from
+₹120,912 estimated incremental recovered GMV and includes its 95% bootstrap
+interval. One human-approved Test Mode action and receipt remain before the M5
+external exit gate can be closed.

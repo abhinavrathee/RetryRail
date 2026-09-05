@@ -662,6 +662,16 @@ Exit gate:
 - Experiment report includes treatment/control sizes and uncertainty.
 - UI/API never mislabels gross recovery as incremental recovery.
 
+Implementation checkpoint (2026-09-05): the real Test Mode adapter, immutable
+pre-network dispatch/receipt ledger, crash-safe lookup-only reconciliation,
+stratified 224/56 assignment, complete attributed synthetic outcome batch,
+10,000-replicate uncertainty interval and authenticated report API are
+implemented. Commit `191ec3f` preserves the remotely pushed outcome-free
+assignment boundary. The official synthetic report estimates ₹120,912
+incremental recovered GMV (95% interval ₹44,447–₹189,391) and labels the result
+as non-live. The exit gate remains open until a human merchant operator approves
+one prepared Test Mode link and its sanitized provider receipt is committed.
+
 ### M6 — Bounded AI analyst and evaluations
 
 **Estimate:** 7–9 hours  

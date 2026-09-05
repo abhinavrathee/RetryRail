@@ -1,4 +1,4 @@
-# M4 deterministic recovery workflow
+# M4–M5 deterministic recovery workflow
 
 ## Implemented boundary
 
@@ -8,10 +8,13 @@ deterministic analyst can explain its verified evidence; the server can preview
 one standard Payment Link plan; an authenticated merchant can approve it; and a
 deterministic fake adapter can produce an append-only action receipt.
 
-No Razorpay credential, live-mode target, customer contact field or production
-mutation exists in M4. The fake adapter records a
+M5 preserves that authority chain and adds the real Razorpay Test Mode edge.
+No live-mode target, customer contact field or production mutation exists. The
+fake adapter records a
 `simulated_external_mutation`, always disables notifications and accepts only
-synthetic plans. Razorpay Test Mode remains M5 work.
+synthetic plans. The Test Mode adapter accepts only `rzp_test_` credentials,
+performs at most one Standard Payment Link POST after a durable dispatch, and
+stores only an allowlisted receipt.
 
 The detector, policy engine and merchant each retain separate authority:
 
@@ -21,8 +24,10 @@ The detector, policy engine and merchant each retain separate authority:
 - the deterministic policy evaluates all 13 rules at preview and again at
   execution;
 - only the authenticated merchant route can issue approval authority; and
-- the execution service can call only the injected fake provider after a fresh
-  allow decision and atomic approval consumption.
+- the execution service can call only its configured fake or Test Mode provider
+  after a fresh allow decision and atomic approval consumption; and
+- the reviewer Test Mode CLI additionally requires an exact plan-specific phrase
+  from an interactive human terminal.
 
 ## Qualified detector activation
 
@@ -65,8 +70,8 @@ operator, never a caller-supplied identity.
 | `POST /api/v1/plans/{plan_id}/preview` | Revalidates and returns immutable preview evidence | Read only |
 | `POST /api/v1/plans/{plan_id}/approve` | Appends a merchant approval and returns one short-lived bearer once | Replay never repeats the bearer |
 | `POST /api/v1/plans/{plan_id}/reject` | Appends a terminal token-free rejection | A plan can be decided once |
-| `POST /api/v1/plans/{plan_id}/execute` | Revalidates policy, consumes approval and invokes the fake once | Same plan/key returns the identical receipt; rebinding returns `409` |
-| `POST /api/v1/actions/{action_id}/reconcile` | Looks up an ambiguous fake result by stable reference | One lookup receipt; never creates or retries an action |
+| `POST /api/v1/plans/{plan_id}/execute` | Revalidates policy, consumes approval, commits dispatch and invokes the configured provider once | Same plan/key returns the identical receipt; rebinding returns `409` |
+| `POST /api/v1/actions/{action_id}/reconcile` | Looks up an ambiguous provider result by stable reference | One lookup receipt; never creates or retries an action |
 
 Plan creation accepts only `payment_id` and `idempotency_key`. Execution accepts
 only an idempotency key in the body and the raw approval bearer in
@@ -107,10 +112,11 @@ decision. A deny records complete rule evidence but creates no action, consumes
 no token and calls no provider. Clearing a stop condition requires a new plan
 and approval; a prior execution decision is immutable.
 
-On allow, token consumption, the immutable action row, the initial transitions
-and the recovery-attempt control advance in the same database transaction. The
-fake adapter receives only amount, currency, stable reference, synthetic label
-and `external_notifications_enabled=false`. The state chain is:
+On allow, token consumption, the immutable action row, initial transitions,
+recovery-attempt control and sanitized provider dispatch advance in the same
+database transaction. That transaction commits before any network I/O. The
+provider receives only amount, currency, stable reference, expiry, synthetic
+label and `external_notifications_enabled=false`. The state chain is:
 
 ```text
 previewed -> awaiting_approval -> approved -> executing
@@ -128,10 +134,12 @@ ambiguous and produces `reconciliation_required`; the only permitted next
 operation is provider lookup by the stable reference. Reconciliation never calls
 create and is itself idempotent.
 
-The provider call occurs inside the transaction only because the M4 adapter is
-an in-memory deterministic fake. M5 must not copy that implementation detail for
-network I/O; the Test Mode adapter needs a durable dispatch/reconciliation
-boundary that remains safe across process failure.
+The provider call always occurs after the pre-network transaction, including for
+the deterministic fake. A process failure after dispatch leaves an `executing`
+action with enough immutable evidence to permit only reference lookup; execute
+replay returns the stored action and cannot re-POST. A successful allowlisted
+create or lookup response is recorded in a second transaction as a provider
+receipt bound to the dispatch/request digest.
 
 ## Model-unavailable analysis
 
@@ -157,10 +165,13 @@ Migration `0003_m4_preview_approval` creates recovery controls, plans, preview
 policy results, approval decisions and token consumptions. Migration
 `0004_m4_action_execution` adds execution policy support plus actions,
 transitions and reconciliation receipts. Migration
-`0005_m4_rules_fallback` adds content-addressed rules briefs.
+`0005_m4_rules_fallback` adds content-addressed rules briefs. Migration
+`0006_m5_provider_dispatch` adds immutable provider dispatches and sanitized
+provider receipts and admits only the fake and Razorpay Test Mode targets.
 
-Plan, policy, approval, consumption, action, transition, reconciliation and
-brief records reject update and delete in PostgreSQL and the SQLite test adapter.
+Plan, policy, approval, consumption, action, transition, reconciliation, brief,
+dispatch and provider-receipt records reject update and delete in PostgreSQL and
+the SQLite test adapter.
 Composite foreign keys preserve merchant/incident/plan scope. Unique plan,
 approval, reference and idempotency constraints make duplicate logical actions
 database-invalid even if process-local coalescing is bypassed.
@@ -168,8 +179,9 @@ database-invalid even if process-local coalescing is bypassed.
 The audit verifier reconstructs an action contract and checks the correlated
 source event, incident, pre-action rules brief, plan, both policy stages,
 merchant approval, token consumption, terminal provider transition, recovery
-control attempt and, when needed, reconciliation receipt. It reports the exact
-missing-fact set and cannot mark an incomplete chain complete.
+control attempt, provider dispatch, successful provider receipt and, when
+needed, reconciliation receipt. It reports the exact missing-fact set and cannot
+mark an incomplete chain complete.
 
 ## Verification matrix
 
@@ -179,19 +191,25 @@ rebinding, plan/token expiry, malformed and cross-plan tokens, concurrent use,
 kill-switch and mutable control drift, resolved incidents, forged detector
 identity, append-only enforcement, raw-token non-persistence, missing audit
 evidence and the literal qualified-detector-to-audited-receipt path with no model
-provider. All 13 policy rules retain paired allow/deny and property coverage.
+provider. Test Mode coverage adds credential/live-key rejection, exact bounded
+request and response parsing, redirects, 4xx/5xx classification, oversized and
+malformed responses, pre-network durability and process-crash replay. All 13
+policy rules retain paired allow/deny and property coverage.
 
 The complete release-gate command results are recorded in
 `docs/PROJECT_STATUS.md`; commands are listed only as passing when they were
 actually run.
 
-## Deliberate limits after M4
+## Deliberate limits after M5 implementation
 
 - The API is a single-merchant demo boundary using a shared authorization
   secret; per-user IAM, roles, revocation, rate limiting and database row-level
   security are production work.
 - The fake provider is process-local and stores no durable external object; it
   is deterministic test evidence, not a Razorpay integration claim.
-- Test Mode credentials, real Payment Link requests and experiment measurement
-  begin in M5.
+- The real adapter is deliberately Test Mode-only. One human-approved external
+  link and its sanitized receipt are required before the M5 exit gate is closed;
+  a credential-authentication probe alone is not action evidence.
+- The committed impact report uses deterministic synthetic outcomes and must not
+  be generalized to live merchant performance.
 - The reviewer-facing incident, approval and audit UI begins in M7.

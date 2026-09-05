@@ -1,7 +1,6 @@
 """Crash-safe execute-once recovery state machine and append-only receipt ledger."""
 
 import asyncio
-import hashlib
 import hmac
 from collections.abc import Callable
 from dataclasses import dataclass
@@ -58,7 +57,11 @@ from retryrail.recovery.adapter import (
     ProviderOutcomeAmbiguousError,
     RecoveryProvider,
 )
-from retryrail.recovery.integrity import canonical_sha256, stable_identifier
+from retryrail.recovery.integrity import (
+    canonical_sha256,
+    payment_link_reference_id,
+    stable_identifier,
+)
 from retryrail.recovery.models import (
     ApprovalTokenBinding,
     ProviderVerificationSource,
@@ -741,7 +744,7 @@ class RecoveryExecutionService:
         return PaymentLinkCreateRequest(
             amount_subunits=preview.amount_subunits,
             currency=preview.currency,
-            reference_id=_reference_id(
+            reference_id=payment_link_reference_id(
                 preview.plan.merchant_id,
                 preview.payment_id,
                 preview.plan.plan_id,
@@ -1592,8 +1595,3 @@ def _materialize_policy_record(record: PolicyResultRecord) -> PolicyResultContra
     ):
         raise RecoveryEvidenceInvalidError
     return result
-
-
-def _reference_id(merchant_id: str, payment_id: str, plan_id: str) -> str:
-    material = f"{merchant_id}\x1f{payment_id}\x1f{plan_id}".encode()
-    return f"rr_{hashlib.sha256(material).hexdigest()[:32]}"

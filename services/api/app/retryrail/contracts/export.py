@@ -28,6 +28,7 @@ from retryrail.experiments.models import (
     RecoveryExperimentReport,
     RecoveryOutcomeBatch,
 )
+from retryrail.recovery.models import RazorpayTestModeEvidenceReceipt
 from retryrail.synthetic.models import (
     AttemptGroundTruth,
     ExperimentDesign,
@@ -158,6 +159,12 @@ _SCHEMAS = (
         relative_path="contracts/domain/recovery_experiment_report.v1.schema.json",
         schema_id="https://retryrail.dev/contracts/domain/recovery-experiment-report/v1",
         title="RetryRail Recovery Experiment Report v1",
+    ),
+    SchemaDefinition(
+        model=RazorpayTestModeEvidenceReceipt,
+        relative_path="contracts/domain/razorpay_test_mode_evidence.v1.schema.json",
+        schema_id="https://retryrail.dev/contracts/domain/razorpay-test-mode-evidence/v1",
+        title="RetryRail Razorpay Test Mode Evidence v1",
     ),
 )
 

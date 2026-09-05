@@ -11,6 +11,7 @@ from retryrail.experiments.evaluation import (
     build_outcome_batch,
     build_protocol,
     build_report,
+    evaluation_stage,
     freeze_stage,
 )
 from retryrail.experiments.models import ExperimentArm, RecoveryOutcome
@@ -125,3 +126,7 @@ def test_control_outcome_cannot_carry_intervention_cost() -> None:
 
 def test_committed_assignment_artifacts_match_the_deterministic_builders() -> None:
     assert freeze_stage(root=_ROOT, check=True) == ()
+
+
+def test_committed_outcome_and_report_match_the_frozen_assignment() -> None:
+    assert evaluation_stage(root=_ROOT, check=True) == ()

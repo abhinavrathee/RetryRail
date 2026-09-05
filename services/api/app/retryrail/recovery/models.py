@@ -25,7 +25,8 @@ from retryrail.contracts.recovery import (
     Sha256Digest,
 )
 from retryrail.events.models import Currency, Identifier
-from retryrail.recovery.adapter import PaymentLinkStatus
+from retryrail.recovery.adapter import PaymentLinkStatus, RazorpayReferenceId
+from retryrail.recovery.integrity import payment_link_reference_id
 
 ApprovalBearer = Annotated[
     str,
@@ -105,6 +106,7 @@ class RecoveryPlanPreview(StrictContract):
     currency: Currency
     template: RecoveryTemplateContract
     execution_target: RecoveryExecutionTarget
+    provider_reference_id: RazorpayReferenceId
     effect: RecoveryEffect
     external_notifications_enabled: Literal[False] = False
     plan_sha256: Sha256Digest
@@ -152,6 +154,13 @@ class RecoveryPlanPreview(StrictContract):
             or self.template.effect is not self.effect
         ):
             msg = "preview template or execution target is inconsistent"
+            raise ValueError(msg)
+        if self.provider_reference_id != payment_link_reference_id(
+            self.plan.merchant_id,
+            self.payment_id,
+            self.plan.plan_id,
+        ):
+            msg = "preview provider reference is not derived from its bound identities"
             raise ValueError(msg)
         expected_approval = self.policy_result.decision is PolicyDecision.ALLOW
         if self.preview_policy_allowed is not expected_approval:
@@ -575,5 +584,47 @@ class RecoveryAuditCompletenessReport(StrictContract):
             raise ValueError(msg)
         if not set(self.missing_facts).issubset(self.required_facts):
             msg = "audit report contains an unknown missing fact"
+            raise ValueError(msg)
+        return self
+
+
+class RazorpayTestModeEvidenceReceipt(StrictContract):
+    """Sanitized reviewer artifact for the single approved real Test Mode action."""
+
+    schema_version: Literal["1.0.0"] = "1.0.0"
+    evidence_id: Identifier
+    recorded_at: AwareDatetime
+    scope: Literal["razorpay_test_mode_no_real_money"] = (
+        "razorpay_test_mode_no_real_money"
+    )
+    provider_receipt: RecoveryProviderReceipt
+    audit: RecoveryAuditCompletenessReport
+    external_notifications_enabled: Literal[False] = False
+    credentials_persisted: Literal[False] = False
+    raw_provider_response_persisted: Literal[False] = False
+    synthetic: Literal[True] = True
+
+    @model_validator(mode="after")
+    def validate_test_mode_evidence(self) -> Self:
+        """Require one complete, bound and explicitly non-production receipt."""
+
+        provider = self.provider_receipt
+        audit = self.audit
+        if provider.execution_target is not RecoveryExecutionTarget.RAZORPAY_TEST_MODE:
+            msg = "reviewer evidence must come from the Razorpay Test Mode target"
+            raise ValueError(msg)
+        if not audit.complete or audit.missing_facts:
+            msg = "reviewer evidence requires a complete recovery audit"
+            raise ValueError(msg)
+        if (
+            provider.action_id != audit.action_id
+            or provider.plan_id != audit.plan_id
+            or provider.incident_id != audit.incident_id
+            or provider.merchant_id != audit.merchant_id
+        ):
+            msg = "provider receipt and audit identities do not match"
+            raise ValueError(msg)
+        if provider.external_notifications_enabled or not provider.synthetic:
+            msg = "reviewer evidence must be synthetic and non-notifying"
             raise ValueError(msg)
         return self

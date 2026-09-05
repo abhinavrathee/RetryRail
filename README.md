@@ -34,6 +34,8 @@ loop:
 - [Deterministic detector and honest evaluation](docs/DETECTOR.md)
 - [Detector-v4 remediation boundary](docs/DETECTOR_V4_PROTOCOL.md)
 - [Detector-v4 development candidate](docs/DETECTOR_V4_CANDIDATE.md)
+- [M5 recovery experiment and official synthetic result](docs/M5_EXPERIMENT_PROTOCOL.md)
+- [Razorpay Test Mode safety and one-link workflow](docs/RAZORPAY_TEST_MODE.md)
 - [Razorpay submission checklist](docs/SUBMISSION_CHECKLIST.md)
 - [Repository instructions](AGENTS.md)
 
@@ -52,8 +54,9 @@ slice (M1), authenticated event pipeline (M2), and M3 detector/lifecycle
 machinery are implemented. Detector v1 deliberately remains release-blocked:
 it passed tuning but scored 0 precision and 0 recall on the frozen held-out
 batch. A generated, hash-bound release decision keeps every v1 incident
-action-ineligible. M4 now proves synthetic fake execution; Razorpay Test Mode
-and causal impact reporting remain behind M5.
+action-ineligible. M4 proves the full model-independent fake execution path. M5
+now adds the real Test Mode provider edge and a frozen synthetic impact report;
+only the one human-approved external Test Mode receipt remains to close M5.
 
 Detector-v2 remediation completed its one-time, nonce-derived synthetic blind
 run with byte-reproducible, append-only evidence. The frozen candidate found
@@ -91,13 +94,18 @@ consumption, append-only action transitions, execute-once replay and a
 deterministic fake provider with lookup-only timeout reconciliation. M4.5 adds a
 grounded rules analyst, model-unavailable fallback, complete audit verifier and
 an additive activation gate for only the exact qualified detector-v4 identity.
-The frozen v4 release remains unchanged; the fake path is synthetic-only and
-cannot call Razorpay.
+The frozen v4 release remains unchanged. M5 adds an immutable pre-network
+dispatch, a no-create-retry Test Mode adapter, reference-only reconciliation,
+and a remotely frozen 224/56 treatment/control experiment. Its official full-
+batch synthetic report estimates ₹120,912 incremental recovered GMV with a 95%
+interval of ₹44,447–₹189,391; this is not a live merchant-performance claim.
 See the [v4 protocol](docs/DETECTOR_V4_PROTOCOL.md) and
 [v4 candidate](docs/DETECTOR_V4_CANDIDATE.md), plus the
 [M4 recovery-boundary decision](docs/adr/0007-m4-policy-approval-recovery-contract-boundary.md)
 and [M4.3 storage decision](docs/adr/0008-m4-authoritative-preview-and-approval-storage.md),
 plus the [M4 execution and activation decision](docs/adr/0009-m4-qualified-detector-and-execute-once-fake.md),
+the [M5 provider decision](docs/adr/0010-m5-durable-razorpay-test-mode-dispatch.md),
+the [M5 experiment decision](docs/adr/0011-m5-precommitted-recovery-experiment.md),
 plus the [deterministic policy](docs/POLICY.md) and
 [complete recovery workflow](docs/RECOVERY_WORKFLOW.md).
 
@@ -201,8 +209,10 @@ receipts and at-most-once authority. M4.5 adds grounded no-model analysis,
 audit-completeness verification and a separate hash-bound activation for exact
 qualified v4 incidents. Failed historical detectors remain blocked, no frozen
 release artifact is rewritten, and no M4 route can reach Razorpay or notify a
-customer. M5 is the next milestone for Test Mode network integration and
-holdout-based incremental recovered-GMV measurement. See the current
+customer. M5 preserves those controls while adding a Test-key-only provider
+edge, durable dispatch/receipt evidence and holdout-based incremental recovered-
+GMV measurement. The code and synthetic result are complete; the single
+interactive merchant-approved Test Mode link remains. See the current
 [project status and next-chat handoff](docs/PROJECT_STATUS.md),
 [v3 result](docs/DETECTOR_V3_PROTOCOL.md),
 [v4 protocol](docs/DETECTOR_V4_PROTOCOL.md),

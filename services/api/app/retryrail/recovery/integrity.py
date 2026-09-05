@@ -33,3 +33,10 @@ def stable_identifier(kind: str, merchant_id: str, unique_key: str) -> str:
 
     material = _IDENTITY_SEPARATOR.join((kind, merchant_id, unique_key)).encode()
     return f"{kind}_{hashlib.sha256(material).hexdigest()}"
+
+
+def payment_link_reference_id(merchant_id: str, payment_id: str, plan_id: str) -> str:
+    """Derive the public, provider-bounded reference shown before approval."""
+
+    material = _IDENTITY_SEPARATOR.join((merchant_id, payment_id, plan_id)).encode()
+    return f"rr_{hashlib.sha256(material).hexdigest()[:32]}"

@@ -1,0 +1,360 @@
+{
+  "$defs": {
+    "ActionState": {
+      "description": "Auditable recovery action states, including ambiguous outcomes.",
+      "enum": [
+        "previewed",
+        "awaiting_approval",
+        "approved",
+        "rejected",
+        "expired",
+        "executing",
+        "succeeded",
+        "failed",
+        "reconciliation_required"
+      ],
+      "title": "ActionState",
+      "type": "string"
+    },
+    "PaymentLinkStatus": {
+      "description": "Razorpay Standard Payment Link states admitted into stored evidence.",
+      "enum": [
+        "created",
+        "partially_paid",
+        "paid",
+        "expired",
+        "cancelled"
+      ],
+      "title": "PaymentLinkStatus",
+      "type": "string"
+    },
+    "ProviderVerificationSource": {
+      "description": "How RetryRail obtained the authoritative provider representation.",
+      "enum": [
+        "create_response",
+        "reference_lookup"
+      ],
+      "title": "ProviderVerificationSource",
+      "type": "string"
+    },
+    "RecoveryAuditCompletenessReport": {
+      "additionalProperties": false,
+      "description": "Machine-checkable correlation result for one full recovery action.",
+      "properties": {
+        "action_id": {
+          "maxLength": 80,
+          "minLength": 3,
+          "pattern": "^[A-Za-z0-9_-]+$",
+          "title": "Action Id",
+          "type": "string"
+        },
+        "complete": {
+          "title": "Complete",
+          "type": "boolean"
+        },
+        "incident_id": {
+          "maxLength": 80,
+          "minLength": 3,
+          "pattern": "^[A-Za-z0-9_-]+$",
+          "title": "Incident Id",
+          "type": "string"
+        },
+        "merchant_id": {
+          "maxLength": 80,
+          "minLength": 3,
+          "pattern": "^[A-Za-z0-9_-]+$",
+          "title": "Merchant Id",
+          "type": "string"
+        },
+        "missing_facts": {
+          "items": {
+            "maxLength": 80,
+            "minLength": 3,
+            "pattern": "^[A-Za-z0-9_-]+$",
+            "type": "string"
+          },
+          "title": "Missing Facts",
+          "type": "array"
+        },
+        "plan_id": {
+          "maxLength": 80,
+          "minLength": 3,
+          "pattern": "^[A-Za-z0-9_-]+$",
+          "title": "Plan Id",
+          "type": "string"
+        },
+        "required_facts": {
+          "items": {
+            "maxLength": 80,
+            "minLength": 3,
+            "pattern": "^[A-Za-z0-9_-]+$",
+            "type": "string"
+          },
+          "minItems": 1,
+          "title": "Required Facts",
+          "type": "array"
+        },
+        "synthetic": {
+          "title": "Synthetic",
+          "type": "boolean"
+        },
+        "terminal_state": {
+          "$ref": "#/$defs/ActionState"
+        },
+        "transition_count": {
+          "exclusiveMinimum": 0,
+          "title": "Transition Count",
+          "type": "integer"
+        }
+      },
+      "required": [
+        "action_id",
+        "incident_id",
+        "plan_id",
+        "merchant_id",
+        "complete",
+        "required_facts",
+        "missing_facts",
+        "transition_count",
+        "terminal_state",
+        "synthetic"
+      ],
+      "title": "RecoveryAuditCompletenessReport",
+      "type": "object"
+    },
+    "RecoveryExecutionTarget": {
+      "description": "The only execution targets admitted by the P0 contracts.",
+      "enum": [
+        "deterministic_fake",
+        "razorpay_test_mode"
+      ],
+      "title": "RecoveryExecutionTarget",
+      "type": "string"
+    },
+    "RecoveryProviderReceipt": {
+      "additionalProperties": false,
+      "description": "Redacted immutable proof of one fake or Razorpay Test Mode provider entity.",
+      "properties": {
+        "action_id": {
+          "maxLength": 80,
+          "minLength": 3,
+          "pattern": "^[A-Za-z0-9_-]+$",
+          "title": "Action Id",
+          "type": "string"
+        },
+        "amount_subunits": {
+          "exclusiveMinimum": 0,
+          "maximum": 100000000000,
+          "title": "Amount Subunits",
+          "type": "integer"
+        },
+        "currency": {
+          "maxLength": 3,
+          "minLength": 3,
+          "pattern": "^[A-Z]{3}$",
+          "title": "Currency",
+          "type": "string"
+        },
+        "dispatch_id": {
+          "maxLength": 80,
+          "minLength": 3,
+          "pattern": "^[A-Za-z0-9_-]+$",
+          "title": "Dispatch Id",
+          "type": "string"
+        },
+        "execution_target": {
+          "$ref": "#/$defs/RecoveryExecutionTarget"
+        },
+        "external_notifications_enabled": {
+          "const": false,
+          "default": false,
+          "title": "External Notifications Enabled",
+          "type": "boolean"
+        },
+        "incident_id": {
+          "maxLength": 80,
+          "minLength": 3,
+          "pattern": "^[A-Za-z0-9_-]+$",
+          "title": "Incident Id",
+          "type": "string"
+        },
+        "merchant_id": {
+          "maxLength": 80,
+          "minLength": 3,
+          "pattern": "^[A-Za-z0-9_-]+$",
+          "title": "Merchant Id",
+          "type": "string"
+        },
+        "plan_id": {
+          "maxLength": 80,
+          "minLength": 3,
+          "pattern": "^[A-Za-z0-9_-]+$",
+          "title": "Plan Id",
+          "type": "string"
+        },
+        "provider_action_id": {
+          "maxLength": 80,
+          "minLength": 3,
+          "pattern": "^[A-Za-z0-9_-]+$",
+          "title": "Provider Action Id",
+          "type": "string"
+        },
+        "provider_created_at": {
+          "format": "date-time",
+          "title": "Provider Created At",
+          "type": "string"
+        },
+        "provider_receipt_id": {
+          "maxLength": 80,
+          "minLength": 3,
+          "pattern": "^[A-Za-z0-9_-]+$",
+          "title": "Provider Receipt Id",
+          "type": "string"
+        },
+        "reference_id": {
+          "maxLength": 80,
+          "minLength": 3,
+          "pattern": "^[A-Za-z0-9_-]+$",
+          "title": "Reference Id",
+          "type": "string"
+        },
+        "request_sha256": {
+          "pattern": "^[a-f0-9]{64}$",
+          "title": "Request Sha256",
+          "type": "string"
+        },
+        "response_sha256": {
+          "pattern": "^[a-f0-9]{64}$",
+          "title": "Response Sha256",
+          "type": "string"
+        },
+        "schema_version": {
+          "const": "1.0.0",
+          "default": "1.0.0",
+          "title": "Schema Version",
+          "type": "string"
+        },
+        "short_url": {
+          "anyOf": [
+            {
+              "format": "uri",
+              "minLength": 1,
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Short Url"
+        },
+        "status": {
+          "$ref": "#/$defs/PaymentLinkStatus"
+        },
+        "synthetic": {
+          "const": true,
+          "default": true,
+          "title": "Synthetic",
+          "type": "boolean"
+        },
+        "verification_source": {
+          "$ref": "#/$defs/ProviderVerificationSource"
+        },
+        "verified_at": {
+          "format": "date-time",
+          "title": "Verified At",
+          "type": "string"
+        }
+      },
+      "required": [
+        "provider_receipt_id",
+        "dispatch_id",
+        "action_id",
+        "plan_id",
+        "incident_id",
+        "merchant_id",
+        "execution_target",
+        "provider_action_id",
+        "reference_id",
+        "status",
+        "amount_subunits",
+        "currency",
+        "provider_created_at",
+        "verified_at",
+        "verification_source",
+        "request_sha256",
+        "response_sha256"
+      ],
+      "title": "RecoveryProviderReceipt",
+      "type": "object"
+    }
+  },
+  "$id": "https://retryrail.dev/contracts/domain/razorpay-test-mode-evidence/v1",
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "additionalProperties": false,
+  "description": "Sanitized reviewer artifact for the single approved real Test Mode action.",
+  "properties": {
+    "audit": {
+      "$ref": "#/$defs/RecoveryAuditCompletenessReport"
+    },
+    "credentials_persisted": {
+      "const": false,
+      "default": false,
+      "title": "Credentials Persisted",
+      "type": "boolean"
+    },
+    "evidence_id": {
+      "maxLength": 80,
+      "minLength": 3,
+      "pattern": "^[A-Za-z0-9_-]+$",
+      "title": "Evidence Id",
+      "type": "string"
+    },
+    "external_notifications_enabled": {
+      "const": false,
+      "default": false,
+      "title": "External Notifications Enabled",
+      "type": "boolean"
+    },
+    "provider_receipt": {
+      "$ref": "#/$defs/RecoveryProviderReceipt"
+    },
+    "raw_provider_response_persisted": {
+      "const": false,
+      "default": false,
+      "title": "Raw Provider Response Persisted",
+      "type": "boolean"
+    },
+    "recorded_at": {
+      "format": "date-time",
+      "title": "Recorded At",
+      "type": "string"
+    },
+    "schema_version": {
+      "const": "1.0.0",
+      "default": "1.0.0",
+      "title": "Schema Version",
+      "type": "string"
+    },
+    "scope": {
+      "const": "razorpay_test_mode_no_real_money",
+      "default": "razorpay_test_mode_no_real_money",
+      "title": "Scope",
+      "type": "string"
+    },
+    "synthetic": {
+      "const": true,
+      "default": true,
+      "title": "Synthetic",
+      "type": "boolean"
+    }
+  },
+  "required": [
+    "evidence_id",
+    "recorded_at",
+    "provider_receipt",
+    "audit"
+  ],
+  "title": "RetryRail Razorpay Test Mode Evidence v1",
+  "type": "object"
+}
