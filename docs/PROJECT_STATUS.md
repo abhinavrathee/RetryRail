@@ -2,7 +2,7 @@
 
 **Last verified:** September 5, 2026
 
-**Current delivery boundary:** M5, M6 and M7 complete; next is M8 observability, security and clean-release hardening
+**Current delivery boundary:** M0–M8 complete; next is M9 deployment and submission packaging
 
 **Runtime recovery:** deterministic fake or human-approved Razorpay Test Mode for exact qualified synthetic v4 incidents; Razorpay Live Mode rejected
 
@@ -35,6 +35,7 @@ this document records the verified implementation boundary.
 | M5 measurement | Remotely frozen 224/56 stratified assignment over all 280 eligible blind-batch rows, same-payment outcome attribution, gross/natural/incremental/net value separation, deterministic 10,000-replicate uncertainty and an authenticated hash-bound report API |
 | M6 | Aggregate-only redacted snapshot, strict brief/proposal schemas, bounded OpenAI adapter, deterministic grounding/fallback, append-only provenance and create-only 72-evaluation report; `gpt-5.4-nano-2026-03-17` alone passed every frozen gate and is selected |
 | M7 | Responsive Blade control room, typed API boundary, memory-only merchant/approval secrets, authoritative policy preview, keyboard approval/rejection, lookup-only ambiguity, audit/impact views and isolated demo |
+| M8 | W3C request correlation, immutable event-to-action trace lineage, recursive structured-log redaction, bounded release metrics, optional provisioned Prometheus/Grafana, clean-checkout proof and an executable failure matrix |
 
 The v4 figures are synthetic benchmark evidence, not production-performance
 claims. Detector v2 and v3 artifacts are immutable historical failures and must
@@ -266,6 +267,36 @@ See `docs/DETECTOR_V4_PROTOCOL.md` for the full R5.5 evidence narrative.
   evidence-to-demo path, keyboard-only rejection and the foundation smoke path.
   Desktop and 390-pixel responsive layouts were visually reviewed.
 
+## Verified M8 completion snapshot
+
+- Implementation commit `791cf4162f60e8d2815c9b18e1a852c180c6fe60`
+  adds valid W3C request continuation, immutable identifier-only lineage from
+  event/outbox through incident, plan and action, and deterministic legacy
+  backfill without changing frozen domain evidence.
+- Central recursive structured-log redaction masks nested secrets, tokens,
+  authorization values, credential URLs, customer/contact fields and known
+  provider-key shapes. Failed advisory calls retain bounded outcome and latency
+  visibility while unavailable cost is explicit rather than estimated.
+- The optional local observability profile uses exact Prometheus 3.5.5 LTS and
+  Grafana 13.2.0 image digests. Both scrape targets were healthy, the
+  provisioned six-section dashboard loaded, application containers ran as the
+  non-root `retryrail` user and no plugin/download error appeared at startup.
+- The local backend regression passed 512 tests in 33:15 with 85.27%
+  branch-aware coverage. Final post-run refinements passed 13 focused tests;
+  the exact 17-case failure matrix and 11-case M8 readiness, migration, trace,
+  dashboard and complete-audit set pass.
+- Ruff, strict mypy over 142 source files, Bandit with zero findings, repository
+  and pre-push history secret scans, pip-audit and the fail-closed pnpm
+  high-severity audit all pass.
+- A fresh clone of the exact remote commit installed the locked Python and web
+  environments in 67.82 seconds, reproduced two intentionally ignored v4
+  derived inputs from zero local cache, passed the clean 11-case M8 gate in
+  49.13 seconds and remained byte-clean at the pushed commit.
+- [GitHub Actions run 33975902471](https://github.com/abhinavrathee/RetryRail/actions/runs/33975902471)
+  is the canonical five-job verification record for the implementation commit,
+  covering PostgreSQL, Python/contracts/evaluations, web/build, Chromium,
+  security/dependencies and all digest-pinned container images.
+
 ## Safety boundary that must remain true
 
 - Frozen detector artifacts retain their historical
@@ -293,6 +324,9 @@ See `docs/DETECTOR_V4_PROTOCOL.md` for the full R5.5 evidence narrative.
   independently valid rules path.
 - M7 keeps authorization in browser memory and exposes no direct Razorpay or
   OpenAI client. Synthetic replay is local-only and cannot approve or execute.
+- M8 trace identifiers and dashboards are correlation-only. They grant no
+  authentication, detector, approval, policy or provider authority; metric
+  labels exclude merchant, payment, incident, plan and action identifiers.
 - No v4 threshold, candidate, blind artifact, receipt or decision may be tuned
   or rewritten after the nonce reveal.
 - No credential is needed for M4. Razorpay Test Mode credentials first become
@@ -302,11 +336,14 @@ See `docs/DETECTOR_V4_PROTOCOL.md` for the full R5.5 evidence narrative.
 
 ## Start here next
 
-Begin M8 observability, security and clean-release hardening. Preserve all
-M3–M7 authority and evidence boundaries, including the create-only M6 report
-and its exact selected model.
+Begin M9 deployment and submission packaging. Preserve the exact M8 release
+commit and all M3–M8 authority/evidence boundaries. Do not make the repository
+public, create the final tag, publish a deployment or submit the form until the
+operator has reviewed the destinations and the signed-out checks are ready.
 
-## What remains after the M6–M7 implementation
+## What remains after M8
 
-- M8: observability, security and final release hardening.
-- M9: public repository, tag, video, signed-out link checks and submission.
+- M9 only: choose and create the public deployment, rehearse and record the
+  five-minute video, make the GitHub repository public, freeze/tag the exact
+  submission commit, verify every public link signed out, finalize the form
+  text and submit.

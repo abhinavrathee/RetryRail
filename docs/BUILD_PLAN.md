@@ -793,6 +793,17 @@ Exit gate:
 - No High/Critical security finding remains unexplained.
 - Audit-completeness checker passes for the demo incident.
 
+Implementation status (September 5, 2026): complete. Commit `791cf41`
+implements W3C request correlation, immutable event/outbox/incident/plan/action
+lineage, recursive log redaction, bounded release metrics, a digest-pinned local
+Prometheus/Grafana profile and an executable failure matrix. The complete local
+backend regression passed with 85.27% branch-aware coverage; final focused
+checks cover the later failure-telemetry and CORS refinements. A clean clone of
+the exact pushed commit installed from both lockfiles in 67.82 seconds,
+reconstructed its two absent ignored v4 inputs and passed the 11-case clean M8
+gate in 49.13 seconds. Security, dependency, browser, container and PostgreSQL
+CI evidence is linked from `PROJECT_STATUS.md`.
+
 ### M9 — Submission package
 
 **Estimate:** 5–7 hours  

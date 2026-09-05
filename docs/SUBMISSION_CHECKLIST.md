@@ -130,17 +130,17 @@ relevant tests, ADRs or evaluation report in the public README.
 - [ ] README begins with the problem, outcome and a 60-second demo path.
 - [ ] README contains an architecture diagram.
 - [ ] README states Test Mode and synthetic-data limitations prominently.
-- [ ] Setup has been tested from a clean checkout.
-- [ ] Lockfiles are committed.
-- [ ] `.env.example` contains names and safe placeholders only.
-- [ ] No key, secret, token, personal contact data or real transaction data is
+- [x] Setup has been tested from a clean checkout.
+- [x] Lockfiles are committed.
+- [x] `.env.example` contains names and safe placeholders only.
+- [x] No key, secret, token, personal contact data or real transaction data is
   present in Git history.
 - [ ] `make seed`, `make demo` and `make check` work as documented.
-- [ ] Held-out detector report is committed.
+- [x] Held-out detector report is committed.
 - [x] Agent golden/adversarial evaluation report is committed.
 - [ ] Screenshots show the final current UI.
-- [ ] Known limitations and unresolved exceptions are honest.
-- [ ] License and attribution are present.
+- [x] Known limitations and unresolved exceptions are honest.
+- [x] License and attribution are present.
 - [ ] Repository opens and renders correctly when signed out of GitHub.
 
 ## 5. Product proof gate
