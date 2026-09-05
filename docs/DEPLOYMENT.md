@@ -152,11 +152,15 @@ health check.
 | HTTP method | GET |
 | Interval | 5 minutes |
 | Expected status | 200 |
-| Optional keyword | `"status":"ready"` |
 
 `/health/live` proves only that the HTTP process responds.
 `/health/ready` additionally checks PostgreSQL connectivity and the exact
 Alembic migration head, so it is the better alert target.
+
+The [UptimeRobot monitor guide](https://help.uptimerobot.com/en/articles/11358364-how-to-create-your-first-monitor-on-uptimerobot-quick-setup-guide)
+documents five-minute checks on the free plan. If you want response-body
+validation as well, create a Keyword monitor that alerts when
+`"status":"ready"` is absent; keep the request method as GET.
 
 UptimeRobot is monitoring, not availability infrastructure. On the committed
 paid profile the service is already always-on. If plans are changed to free,

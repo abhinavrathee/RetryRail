@@ -1,9 +1,10 @@
 # RetryRail testing and verification dossier
 
-**Latest remote release evidence:** 5 September 2026  
-**CI run:** <https://github.com/abhinavrathee/RetryRail/actions/runs/33976562151>  
-**Implementation commit:** `791cf4162f60e8d2815c9b18e1a852c180c6fe60`  
-**Evidence commit:** `30a2694cf00f406048152f0c62cf3d9ff9134a9d`
+**Latest remote release evidence:** 6 September 2026
+
+**CI run:** <https://github.com/abhinavrathee/RetryRail/actions/runs/33982794739>
+
+**Implementation and CI commit:** `5f8a06c903fec01ba9f67bd4586e242fc59d41b3`
 
 ## Purpose
 
@@ -20,16 +21,16 @@ positive and negative executable evidence.
 
 | Layer | Exact recorded result |
 | --- | --- |
-| Python release suite | 514 pytest nodes passed on PostgreSQL in 31:42 |
-| Backend coverage | 85.48% branch-aware coverage |
+| Python release suite | 525 pytest nodes passed on PostgreSQL in 31:53 |
+| Backend coverage | 85.57% branch-aware coverage |
 | Frontend unit/component | 13 Vitest tests passed |
 | Frontend coverage | 90.05% statements, 77.69% branches, 93.69% functions, 92.40% lines |
 | Browser | 3 Chromium scenarios passed |
 | M8 focused evidence | 17-case failure matrix and 11-case readiness/migration/trace/dashboard/audit set passed |
-| Static analysis | Ruff and strict mypy over 142 source files passed |
+| Static analysis | Ruff and strict mypy over 143 source files passed |
 | Security | Bandit reported zero findings; repository/history secret scans, `pip-audit` and fail-closed pnpm high-severity audit passed |
 | Contracts/evaluations | 23-schema drift gate and every frozen detector, experiment and model-report integrity check passed |
-| Containers | Digest policy, API/worker/web builds, non-root runtime and local observability configuration passed |
+| Containers | Digest policy, API/worker/web builds, the exact Render reviewer image, non-root runtime and local observability configuration passed |
 | Clean checkout | Locked install took 67.82 seconds; the focused clean M8 gate took 49.13 seconds; checkout remained byte-clean |
 
 ### Reviewer-deployment candidate rehearsal
@@ -50,9 +51,10 @@ and `render.yaml` topology were rehearsed locally against PostgreSQL 16:
 | Reviewer story | With API and worker running concurrently, 400 deliveries settled at a healthy zero-incident baseline; extension to 700 completed in 6.12 s and opened exactly 1 active incident with INR 949,600 subunits at risk |
 | Focused regression | 32 configuration, health, SPA-hosting, security-header, staged reviewer-story and lease-timeout tests passed; Ruff and strict mypy passed |
 
-This is pre-deployment evidence for the current working tree, not proof that a
-public Render hostname exists. The public URL, Render health state, UptimeRobot
-monitor and signed-out browser pass remain operator-owned M9 evidence.
+This is pre-deployment evidence for the verified implementation, not proof that
+a public Render hostname exists. The public URL, Render health state,
+UptimeRobot monitor and signed-out browser pass remain operator-owned M9
+evidence.
 
 The staged reviewer call accepted 300 new deliveries, recognized 398 safe
 duplicates, rejected 2 invalid signatures and recorded 0 expectation
@@ -60,9 +62,9 @@ mismatches. Its in-request worker projected 78 records while the resident
 worker projected the balance; the response waited for both before reporting the
 incident. This directly exercises the concurrency shape used by Render.
 
-The authoritative narrative is
-`docs/PROJECT_STATUS.md#verified-m8-completion-snapshot`. Historical sections in
-that file intentionally retain smaller test counts from earlier milestones and
+The current deployment evidence is recorded in
+`docs/PROJECT_STATUS.md#verified-m9-deployment-candidate-rehearsal`. Historical
+milestone sections in that file intentionally retain smaller test counts and
 must not be added together.
 
 ## How to enumerate every individual test
@@ -76,7 +78,7 @@ pnpm --filter @retryrail/web exec vitest list
 pnpm --filter @retryrail/web exec playwright test --list
 ```
 
-The current M9 deployment candidate collects 525 nodes: the 514-node verified
+The verified M9 deployment release collects 525 nodes: the 514-node verified
 M8 release plus nine hosted-runtime tests and two staged reviewer-path tests.
 Parameterized tests produce more nodes than function definitions; the per-file
 counts below are collected nodes, not a manual function count.

@@ -1,8 +1,8 @@
 # RetryRail project status and next-chat handoff
 
-**Last verified:** September 5, 2026
+**Last verified:** September 6, 2026
 
-**Current delivery boundary:** M0–M8 complete; the M9 reviewer deployment is implemented and locally rehearsed, with publication and final submission actions pending
+**Current delivery boundary:** M0–M8 complete; the M9 reviewer deployment is implemented, locally rehearsed and release-CI verified, with publication and final submission actions pending
 
 **Runtime recovery:** deterministic fake or human-approved Razorpay Test Mode for exact qualified synthetic v4 incidents; Razorpay Live Mode rejected
 
@@ -341,7 +341,7 @@ See `docs/DETECTOR_V4_PROTOCOL.md` for the full R5.5 evidence narrative.
 Continue M9 deployment and submission packaging. The reviewer-first README,
 branded system map, deterministic pre-deployment UI captures, official
 Buildathon traceability dossier, testing catalogue, restrained M9 UI polish and
-Render Blueprint/runbook are complete in the working tree. Preserve the exact
+Render Blueprint/runbook are committed and release-verified. Preserve the exact
 M8 release evidence and all M3–M8 authority boundaries. Do not make the
 repository public, create the final tag, publish a deployment or submit the
 form until the operator has reviewed the destinations and the signed-out checks
@@ -378,10 +378,17 @@ are ready.
   passed.
   `docs/DEPLOYMENT.md` contains the exact Blueprint, billing, UptimeRobot,
   signed-out verification and rollback procedure.
+- [GitHub Actions run 33982794739](https://github.com/abhinavrathee/RetryRail/actions/runs/33982794739)
+  passed all five jobs for implementation commit
+  `5f8a06c903fec01ba9f67bd4586e242fc59d41b3`. PostgreSQL ran all 525
+  Python tests in 31:53 at 85.57% branch-aware coverage. The web/build,
+  three-scenario Chromium, static/dependency security and container jobs also
+  passed; the container job rebuilt both the local service images and the exact
+  Render reviewer image.
 
-These are local deployment-candidate results. No public URL, external monitor
-or Render-account health claim is made until the operator applies the Blueprint
-and the signed-out checks are captured.
+These are local rehearsal and remote release-CI results. No public URL, external
+monitor or Render-account health claim is made until the operator applies the
+Blueprint and the signed-out checks are captured.
 
 ## What remains after M8
 

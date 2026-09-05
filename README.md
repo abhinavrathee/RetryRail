@@ -36,7 +36,7 @@ incremental.
 | **Action boundary** | Thirteen deterministic policy checks plus a short-lived, single-use merchant approval. |
 | **Provider** | Deterministic fake by default; protected Razorpay Test Mode Standard Payment Link adapter for external evidence. |
 | **Impact method** | Frozen 80/20 treatment/control assignment, same-payment attribution and a 10,000-replicate bootstrap interval. |
-| **Delivery status** | M0–M8 complete. M9 deployment package is locally verified; publication, public tag, signed-out checks and five-minute video remain. |
+| **Delivery status** | M0–M8 complete. The M9 deployment package is locally rehearsed and release-CI verified; publication, public tag, signed-out checks and five-minute video remain. |
 
 ## Review in 60 seconds
 
@@ -57,7 +57,7 @@ No installation or credentials are needed to inspect the central proof:
    72 evaluations across grounding, abstention, privacy, injection, schema and
    trajectory behavior.
 5. **Release quality** — the recorded
-   [five-job CI run](https://github.com/abhinavrathee/RetryRail/actions/runs/33976562151)
+   [five-job CI run](https://github.com/abhinavrathee/RetryRail/actions/runs/33982794739)
    passed Python, web/build, Chromium, security/dependency and container gates.
 
 For a strict requirement-by-requirement review, open the
@@ -119,7 +119,7 @@ All figures below link to their canonical machine-readable artifact.
 | Model evaluation | **24 cases × 3 models = 72 evaluations** | Synthetic aggregate-only safety corpus |
 | Selected model | **`gpt-5.4-nano-2026-03-17`** | 95.83% grounding; every frozen gate passed |
 | Unsafe model actions | **0** | Fixed M6 evaluation |
-| Latest PostgreSQL CI | **514 Python tests · 85.48% branch-aware coverage** | Exact M8 evidence run |
+| Latest PostgreSQL CI | **525 Python tests · 85.57% branch-aware coverage** | Exact deployment-candidate release run |
 | Frontend | **13 tests · 3 Chromium stories** | 90.05% statements; keyboard path included |
 
 ![RetryRail impact view with treatment, holdout, value bridge and uncertainty](docs/assets/experiment-impact.png)
@@ -355,17 +355,18 @@ Read [M8_RELEASE_HARDENING.md](docs/M8_RELEASE_HARDENING.md) and
 
 | Gate | Recorded result |
 | --- | --- |
-| Python on PostgreSQL | 514 passed in 31:42; 85.48% branch-aware coverage |
+| Python on PostgreSQL | 525 passed in 31:53; 85.57% branch-aware coverage |
 | Frontend unit/component | 13 passed; 90.05% statements / 77.69% branches / 93.69% functions / 92.40% lines |
 | Browser | Primary keyboard workflow, independent keyboard rejection and offline foundation smoke passed |
 | Contracts | All 23 generated schemas and deterministic data identities passed drift checks |
 | M8 hardening | 17-case failure matrix and 11-case readiness/migration/trace/dashboard/audit set passed |
 | Security | Ruff, strict mypy, Bandit with zero findings, secret/history scans and both dependency audits passed |
-| Containers | Digest policy, builds, non-root runtime, migration/readiness and observability profile passed |
+| Containers | Digest policy, local images and the exact Render reviewer image built; non-root runtime, migration/readiness and observability checks passed |
 | Clean checkout | Locked install 67.82 seconds; absent v4 derived inputs reproduced; focused M8 gate 49.13 seconds; checkout remained clean |
 
-Source: [verified M8 project snapshot](docs/PROJECT_STATUS.md#verified-m8-completion-snapshot)
-and [CI run 33976562151](https://github.com/abhinavrathee/RetryRail/actions/runs/33976562151).
+Source: [testing and verification dossier](docs/TESTING.md#latest-verified-snapshot)
+and [CI run 33982794739](https://github.com/abhinavrathee/RetryRail/actions/runs/33982794739)
+for implementation commit `5f8a06c903fec01ba9f67bd4586e242fc59d41b3`.
 
 ### Test layers
 
@@ -509,7 +510,8 @@ M0–M8 are implemented. The exact code/evidence snapshot is in
 [PROJECT_STATUS.md](docs/PROJECT_STATUS.md); the authoritative sequence is in
 [BUILD_PLAN.md](docs/BUILD_PLAN.md).
 
-M9 deployment infrastructure is ready; these operator-owned actions remain:
+M9 deployment infrastructure and its release gates are verified; these
+operator-owned actions remain:
 
 - apply the reviewed Render Blueprint and verify the assigned URL;
 - capture final deployment screenshots;
