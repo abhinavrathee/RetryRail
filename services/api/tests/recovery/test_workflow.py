@@ -1381,11 +1381,55 @@ def test_openapi_has_execution_route_and_metrics_are_identifier_free(
     metrics = client.get("/metrics")
     assert "/api/v1/plans/{plan_id}/execute" in schema["paths"]
     assert "/api/v1/actions/{action_id}/reconcile" in schema["paths"]
+    assert "/api/v1/actions/{action_id}" in schema["paths"]
     assert "/api/v1/incidents/{incident_id}/analyze" in schema["paths"]
+    assert "/api/v1/incidents/{incident_id}/recovery-candidates" in schema["paths"]
     assert "retryrail_recovery_plan_previews_total" in metrics.text
     assert settings.merchant_id not in metrics.text
     assert seeded.incident_id not in metrics.text
     assert seeded.payment_id not in metrics.text
+
+
+def test_recovery_candidates_are_authenticated_cited_and_pii_free(
+    settings: Settings,
+    client: TestClient,
+) -> None:
+    seeded = asyncio.run(_seed_case(settings, suffix="130"))
+    path = f"/api/v1/incidents/{seeded.incident_id}/recovery-candidates"
+
+    unauthenticated = client.get(path)
+    missing = client.get(
+        "/api/v1/incidents/incident_missing/recovery-candidates",
+        headers=_AUTHORIZATION,
+    )
+    response = client.get(path, headers=_AUTHORIZATION)
+
+    assert unauthenticated.status_code == 401
+    assert unauthenticated.json()["detail"]["reason_code"] == (
+        "MERCHANT_AUTHENTICATION_FAILED"
+    )
+    assert missing.status_code == 404
+    assert response.status_code == 200
+    body = response.json()
+    assert body["incident_id"] == seeded.incident_id
+    assert body["action_eligible"] is True
+    assert body["count"] == 1
+    assert body["items"] == [
+        {
+            "payment_id": seeded.payment_id,
+            "amount_subunits": 12_345,
+            "currency": "INR",
+            "method": "card",
+            "issuer": "issuer_synthetic_alpha",
+            "status": "failed",
+            "authoritative_preview_required": True,
+            "synthetic": True,
+        }
+    ]
+    serialized = json.dumps(body)
+    assert "email" not in serialized
+    assert "phone" not in serialized
+    assert "contact" not in serialized
 
 
 def test_model_unavailable_rules_fallback_completes_plan_to_audited_receipt(
@@ -1468,6 +1512,42 @@ def test_model_unavailable_rules_fallback_completes_plan_to_audited_receipt(
             await database.dispose()
 
     asyncio.run(verify_audit())
+
+
+def test_action_audit_api_reconstructs_complete_receipt_without_a_write(
+    settings: Settings,
+    client: TestClient,
+) -> None:
+    seeded = asyncio.run(_seed_case(settings, suffix="132"))
+    asyncio.run(_seed_valid_analysis_evidence(settings, seeded))
+    analysis = client.post(
+        f"/api/v1/incidents/{seeded.incident_id}/analyze",
+        headers=_AUTHORIZATION,
+    )
+    preview, token = _preview_and_approve(client, seeded, prefix="audit_read_api")
+    execution = client.post(
+        f"/api/v1/plans/{preview.plan.plan_id}/execute",
+        headers={**_AUTHORIZATION, "X-RetryRail-Approval-Token": token},
+        json={"idempotency_key": "audit_read_api_execute"},
+    )
+
+    assert analysis.status_code == execution.status_code == 200
+    receipt = execution.json()["receipt"]
+    path = f"/api/v1/actions/{receipt['action_id']}"
+    unauthenticated = client.get(path)
+    first = client.get(path, headers=_AUTHORIZATION)
+    second = client.get(path, headers=_AUTHORIZATION)
+    missing = client.get("/api/v1/actions/action_missing", headers=_AUTHORIZATION)
+
+    assert unauthenticated.status_code == 401
+    assert missing.status_code == 404
+    assert missing.json()["detail"]["reason_code"] == "RECOVERY_ACTION_NOT_FOUND"
+    assert first.status_code == second.status_code == 200
+    assert first.json() == second.json()
+    assert first.json()["receipt"] == receipt
+    assert first.json()["audit"]["complete"] is True
+    assert first.json()["audit"]["missing_facts"] == []
+    assert first.json()["audit"]["terminal_state"] == "succeeded"
 
 
 def test_rules_fallback_fails_closed_on_invalid_incident_evidence(

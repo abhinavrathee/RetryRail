@@ -28,6 +28,12 @@ from retryrail.experiments.models import (
     RecoveryExperimentReport,
     RecoveryOutcomeBatch,
 )
+from retryrail.recovery.analyst_models import (
+    IncidentSnapshot,
+    ModelIncidentAnalysis,
+    ModelIncidentBrief,
+    ModelRecoveryProposal,
+)
 from retryrail.recovery.models import RazorpayTestModeEvidenceReceipt
 from retryrail.synthetic.models import (
     AttemptGroundTruth,
@@ -165,6 +171,30 @@ _SCHEMAS = (
         relative_path="contracts/domain/razorpay_test_mode_evidence.v1.schema.json",
         schema_id="https://retryrail.dev/contracts/domain/razorpay-test-mode-evidence/v1",
         title="RetryRail Razorpay Test Mode Evidence v1",
+    ),
+    SchemaDefinition(
+        model=IncidentSnapshot,
+        relative_path="contracts/tools/incident_snapshot.v1.schema.json",
+        schema_id="https://retryrail.dev/contracts/tools/incident-snapshot/v1",
+        title="RetryRail Redacted Incident Snapshot v1",
+    ),
+    SchemaDefinition(
+        model=ModelIncidentBrief,
+        relative_path="contracts/tools/incident_brief.v1.schema.json",
+        schema_id="https://retryrail.dev/contracts/tools/incident-brief/v1",
+        title="RetryRail Model Incident Brief v1",
+    ),
+    SchemaDefinition(
+        model=ModelRecoveryProposal,
+        relative_path="contracts/tools/recovery_proposal.v1.schema.json",
+        schema_id="https://retryrail.dev/contracts/tools/recovery-proposal/v1",
+        title="RetryRail Model Recovery Proposal v1",
+    ),
+    SchemaDefinition(
+        model=ModelIncidentAnalysis,
+        relative_path="contracts/tools/incident_analysis.v1.schema.json",
+        schema_id="https://retryrail.dev/contracts/tools/incident-analysis/v1",
+        title="RetryRail Model Incident Analysis v1",
     ),
 )
 

@@ -1,0 +1,114 @@
+{
+  "$id": "https://retryrail.dev/contracts/tools/recovery-proposal/v1",
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "additionalProperties": false,
+  "description": "Advisory proposal restricted to one server-owned template identifier.",
+  "properties": {
+    "currency": {
+      "maxLength": 3,
+      "minLength": 3,
+      "pattern": "^[A-Z]{3}$",
+      "title": "Currency",
+      "type": "string"
+    },
+    "customer_risk": {
+      "const": "No customer message is sent; any action still requires merchant approval.",
+      "default": "No customer message is sent; any action still requires merchant approval.",
+      "title": "Customer Risk",
+      "type": "string"
+    },
+    "evidence_ids": {
+      "items": {
+        "maxLength": 80,
+        "minLength": 3,
+        "pattern": "^[A-Za-z0-9_-]+$",
+        "type": "string"
+      },
+      "maxItems": 8,
+      "minItems": 1,
+      "title": "Evidence Ids",
+      "type": "array"
+    },
+    "executable": {
+      "const": false,
+      "default": false,
+      "title": "Executable",
+      "type": "boolean"
+    },
+    "expected_benefit": {
+      "const": "not_estimated_without_outcome_evidence",
+      "default": "not_estimated_without_outcome_evidence",
+      "title": "Expected Benefit",
+      "type": "string"
+    },
+    "external_notifications_enabled": {
+      "const": false,
+      "default": false,
+      "title": "External Notifications Enabled",
+      "type": "boolean"
+    },
+    "opportunity_gmv_subunits": {
+      "minimum": 0,
+      "title": "Opportunity Gmv Subunits",
+      "type": "integer"
+    },
+    "opportunity_interpretation": {
+      "const": "at_risk_opportunity_not_forecast",
+      "default": "at_risk_opportunity_not_forecast",
+      "title": "Opportunity Interpretation",
+      "type": "string"
+    },
+    "rationale": {
+      "maxLength": 500,
+      "minLength": 1,
+      "title": "Rationale",
+      "type": "string"
+    },
+    "recommended_template": {
+      "const": "standard_payment_link",
+      "default": "standard_payment_link",
+      "title": "Recommended Template",
+      "type": "string"
+    },
+    "requires_external_approval": {
+      "const": true,
+      "default": true,
+      "title": "Requires External Approval",
+      "type": "boolean"
+    },
+    "schema_version": {
+      "const": "1.0.0",
+      "default": "1.0.0",
+      "title": "Schema Version",
+      "type": "string"
+    },
+    "stop_conditions": {
+      "items": {
+        "enum": [
+          "POLICY_INCIDENT_NOT_ACTION_ELIGIBLE",
+          "POLICY_OPERATING_MODE_ANALYZE_ONLY",
+          "POLICY_CUSTOMER_OPTED_OUT",
+          "POLICY_ATTEMPT_CAP_REACHED",
+          "POLICY_COOLDOWN_ACTIVE",
+          "POLICY_PLAN_EXPIRED",
+          "POLICY_KILL_SWITCH_ON",
+          "POLICY_PAYMENT_ALREADY_RECOVERED"
+        ],
+        "type": "string"
+      },
+      "maxItems": 8,
+      "minItems": 8,
+      "title": "Stop Conditions",
+      "type": "array"
+    }
+  },
+  "required": [
+    "rationale",
+    "evidence_ids",
+    "opportunity_gmv_subunits",
+    "currency",
+    "stop_conditions"
+  ],
+  "title": "RetryRail Model Recovery Proposal v1",
+  "type": "object"
+}

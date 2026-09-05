@@ -51,6 +51,7 @@ export default defineConfig({
     coverage: {
       provider: 'v8',
       reporter: ['text', 'json-summary'],
+      exclude: ['src/test/**', 'src/vite-env.d.ts'],
       thresholds: {
         lines: 80,
         functions: 80,

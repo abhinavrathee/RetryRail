@@ -588,15 +588,36 @@ class RecoveryAuditCompletenessReport(StrictContract):
         return self
 
 
+class RecoveryActionAuditResponse(StrictContract):
+    """Read-only action timeline plus independently verified audit completeness."""
+
+    receipt: RecoveryActionContract
+    audit: RecoveryAuditCompletenessReport
+
+    @model_validator(mode="after")
+    def validate_binding(self) -> Self:
+        """Keep the receipt and audit proof on exactly one action."""
+
+        if (
+            self.receipt.action_id != self.audit.action_id
+            or self.receipt.incident_id != self.audit.incident_id
+            or self.receipt.plan_id != self.audit.plan_id
+            or self.receipt.merchant_id != self.audit.merchant_id
+            or self.receipt.state is not self.audit.terminal_state
+            or self.receipt.synthetic is not self.audit.synthetic
+        ):
+            msg = "action receipt and audit report are not bound"
+            raise ValueError(msg)
+        return self
+
+
 class RazorpayTestModeEvidenceReceipt(StrictContract):
     """Sanitized reviewer artifact for the single approved real Test Mode action."""
 
     schema_version: Literal["1.0.0"] = "1.0.0"
     evidence_id: Identifier
     recorded_at: AwareDatetime
-    scope: Literal["razorpay_test_mode_no_real_money"] = (
-        "razorpay_test_mode_no_real_money"
-    )
+    scope: Literal["razorpay_test_mode_no_real_money"] = "razorpay_test_mode_no_real_money"
     provider_receipt: RecoveryProviderReceipt
     audit: RecoveryAuditCompletenessReport
     external_notifications_enabled: Literal[False] = False

@@ -36,6 +36,8 @@ loop:
 - [Detector-v4 development candidate](docs/DETECTOR_V4_CANDIDATE.md)
 - [M5 recovery experiment and official synthetic result](docs/M5_EXPERIMENT_PROTOCOL.md)
 - [Razorpay Test Mode safety and one-link workflow](docs/RAZORPAY_TEST_MODE.md)
+- [M6 bounded incident analyst and evaluation](docs/INCIDENT_ANALYST.md)
+- [M7 merchant control room](docs/MERCHANT_UI.md)
 - [Sanitized Razorpay Test Mode evidence receipt](evals/reports/razorpay_test_mode_receipt.v1.json)
 - [Razorpay submission checklist](docs/SUBMISSION_CHECKLIST.md)
 - [Repository instructions](AGENTS.md)
@@ -105,6 +107,11 @@ interval of ₹44,447–₹189,391; this is not a live merchant-performance clai
 The sole approved Test Mode POST returned 200; when provider clock skew stopped
 local response validation, the durable action was completed with one GET by its
 stable reference and no repeated create.
+M6 adds a redacted, strict-schema advisory analyst, append-only provenance,
+deterministic grounding and outage fallback, plus a fixed 24-case safety
+evaluation. M7 adds the responsive merchant control room and complete keyboard-
+tested browser story. Provider credentials never enter the browser, and neither
+milestone changes detector, policy, approval or execution authority.
 See the [v4 protocol](docs/DETECTOR_V4_PROTOCOL.md) and
 [v4 candidate](docs/DETECTOR_V4_CANDIDATE.md), plus the
 [M4 recovery-boundary decision](docs/adr/0007-m4-policy-approval-recovery-contract-boundary.md)
@@ -112,14 +119,19 @@ and [M4.3 storage decision](docs/adr/0008-m4-authoritative-preview-and-approval-
 plus the [M4 execution and activation decision](docs/adr/0009-m4-qualified-detector-and-execute-once-fake.md),
 the [M5 provider decision](docs/adr/0010-m5-durable-razorpay-test-mode-dispatch.md),
 the [M5 experiment decision](docs/adr/0011-m5-precommitted-recovery-experiment.md),
+the [M6 analyst decision](docs/adr/0012-m6-redacted-bounded-incident-analyst.md),
+the [M7 control-room decision](docs/adr/0013-m7-merchant-control-room.md),
 plus the [deterministic policy](docs/POLICY.md) and
 [complete recovery workflow](docs/RECOVERY_WORKFLOW.md).
 
-## Run through Part 4 locally
+## Run locally
 
 Required tools are Python 3.12 or 3.13, `uv`, Node.js 22, pnpm 11, GNU Make
 and Docker with Compose.
-No cloud account or Razorpay credential is needed for M0–M4.
+The default local path uses the deterministic fake provider and rules analyst,
+so it needs no cloud credential. Razorpay Test Mode credentials are used only by
+the protected M5 workflow. An OpenAI Platform key is used only for the explicit
+M6 live bakeoff or an opted-in server analyst.
 
 ```bash
 cp .env.example .env
@@ -163,24 +175,27 @@ make v4-candidate-check # verify all three v4 development partitions
 make v4-adversarial-check # verify v4 hierarchy, overlap and contract edge cases
 make v4-freeze-check # verify the complete nonce-free v4 candidate freeze
 make v4-blind-check # reproduce revealed inputs, then verify append-only v4 evidence
+make analyst-corpus-check # verify the fixed 24-case M6 corpus
+make analyst-report-check # verify the committed key-backed model report
+make demo       # run the M7 backend replay and browser-story gates
 make check      # run every implemented release gate
 ```
 
-`make seed` recreates the M1 truth artifacts and their stable manifest. Replay
-requires `RETRYRAIL_REPLAY_ENABLED=true` and the configured local token. `make
-demo` deliberately exits with an explanatory error until M7. `make eval` now
-checks detector artifacts; agent evaluation will be added in M6. This prevents
-event processing from being mistaken for a working recovery product. On
-Windows without GNU Make, run the underlying `uv`
-and `pnpm` commands shown in the Makefile.
+`make seed` recreates the M1 truth artifacts and their stable manifest. Runtime
+replay requires `RETRYRAIL_REPLAY_ENABLED=true` and the configured local token.
+`make demo` runs the bounded demo API integration and both M7 Playwright paths;
+it does not contact Razorpay or OpenAI. On Windows without GNU Make, run the
+underlying `uv` and `pnpm` commands shown in the Makefile.
 
-M0–M4 verification includes Python and TypeScript lint/typecheck, backend and
+M0–M7 verification includes Python and TypeScript lint/typecheck, backend and
 web unit tests, schema and truth-manifest drift, production web build, a
 Chromium smoke test, Bandit, credential/fixture scanning and Python/web
 dependency audits. Pipeline integration tests run hermetically on SQLite
 locally and against PostgreSQL 16 in the Python CI job. The M4 workflow adds
 SQLite/PostgreSQL migration coverage, adversarial approval/action races and a
-literal model-unavailable detector-to-audit release test.
+literal model-unavailable detector-to-audit release test. M6 adds strict
+redaction, provider-failure and grounding cases; M7 adds API-boundary,
+responsive workflow and keyboard-only approval/rejection coverage.
 
 ## Official context
 
@@ -217,15 +232,18 @@ qualified v4 incidents. Failed historical detectors remain blocked, no frozen
 release artifact is rewritten, and no M4 route can reach Razorpay or notify a
 customer. M5 preserves those controls while adding a Test-key-only provider
 edge, durable dispatch/receipt evidence and holdout-based incremental recovered-
-GMV measurement. The code and synthetic result are complete; the single
-interactive merchant-approved Test Mode link remains. See the current
+GMV measurement. Its single interactive merchant-approved Test Mode link and
+sanitized complete-audit receipt are committed. M6 implements the redacted
+single-provider boundary, deterministic fallback and fixed 24-case evaluation;
+M7 implements the merchant control room and primary browser story. See the current
 [project status and next-chat handoff](docs/PROJECT_STATUS.md),
 [v3 result](docs/DETECTOR_V3_PROTOCOL.md),
 [v4 protocol](docs/DETECTOR_V4_PROTOCOL.md),
 [v4 candidate](docs/DETECTOR_V4_CANDIDATE.md),
 [event pipeline](docs/EVENT_PIPELINE.md),
 [detector](docs/DETECTOR.md), [policy](docs/POLICY.md),
-[recovery workflow](docs/RECOVERY_WORKFLOW.md),
+[recovery workflow](docs/RECOVERY_WORKFLOW.md), [incident analyst](docs/INCIDENT_ANALYST.md),
+[merchant UI](docs/MERCHANT_UI.md),
 [architecture](docs/ARCHITECTURE.md),
 [dataset](docs/DATASET.md), [security](docs/SECURITY.md) and the
 [authoritative build plan](docs/BUILD_PLAN.md).

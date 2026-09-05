@@ -177,6 +177,29 @@ class PipelineMetrics:
             ("result",),
             registry=self.registry,
         )
+        self.incident_analyses = Counter(
+            "retryrail_incident_analyses_total",
+            "Bounded incident-analysis outcomes without incident or merchant labels.",
+            ("result",),
+            registry=self.registry,
+        )
+        self.incident_analysis_latency = Histogram(
+            "retryrail_incident_analysis_latency_seconds",
+            "Provider wall time for one validated redacted incident analysis.",
+            buckets=(0.1, 0.25, 0.5, 1, 2, 5, 10, 20, 30),
+            registry=self.registry,
+        )
+        self.incident_analysis_tokens = Counter(
+            "retryrail_incident_analysis_tokens_total",
+            "Validated provider token usage by input or output direction.",
+            ("direction",),
+            registry=self.registry,
+        )
+        self.incident_analysis_estimated_cost = Counter(
+            "retryrail_incident_analysis_estimated_cost_microusd_total",
+            "Versioned public-price estimate for validated model analysis.",
+            registry=self.registry,
+        )
 
 
 router = APIRouter(tags=["operations"])

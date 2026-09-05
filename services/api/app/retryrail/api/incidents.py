@@ -1,8 +1,9 @@
 """Merchant-scoped read APIs for detector overview and incident evidence."""
 
+import hmac
 from typing import Annotated, Literal
 
-from fastapi import APIRouter, HTTPException, Query, Request, status
+from fastapi import APIRouter, Header, HTTPException, Query, Request, status
 from pydantic import AwareDatetime, ConfigDict, Field, ValidationError
 from sqlalchemy import desc, func, select
 
@@ -19,6 +20,7 @@ from retryrail.db.tables import (
     DetectionRunRecord,
     IncidentObservationRecord,
     IncidentRecord,
+    PaymentProjectionRecord,
 )
 from retryrail.detection.config import load_detector_release_decision
 from retryrail.detection.models import (
@@ -31,6 +33,10 @@ from retryrail.detection.runtime_activation import load_detector_v4_activation
 from retryrail.detection.v2_models import V2DetectorStatistics
 
 router = APIRouter(prefix="/api/v1", tags=["incidents"])
+MerchantAuthorization = Annotated[
+    str | None,
+    Header(alias="X-RetryRail-Merchant-Authorization"),
+]
 
 
 class IncidentSummary(StrictContract):
@@ -88,6 +94,29 @@ class OverviewResponse(StrictContract):
     synthetic: bool
 
 
+class RecoveryCandidate(StrictContract):
+    """PII-free failed payment identity available for authoritative preview."""
+
+    payment_id: str = Field(min_length=3, max_length=80, pattern=r"^[A-Za-z0-9_-]+$")
+    amount_subunits: int = Field(gt=0)
+    currency: str = Field(min_length=3, max_length=3, pattern=r"^[A-Z]{3}$")
+    method: str = Field(min_length=1, max_length=24)
+    issuer: str | None = Field(default=None, max_length=80)
+    status: Literal["failed"] = "failed"
+    authoritative_preview_required: Literal[True] = True
+    synthetic: bool
+
+
+class RecoveryCandidateListResponse(StrictContract):
+    """Bounded candidate list derived only from cited failed payment events."""
+
+    incident_id: str
+    action_eligible: bool
+    items: tuple[RecoveryCandidate, ...]
+    count: int = Field(ge=0)
+    synthetic: bool
+
+
 @router.get("/overview")
 async def overview(request: Request) -> OverviewResponse:
     """Return current detector state for the configured merchant only."""
@@ -102,38 +131,15 @@ async def overview(request: Request) -> OverviewResponse:
             )
             or 0
         )
-        active = int(
-            await session.scalar(
-                select(func.count())
-                .select_from(IncidentRecord)
-                .where(
-                    IncidentRecord.merchant_id == settings.merchant_id,
-                    IncidentRecord.status == "open",
+        active_records = tuple(
+            (
+                await session.scalars(
+                    select(IncidentRecord).where(
+                        IncidentRecord.merchant_id == settings.merchant_id,
+                        IncidentRecord.status == "open",
+                    )
                 )
-            )
-            or 0
-        )
-        action_eligible = int(
-            await session.scalar(
-                select(func.count())
-                .select_from(IncidentRecord)
-                .where(
-                    IncidentRecord.merchant_id == settings.merchant_id,
-                    IncidentRecord.status == "open",
-                    IncidentRecord.action_eligible.is_(True),
-                )
-            )
-            or 0
-        )
-        at_risk = int(
-            await session.scalar(
-                select(func.coalesce(func.sum(IncidentRecord.gmv_at_risk_subunits), 0))
-                .where(
-                    IncidentRecord.merchant_id == settings.merchant_id,
-                    IncidentRecord.status == "open",
-                )
-            )
-            or 0
+            ).all()
         )
         latest_run = await session.scalar(
             select(DetectionRunRecord)
@@ -147,12 +153,13 @@ async def overview(request: Request) -> OverviewResponse:
             .order_by(desc(IncidentRecord.opened_at))
             .limit(1)
         )
+    activation = load_detector_v4_activation()
+    active = len(active_records)
+    action_eligible = sum(activation.allows_incident(item) for item in active_records)
+    at_risk = sum(item.gmv_at_risk_subunits for item in active_records)
     if latest_run is None or latest_run.detector_version == "detector_v4_0_0":
-        activation = load_detector_v4_activation()
         detector_version = (
-            latest_run.detector_version
-            if latest_run is not None
-            else activation.detector_version
+            latest_run.detector_version if latest_run is not None else activation.detector_version
         )
         release_status = DetectorReleaseStatus(activation.status.value)
         release_failed_targets: tuple[DetectorReleaseTarget, ...] = ()
@@ -187,9 +194,7 @@ async def list_incidents(
     """List only the configured merchant's bounded incident records."""
 
     database, settings = _resources(request)
-    statement = select(IncidentRecord).where(
-        IncidentRecord.merchant_id == settings.merchant_id
-    )
+    statement = select(IncidentRecord).where(IncidentRecord.merchant_id == settings.merchant_id)
     if incident_status is not None:
         statement = statement.where(IncidentRecord.status == incident_status)
     statement = statement.order_by(desc(IncidentRecord.opened_at)).limit(limit)
@@ -259,6 +264,64 @@ async def get_incident(incident_id: str, request: Request) -> IncidentDetailResp
             "unknown",
         ),
         synthetic=record.synthetic,
+    )
+
+
+@router.get("/incidents/{incident_id}/recovery-candidates")
+async def list_recovery_candidates(
+    incident_id: str,
+    request: Request,
+    authorization: MerchantAuthorization = None,
+) -> RecoveryCandidateListResponse:
+    """Return cited failed payments; policy remains authoritative at preview time."""
+
+    database, settings = _resources(request)
+    _require_merchant_authorization(settings, authorization)
+    async with database.sessions() as session:
+        incident = await session.scalar(
+            select(IncidentRecord).where(
+                IncidentRecord.incident_id == incident_id,
+                IncidentRecord.merchant_id == settings.merchant_id,
+            )
+        )
+        if incident is None:
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND,
+                detail={"reason_code": "INCIDENT_NOT_FOUND"},
+            )
+        records = tuple(
+            (
+                await session.scalars(
+                    select(PaymentProjectionRecord)
+                    .where(
+                        PaymentProjectionRecord.merchant_id == settings.merchant_id,
+                        PaymentProjectionRecord.status == "failed",
+                        PaymentProjectionRecord.last_event_internal_id.in_(
+                            tuple(incident.evidence_event_ids)
+                        ),
+                    )
+                    .order_by(PaymentProjectionRecord.payment_id)
+                    .limit(25)
+                )
+            ).all()
+        )
+    items = tuple(
+        RecoveryCandidate(
+            payment_id=item.payment_id,
+            amount_subunits=item.amount_subunits,
+            currency=item.currency,
+            method=item.method,
+            issuer=item.issuer,
+            synthetic=item.synthetic,
+        )
+        for item in records
+    )
+    return RecoveryCandidateListResponse(
+        incident_id=incident_id,
+        action_eligible=load_detector_v4_activation().allows_incident(incident),
+        items=items,
+        count=len(items),
+        synthetic=incident.synthetic and all(item.synthetic for item in items),
     )
 
 
@@ -345,3 +408,16 @@ def _resources(request: Request) -> tuple[Database, Settings]:
             detail={"reason_code": "SERVICE_NOT_READY"},
         )
     return database, settings
+
+
+def _require_merchant_authorization(
+    settings: Settings,
+    authorization: str | None,
+) -> None:
+    supplied = authorization or ""
+    expected = settings.merchant_approval_secret.get_secret_value()
+    if not hmac.compare_digest(supplied.encode(), expected.encode()):
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail={"reason_code": "MERCHANT_AUTHENTICATION_FAILED"},
+        )

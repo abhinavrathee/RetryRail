@@ -27,6 +27,10 @@ schema's meaning.
 | Recovery assignment freeze (M5) | Complete stratified treatment/control allocation made without outcome access | None |
 | Recovery outcome batch (M5) | Same-payment attributed outcomes for every frozen assignment | Deterministic synthetic generation only |
 | Recovery experiment report (M5) | Gross, natural, incremental and net recovery with confidence intervals | Read-only measurement evidence |
+| Incident snapshot (M6) | Aggregate-only allowlist containing detector evidence and no merchant/payment/customer identity | Optional model-provider request only |
+| Model incident brief (M6) | Strict evidence-cited observations, bounded hypotheses and explicit unknowns | Advisory output only |
+| Model recovery proposal (M6) | Sole known template, observed opportunity and complete stop conditions | Advisory output only; explicitly non-executable |
+| Model incident analysis (M6) | Content-addressed brief/proposal plus model, prompt, schema, evaluator, latency, token and cost provenance | Append-only internal evidence |
 | Synthetic manifest | Complete batch identity, scenario truth and artifact digests | None |
 
 ## Contract invariants
@@ -85,13 +89,25 @@ schema's meaning.
   Natural control recovery, action cost and false-intervention cost remain
   separate, and the conclusion is determined by the precommitted primary 95%
   interval.
+- An M6 snapshot cannot contain merchant ID, payment ID, raw payload, note,
+  description, contact field, credential, token or action authority.
+- Every M6 model claim cites only an event identifier already verified for the
+  incident. Unsupported global/provider-wide claims fail grounding.
+- The M6 proposal preserves exact observed amount/currency, recommends only
+  `standard_payment_link`, refuses to estimate benefit without outcome evidence,
+  retains all stop conditions, requires external approval, disables
+  notifications and is structurally non-executable.
+- M6 provider provenance uses a dated model snapshot, versioned prompt/schema/
+  evaluator, internally consistent token counts, at most one schema repair and
+  provider storage disabled.
 - Unknown fields fail validation at domain boundaries.
 
 ## Schema locations
 
 Event and delivery schemas live in `contracts/events/`. Incident, recovery,
 policy, approval, action, evaluation and truth schemas live in
-`contracts/domain/`. They are generated only from Pydantic source models:
+`contracts/domain/`. M6 model-boundary schemas live in `contracts/tools/`.
+They are generated only from Pydantic source models:
 
 ```bash
 uv run retryrail-contracts
@@ -115,4 +131,5 @@ The executable truth table and time boundaries are documented in
 fallback and audit boundary is documented in `docs/RECOVERY_WORKFLOW.md`,
 ADR-0008 and ADR-0009. The M5 external boundary and experiment evidence chain
 are documented in ADR-0010, ADR-0011, `docs/RAZORPAY_TEST_MODE.md` and
-`docs/M5_EXPERIMENT_PROTOCOL.md`.
+`docs/M5_EXPERIMENT_PROTOCOL.md`. The M6 allowlist and advisory boundary are
+documented in ADR-0012 and `docs/INCIDENT_ANALYST.md`.

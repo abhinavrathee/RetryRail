@@ -2,10 +2,12 @@
 
 ## Scope
 
-M0–M5 contain no live-money Razorpay action, customer messaging or model call.
-M5 adds a Test Mode-only Standard Payment Link boundary and synthetic causal
-measurement. Its one external reviewer action was human-approved, carried no
-customer contact and used a Test key; the adapter cannot accept a live key.
+M0–M7 contain no live-money Razorpay action or customer messaging. M5 adds a
+Test Mode-only Standard Payment Link boundary and synthetic causal measurement.
+Its one external reviewer action was human-approved, carried no customer contact
+and used a Test key; the adapter cannot accept a live key. M6 permits an optional
+aggregate-only model call but grants it no policy, approval or provider
+authority. M7 keeps both provider credentials outside the browser.
 
 ## Threats and current controls
 
@@ -17,6 +19,10 @@ customer contact and used a Test key; the adapter cannot accept a live key.
 | Live credential reaches the Test Mode adapter | Configuration and adapter both require `rzp_test_` and reject any configured `rzp_live_` identifier | Configuration and adapter negative tests |
 | Crash or timeout causes a duplicate Payment Link | Approval, action, attempt and immutable dispatch commit before network I/O; execute replay never re-POSTs and recovery is GET-only by stable reference | Crash-after-dispatch, timeout-before/after-create and replay tests |
 | Provider secret, PII or raw response enters evidence | Process-only masked secrets, PII-free request contract, notifications off and allowlisted bounded response models | Credential-redaction, request-shape, response-validation and schema tests |
+| Model sees payment/customer data or injected notes | Aggregate-only `IncidentSnapshot` allowlist excludes identities, raw events, notes, descriptions, contact data and credentials | Snapshot contract and 24-case privacy/prompt-injection corpus |
+| Model fabricates evidence, global scope or unsafe action | Strict output schema, citation subset check, unsupported-scope scan, exact amount/currency/template/stop validation and non-executable proposal | Grounding, scope, trajectory and unsafe-action tests/evaluation |
+| Model outage blocks recovery | Rules baseline persists before the call; timeout/refusal/invalid/provider error returns deterministic fallback | Provider-failure and full no-model workflow tests |
+| Browser persists a merchant or approval credential | Merchant authorization and one-time bearer remain in memory; lock/refresh clears the session and lock/execution clears the bearer | Component tests for secret clearing and execution lifecycle |
 | Gross or cherry-picked recovery is claimed as impact | Full qualified batch scan, remote pre-outcome assignment freeze, independent assignment/outcome namespaces, control subtraction and explicit uncertainty | `retryrail-experiment freeze --check` and `evaluate --check` |
 | PII/card data in fixtures or normalized events | Explicit field allowlist and prohibited-key scan | Sanitization and fixture scanner tests |
 | Evaluation-label leakage into runtime data | Physically separate truth artifacts and schemas | Split-isolation and forbidden-field tests |
@@ -51,6 +57,9 @@ customer contact and used a Test key; the adapter cannot accept a live key.
 - `.env.example` contains names and conspicuous local placeholders only.
 - Razorpay keys are required only by the approved M5 Test Mode provider process
   and must never use a `VITE_` prefix.
+- An OpenAI key is required only for the explicit M6 bakeoff or opted-in API
+  analyst. It is process-only, masked by settings, absent from reports and must
+  never use a `VITE_` prefix.
 - The reviewer CLI reads Razorpay's two-row CSV directly from an operator path
   outside the repository. It validates exact row labels, file size and the Test
   key prefix; values are held as masked secrets and are never copied into `.env`.
@@ -241,8 +250,50 @@ reproducible and structurally labelled
 `synthetic_batch_not_live_merchant_performance`; it cannot be represented as
 observed merchant performance.
 
-## Known M0–M5 limits
+## M6 model boundary
 
+ADR-0012 defines an allowlist rather than redacting an open-ended payload. The
+provider receives merchant-local aggregate statistics and verified evidence
+identifiers only. `store=false`, no tools, a bounded response size, a request
+timeout and at most one clean schema regeneration limit provider behavior.
+Invalid response text is never logged, persisted or copied into the next
+request.
+
+All accepted output passes strict Pydantic validation and deterministic
+grounding. Event citations must be a subset of the verified incident evidence;
+opportunity and currency must match the snapshot; the only template is the
+known Standard Payment Link; all stop conditions and approval requirements are
+mandatory; and global/provider-wide claims are rejected. Successful evidence is
+append-only and content-addressed. Telemetry is stored separately from prose and
+must agree with the validated document.
+
+The fixed evaluation report retains no completion text. A model API key does not
+unlock merchant approval, create an action or grant Razorpay access. The default
+runtime remains deterministic rules when the key or external provider is
+unavailable. Opted-in model startup requires a passing, corpus-bound report and
+an exact configured-model match to its frozen winner.
+
+## M7 browser boundary
+
+The M7 API client strictly validates server responses and renders bounded reason
+codes on errors. The browser never calls Razorpay or OpenAI. It stores the local
+merchant secret and one-time approval bearer only in memory, clears them at the
+end of authority use and does not place them in a URL or persistent browser
+store. Ambiguous actions expose reference lookup only.
+
+The synthetic demo endpoint is protected by a separate replay token, defaults
+off and is rejected in production. It replays ingestion/detection only and
+cannot issue approval or call a provider. Synthetic labeling remains visible in
+the application shell and every impact statement.
+
+## Known M0–M7 limits
+
+- The M6 provider comparison is synthetic and requires an operator-owned
+  OpenAI Platform key with billing. Production governance, regional processing
+  review and an approved internal model proxy are not implemented.
+- The M7 merchant session is a local single-merchant shared secret held in
+  browser memory. It is not production IAM, RBAC, revocation, CSRF/session
+  infrastructure or database row-level security.
 - The P0 API currently serves one configured merchant. Recovery writes require
   a shared merchant authorization secret, but per-user sessions, roles,
   revocation and database row-level security are not yet implemented. This is a

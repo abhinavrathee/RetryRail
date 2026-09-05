@@ -1,8 +1,11 @@
 """Configuration must fail closed before a production process starts."""
 
+from types import SimpleNamespace
+
 import pytest
 from pydantic import AnyHttpUrl, SecretStr, ValidationError
 
+from retryrail import main as main_module
 from retryrail.config import Environment, Settings
 
 
@@ -158,3 +161,68 @@ def test_razorpay_test_credentials_are_redacted_and_admitted() -> None:
     assert settings.razorpay_key_secret.get_secret_value() == key_secret
     assert key_id not in repr(settings)
     assert key_secret not in repr(settings)
+
+
+def test_openai_incident_analyst_requires_key_and_pinned_model_snapshot() -> None:
+    with pytest.raises(ValidationError, match="requires an API key"):
+        Settings(incident_analyst_target="openai")
+
+    with pytest.raises(ValidationError, match="openai_incident_model"):
+        Settings(
+            incident_analyst_target="openai",
+            openai_api_key=SecretStr("sk-unit-test-not-a-real-platform-api-key"),
+            openai_incident_model="gpt-5.4-mini",
+        )
+
+    with pytest.raises(ValidationError, match="invalid shape"):
+        Settings(
+            incident_analyst_target="openai",
+            openai_api_key=SecretStr("sk-too-short"),
+        )
+
+
+def test_openai_api_key_is_redacted_admitted_and_not_reusable() -> None:
+    api_key = "sk-unit-test-not-a-real-platform-api-key"
+    settings = Settings(
+        incident_analyst_target="openai",
+        openai_api_key=SecretStr(api_key),
+        openai_incident_model="gpt-5.4-mini-2026-03-17",
+    )
+
+    assert settings.openai_api_key is not None
+    assert settings.openai_api_key.get_secret_value() == api_key
+    assert api_key not in repr(settings)
+
+    with pytest.raises(ValidationError, match="must not be reused"):
+        Settings(
+            webhook_secret=SecretStr(api_key),
+            incident_analyst_target="openai",
+            openai_api_key=SecretStr(api_key),
+        )
+
+
+@pytest.mark.parametrize(
+    ("report_status", "selected_model"),
+    [
+        ("threshold_gap", None),
+        ("passed", "gpt-5.4-nano-2026-03-17"),
+    ],
+)
+def test_openai_runtime_requires_the_exact_passing_frozen_selection(
+    monkeypatch: pytest.MonkeyPatch,
+    report_status: str,
+    selected_model: str | None,
+) -> None:
+    settings = Settings(
+        incident_analyst_target="openai",
+        openai_api_key=SecretStr("sk-unit-test-not-a-real-platform-api-key"),
+        openai_incident_model="gpt-5.4-mini-2026-03-17",
+    )
+    monkeypatch.setattr(
+        main_module,
+        "check_analyst_report",
+        lambda: SimpleNamespace(status=report_status, selected_model=selected_model),
+    )
+
+    with pytest.raises(RuntimeError, match="passing frozen M6 selection"):
+        main_module._configured_incident_analyst_provider(settings)  # noqa: SLF001

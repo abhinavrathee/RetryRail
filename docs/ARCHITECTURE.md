@@ -2,16 +2,17 @@
 
 ## Current release boundary
 
-This document describes the implemented M0–M5 foundation, provider boundary and
-measurement evidence. M5's external release gate is closed by one human-approved
-Test Mode execution and its committed sanitized receipt. The authoritative
+This document describes the implemented M0–M7 foundation, provider boundary,
+measurement evidence, bounded analyst and merchant control room. M5's external
+release gate is closed by one human-approved Test Mode execution and its
+committed sanitized receipt. The authoritative
 product behavior remains in `PRODUCT_REQUIREMENTS.md`; sequencing remains in
 `BUILD_PLAN.md`.
 
 ```mermaid
 flowchart LR
-    Browser[Merchant browser] --> Web[React + Blade shell]
-    Web -->|typed readiness request| API[FastAPI process]
+    Browser[Merchant browser] --> Web[M7 React + Blade control room]
+    Web -->|typed validated API| API[FastAPI process]
     Truth[M1 synthetic generator] --> Contracts[Versioned schemas + manifest]
     Contracts -->|protected raw-body replay| API
     Razorpay[Razorpay payment webhook] -->|exact bytes + HMAC| API
@@ -23,8 +24,11 @@ flowchart LR
     Aggregates --> Detector[Statistical detector]
     Detector --> Incidents[(Incidents + immutable evidence)]
     Incidents -->|merchant-scoped reads| API
+    Incidents --> Snapshot[M6 redacted snapshot]
+    Snapshot --> Model[M6 optional strict-schema analyst]
     Incidents --> Analyst[M4.5 deterministic rules analyst]
-    Analyst --> BriefEvidence[(Immutable grounded briefs)]
+    Model --> ModelEvidence[(Immutable grounded model analysis)]
+    Analyst --> BriefEvidence[(Immutable grounded rules briefs)]
     Incidents --> Recovery[M4 authoritative recovery workflow]
     Projection --> Recovery
     Worker --> Controls[(Synthetic recovery controls)]
@@ -57,7 +61,7 @@ and remains unreachable until a fresh deterministic policy passes and a human
 merchant approval is atomically consumed. The review workflow used that
 authority once for the committed external Test Mode evidence link.
 
-## Decisions implemented in M0–M5
+## Decisions implemented in M0–M7
 
 - Python 3.12-compatible FastAPI modular monolith with typed Pydantic
   boundaries.
@@ -124,6 +128,17 @@ authority once for the committed external Test Mode evidence link.
   10,000-replicate bootstrap interval.
 - An authenticated read-only experiment endpoint serving the exact packaged
   report only after its activated SHA-256 and strict contract validate.
+- An aggregate-only `IncidentSnapshot` allowlist, strict typed analyst output,
+  one schema-regeneration limit, deterministic grounding and a rules fallback
+  for every provider failure.
+- Append-only model analysis bound to its snapshot, dated model, prompt, schema
+  and evaluator, with low-cardinality latency/token/cost metrics and no retained
+  provider prose.
+- A fixed 24-case model bakeoff across grounding, abstention, privacy, prompt
+  injection, scope, trajectory and schema behavior.
+- A responsive control room for overview, incident evidence, policy preview,
+  merchant approval, action/audit, incremental impact and isolated synthetic
+  replay, with memory-only browser secrets and typed response validation.
 - A threshold freeze plus committed tuning and held-out reports. Detector v1
   failed held-out targets and remains explicitly release-blocked through a
   machine-readable runtime decision.
@@ -166,6 +181,13 @@ authority once for the committed external Test Mode evidence link.
 13. M5 assignment and outcome namespaces are independent. Protocol and
     assignment were committed remotely before outcomes, all eligible rows are
     retained, and every report remains structurally labelled synthetic.
+14. M6 sends only the redacted snapshot to a tool-free provider with storage
+    disabled. Model output remains advisory, is deterministically grounded and
+    can never supply policy, approval or execution authority. Failure returns
+    the independently persisted rules analysis.
+15. M7 stores the merchant authorization and one-time approval bearer only in
+    browser memory. Razorpay and OpenAI credentials remain server-only; replay
+    controls are local-only and cannot cross the recovery approval boundary.
 
 ## Dependency boundary
 
@@ -277,3 +299,18 @@ interval. The human-approved Test Mode POST created one link; a small positive
 provider-clock skew interrupted local result parsing, and the durable
 `executing` action completed by reference-only GET without repeating create.
 Its sanitized, complete-audit receipt closes the M5 external exit gate.
+
+M6 adds the optional provider path without changing that authority. It persists
+the deterministic rules baseline first, derives a PII-free aggregate snapshot,
+requires strict structured output and rejects citation, scope, amount, template
+or stop-condition drift before append-only persistence. Refusal, timeout,
+unavailability and invalid output complete through the existing rules path. The
+fixed 24-case report is the only permitted model-selection evidence.
+
+M7 exposes the sequence as a merchant control room. The overview and incident
+views lead to an authenticated, authoritative recovery preview; the merchant
+sees all 13 policy outcomes before a keyboard-operable approve/reject decision.
+The action receipt, lookup-only ambiguous state, complete audit, frozen
+incremental-impact report and isolated synthetic replay are distinct views.
+The browser receives no provider credential and contains no chat-based action
+surface.

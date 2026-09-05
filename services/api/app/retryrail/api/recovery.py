@@ -7,7 +7,8 @@ from fastapi import APIRouter, Header, HTTPException, Path, Request, status
 
 from retryrail.config import Settings
 from retryrail.contracts.recovery import ApprovalDecision
-from retryrail.recovery.analysis import RulesBasedIncidentAnalyst
+from retryrail.recovery.analyst_models import IncidentAnalysisResult
+from retryrail.recovery.audit import RecoveryAuditVerifier
 from retryrail.recovery.execution import (
     RecoveryActionNotFoundError,
     RecoveryActionNotReconciliationRequiredError,
@@ -16,17 +17,18 @@ from retryrail.recovery.execution import (
     RecoveryFakeTargetRequiresSyntheticError,
     RecoveryProviderLookupUnavailableError,
 )
+from retryrail.recovery.incident_analyst import IncidentAnalyst
 from retryrail.recovery.models import (
     ApprovalDecisionRequest,
     ApprovalDecisionResponse,
     CreateRecoveryPlanRequest,
     ExecuteRecoveryPlanRequest,
     ReconcileRecoveryActionRequest,
+    RecoveryActionAuditResponse,
     RecoveryErrorResponse,
     RecoveryExecutionResponse,
     RecoveryPlanPreviewResponse,
     RecoveryReconciliationResponse,
-    RulesBasedIncidentAnalysisResponse,
 )
 from retryrail.recovery.workflow import (
     ApprovalActorError,
@@ -77,14 +79,14 @@ _ERROR_RESPONSES: dict[int | str, dict[str, object]] = {
 @router.post(
     "/incidents/{incident_id}/analyze",
     responses=_ERROR_RESPONSES,
-    summary="Create a grounded incident brief without a model provider",
+    summary="Create a grounded advisory incident analysis with safe fallback",
 )
-async def analyze_incident_with_rules(
+async def analyze_incident(
     request: Request,
     incident_id: RecoveryPath,
     authorization: MerchantAuthorization = None,
-) -> RulesBasedIncidentAnalysisResponse:
-    """Persist or replay a content-bound rules brief and safe plan fallback."""
+) -> IncidentAnalysisResult:
+    """Use redacted structured analysis or deterministically complete without it."""
 
     service, settings = _authenticated_analysis_resources(request, authorization)
     try:
@@ -237,6 +239,33 @@ async def reconcile_recovery_action(
         raise _http_error(error) from error
 
 
+@router.get(
+    "/actions/{action_id}",
+    responses=_ERROR_RESPONSES,
+    summary="Read one action timeline and its audit-completeness proof",
+)
+async def get_recovery_action_audit(
+    request: Request,
+    action_id: RecoveryPath,
+    authorization: MerchantAuthorization = None,
+) -> RecoveryActionAuditResponse:
+    """Reconstruct durable state without performing a provider call or write."""
+
+    execution, audit, settings = _authenticated_audit_resources(request, authorization)
+    try:
+        receipt = await execution.get_receipt(
+            merchant_id=settings.merchant_id,
+            action_id=action_id,
+        )
+        report = await audit.verify_action(
+            merchant_id=settings.merchant_id,
+            action_id=action_id,
+        )
+        return RecoveryActionAuditResponse(receipt=receipt, audit=report)
+    except RecoveryWorkflowError as error:
+        raise _http_error(error) from error
+
+
 async def _decide(
     *,
     body: ApprovalDecisionRequest,
@@ -296,15 +325,29 @@ def _authenticated_execution_resources(
 def _authenticated_analysis_resources(
     request: Request,
     authorization: str | None,
-) -> tuple[RulesBasedIncidentAnalyst, Settings]:
+) -> tuple[IncidentAnalyst, Settings]:
     _, settings = _authenticated_resources(request, authorization)
-    service = request.app.state.rules_based_incident_analyst
-    if not isinstance(service, RulesBasedIncidentAnalyst):
+    service = request.app.state.incident_analyst
+    if not isinstance(service, IncidentAnalyst):
         raise HTTPException(
             status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
             detail={"reason_code": "SERVICE_NOT_READY"},
         )
     return service, settings
+
+
+def _authenticated_audit_resources(
+    request: Request,
+    authorization: str | None,
+) -> tuple[RecoveryExecutionService, RecoveryAuditVerifier, Settings]:
+    execution, settings = _authenticated_execution_resources(request, authorization)
+    audit = request.app.state.recovery_audit_verifier
+    if not isinstance(audit, RecoveryAuditVerifier):
+        raise HTTPException(
+            status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
+            detail={"reason_code": "SERVICE_NOT_READY"},
+        )
+    return execution, audit, settings
 
 
 def _http_error(error: RecoveryWorkflowError) -> HTTPException:

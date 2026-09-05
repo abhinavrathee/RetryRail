@@ -85,7 +85,7 @@ class RulesBasedIncidentAnalyst:
                 )
                 if incident is None:
                     raise IncidentNotFoundError
-                await _validate_event_citations(session, incident)
+                await validate_event_citations(session, incident)
                 source_sha256 = canonical_sha256(_source_snapshot(incident))
                 existing = await session.scalar(
                     select(RulesBasedIncidentBriefRecord).where(
@@ -199,7 +199,7 @@ def _source_snapshot(incident: IncidentRecord) -> dict[str, object]:
     }
 
 
-async def _validate_event_citations(
+async def validate_event_citations(
     session: "AsyncSession",
     incident: IncidentRecord,
 ) -> None:

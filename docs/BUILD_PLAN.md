@@ -714,6 +714,14 @@ Exit gate:
 - A model outage does not prevent recovery through the safe fallback.
 - No model output can cross the mutation boundary without policy and approval.
 
+Implementation status (September 5, 2026): the redacted contracts, one
+strict-schema OpenAI adapter, deterministic grounding and fallback, append-only
+provenance, telemetry and fixed 24-case corpus are implemented. The local
+corpus/failure-path gates pass. The key-backed three-model report is an explicit
+external evidence gate and must be generated with an operator-supplied OpenAI
+Platform API key; results must be recorded whether they pass or disclose a
+threshold gap.
+
 ### M7 — Merchant UI and end-to-end story
 
 **Estimate:** 10–12 hours  
@@ -751,6 +759,12 @@ Exit gate:
 - Keyboard-only approval and rejection work.
 - Every money and metric label identifies currency, units and synthetic status.
 - No generic chat window is the primary product surface.
+
+Implementation status (September 5, 2026): complete. The responsive control
+room covers overview, evidence, recovery, impact, audit and an isolated local
+demo. Component/API tests cover all material states, Playwright completes the
+primary path and keyboard-only rejection, and the browser never receives model
+or Razorpay credentials.
 
 ### M8 — Observability, security and release hardening
 

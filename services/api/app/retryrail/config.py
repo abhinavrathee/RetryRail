@@ -29,6 +29,8 @@ _INSECURE_SECRET_VALUES = frozenset(
 _MAX_RAZORPAY_KEY_ID_LENGTH = 80
 _MIN_RAZORPAY_KEY_SECRET_LENGTH = 8
 _MAX_RAZORPAY_KEY_SECRET_LENGTH = 200
+_MAX_OPENAI_API_KEY_LENGTH = 300
+_MIN_OPENAI_API_KEY_LENGTH = 20
 
 
 class Settings(BaseSettings):
@@ -74,13 +76,32 @@ class Settings(BaseSettings):
     approval_token_lifetime_seconds: int = Field(default=600, ge=30, le=900)
     recovery_maximum_attempts_per_payment: int = Field(default=1, ge=1, le=3)
     recovery_cooldown_seconds: int = Field(default=900, ge=0, le=604_800)
-    recovery_execution_target: Literal[
-        "deterministic_fake", "razorpay_test_mode"
-    ] = "deterministic_fake"
+    recovery_execution_target: Literal["deterministic_fake", "razorpay_test_mode"] = (
+        "deterministic_fake"
+    )
     razorpay_key_id: SecretStr | None = None
     razorpay_key_secret: SecretStr | None = None
     razorpay_connect_timeout_seconds: float = Field(default=3.0, ge=0.1, le=10.0)
     razorpay_read_timeout_seconds: float = Field(default=8.0, ge=0.1, le=30.0)
+    incident_analyst_target: Literal["deterministic_rules", "openai"] = "deterministic_rules"
+    openai_api_key: SecretStr | None = None
+    openai_incident_model: str = Field(
+        default="gpt-5.4-2026-03-05",
+        min_length=3,
+        max_length=80,
+        pattern=r"^gpt-[A-Za-z0-9.:-]+-\d{4}-\d{2}-\d{2}$",
+    )
+    openai_timeout_seconds: float = Field(default=12.0, ge=1.0, le=30.0)
+    openai_max_output_tokens: int = Field(default=1_600, ge=400, le=4_000)
+    openai_max_schema_repairs: Literal[0, 1] = 1
+    incident_analyst_prompt_version: str = Field(
+        default="incident_analyst_prompt_v1",
+        pattern=r"^[A-Za-z0-9_-]+$",
+    )
+    incident_analyst_evaluator_version: str = Field(
+        default="incident_analyst_eval_v1",
+        pattern=r"^[A-Za-z0-9_-]+$",
+    )
     max_webhook_body_bytes: int = Field(default=262_144, ge=1_024, le=1_048_576)
     outbox_max_attempts: int = Field(default=5, ge=1, le=20)
     worker_batch_size: int = Field(default=50, ge=1, le=500)
@@ -98,6 +119,7 @@ class Settings(BaseSettings):
         """Prevent placeholder secrets and non-PostgreSQL production stores."""
 
         self._validate_razorpay_test_mode_configuration()
+        self._validate_incident_analyst_configuration()
 
         if self.environment is not Environment.PRODUCTION:
             return self
@@ -127,19 +149,43 @@ class Settings(BaseSettings):
             self.webhook_secret.get_secret_value(),
             self.merchant_approval_secret.get_secret_value(),
             self.approval_token_hmac_key.get_secret_value(),
+            *((self.openai_api_key.get_secret_value(),) if self.openai_api_key is not None else ()),
         )
         if len(set(runtime_secret_values)) != len(runtime_secret_values):
-            msg = "webhook, merchant approval and token HMAC secrets must be distinct"
+            msg = "all runtime secrets must be distinct"
             raise ValueError(msg)
         return self
+
+    def _validate_incident_analyst_configuration(self) -> None:
+        """Require a plausible secret and pinned snapshot for external analysis."""
+
+        api_key = self.openai_api_key.get_secret_value() if self.openai_api_key else ""
+        if self.incident_analyst_target == "openai" and not api_key:
+            msg = "OpenAI incident analysis requires an API key"
+            raise ValueError(msg)
+        if not api_key:
+            return
+        if (
+            not api_key.startswith("sk-")
+            or len(api_key) < _MIN_OPENAI_API_KEY_LENGTH
+            or len(api_key) > _MAX_OPENAI_API_KEY_LENGTH
+            or any(character.isspace() for character in api_key)
+        ):
+            msg = "OpenAI API key has an invalid shape"
+            raise ValueError(msg)
+        if api_key in {
+            self.webhook_secret.get_secret_value(),
+            self.merchant_approval_secret.get_secret_value(),
+            self.approval_token_hmac_key.get_secret_value(),
+        }:
+            msg = "OpenAI API key must not be reused as another runtime secret"
+            raise ValueError(msg)
 
     def _validate_razorpay_test_mode_configuration(self) -> None:
         """Admit only a complete Test Mode credential pair at the provider boundary."""
 
         key_id = self.razorpay_key_id.get_secret_value() if self.razorpay_key_id else ""
-        key_secret = (
-            self.razorpay_key_secret.get_secret_value() if self.razorpay_key_secret else ""
-        )
+        key_secret = self.razorpay_key_secret.get_secret_value() if self.razorpay_key_secret else ""
         if bool(key_id) is not bool(key_secret):
             msg = "Razorpay Test Mode key id and secret must be configured together"
             raise ValueError(msg)

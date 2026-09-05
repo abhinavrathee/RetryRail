@@ -2,7 +2,7 @@
 
 **Last verified:** September 5, 2026
 
-**Current delivery boundary:** M4 and M5 complete; one human-approved Test Mode link and its sanitized complete-audit receipt are committed
+**Current delivery boundary:** M5 and M7 complete; M6 implementation and local safety gates complete, with the key-backed model-selection report pending external OpenAI API access
 
 **Runtime recovery:** deterministic fake or human-approved Razorpay Test Mode for exact qualified synthetic v4 incidents; Razorpay Live Mode rejected
 
@@ -33,6 +33,8 @@ this document records the verified implementation boundary.
 | M4.5 | Verified-citation rules brief, no-model plan fallback, complete action-audit verifier and exact hash-bound activation of the qualified v4 detector without altering frozen evidence |
 | M5 provider edge | Test-key-only Standard Payment Link adapter, immutable pre-network dispatch, one human-approved INR 1,499.00 link, no-create replay, real GET-only crash-equivalent recovery and a sanitized complete-audit receipt |
 | M5 measurement | Remotely frozen 224/56 stratified assignment over all 280 eligible blind-batch rows, same-payment outcome attribution, gross/natural/incremental/net value separation, deterministic 10,000-replicate uncertainty and an authenticated hash-bound report API |
+| M6 implementation | Aggregate-only redacted snapshot, strict brief/proposal schemas, one bounded OpenAI adapter, deterministic grounding/fallback, append-only provenance, 24-case fixed evaluation and latency/token/cost metrics |
+| M7 | Responsive Blade control room, typed API boundary, memory-only merchant/approval secrets, authoritative policy preview, keyboard approval/rejection, lookup-only ambiguity, audit/impact views and isolated demo |
 
 The v4 figures are synthetic benchmark evidence, not production-performance
 claims. Detector v2 and v3 artifacts are immutable historical failures and must
@@ -230,6 +232,35 @@ See `docs/DETECTOR_V4_PROTOCOL.md` for the full R5.5 evidence narrative.
   authenticated packaged endpoint returns the expected 280-row synthetic
   report. The isolated containers, network and disposable volume were removed.
 
+## M6–M7 implementation snapshot
+
+- Four aggregate/advisory JSON Schemas bring the generated catalog to 23. The
+  `IncidentSnapshot` excludes merchant/payment/customer identities, raw events,
+  notes, descriptions, contact data, credentials, tokens and action authority.
+- The optional analyst has no tools, disables provider storage, uses a bounded
+  timeout and response size, permits at most one clean schema regeneration and
+  falls back for unavailability, timeout, refusal, invalid output or provider
+  error. Deterministic grounding rejects unknown citations, unsupported global
+  claims, amount/currency/template drift, missing stop conditions or authority
+  drift.
+- Migration `0007_m6_model_incident_analysis` stores only validated advisory
+  output and internally consistent provenance/telemetry in an update/delete-
+  protected table. The deterministic rules baseline is persisted before any
+  model call, so provider failure cannot break the recovery/audit path.
+- The fixed M6 corpus has 24 cases across grounding, abstention, privacy, prompt
+  injection, scope, trajectory and schema categories. Its local validation and
+  provider-failure tests pass. The live three-model report is not fabricated:
+  it remains pending until an operator supplies a process-only OpenAI Platform
+  API key with billing.
+- The M7 browser provides overview, incident evidence, recovery control,
+  experiment impact and an isolated synthetic demo. All API responses are
+  runtime validated. Merchant authorization and the one-time approval bearer
+  remain in memory; Razorpay/OpenAI credentials never enter the browser.
+- Thirteen frontend tests pass with 90.05% statements, 77.69% branches, 93.69%
+  functions and 92.40% lines. The three Chromium scenarios include the primary
+  evidence-to-demo path, keyboard-only rejection and the foundation smoke path.
+  Desktop and 390-pixel responsive layouts were visually reviewed.
+
 ## Safety boundary that must remain true
 
 - Frozen detector artifacts retain their historical
@@ -251,6 +282,12 @@ See `docs/DETECTOR_V4_PROTOCOL.md` for the full R5.5 evidence narrative.
 - M4.5 rules analysis can explain verified evidence and propose only the frozen
   review-first template; it cannot detect, approve or execute.
 - No LLM may decide whether degradation occurred or cross a mutation boundary.
+- M6 model input is an aggregate-only allowlist. Accepted output must retain
+  evidence citations, merchant-local scope, one known template, all stop
+  conditions, external approval and `executable=false`; failure returns the
+  independently valid rules path.
+- M7 keeps authorization in browser memory and exposes no direct Razorpay or
+  OpenAI client. Synthetic replay is local-only and cannot approve or execute.
 - No v4 threshold, candidate, blind artifact, receipt or decision may be tuned
   or rewritten after the nonce reveal.
 - No credential is needed for M4. Razorpay Test Mode credentials first become
@@ -258,19 +295,17 @@ See `docs/DETECTOR_V4_PROTOCOL.md` for the full R5.5 evidence narrative.
 - The GitHub repository is currently private. Public visibility and signed-out
   verification are deliberate M9 submission actions, not assumptions.
 
-## Start here next: M6 bounded AI analyst
+## Start here next
 
-The provider, external Test Mode proof and synthetic causal-measurement work are
-complete. Begin M6 with a redacted model input contract and evaluation protocol;
-preserve the existing deterministic detector, policy, approval, execution and
-rules-only fallback boundaries. The LLM may explain evidence and propose only
-pre-authorized interventions. It must never detect degradation, approve an
-action or cross the provider boundary.
+First close the only M6 external evidence dependency: run the fixed live model
+bakeoff with a process-only OpenAI Platform API key, commit the sanitized report
+and freeze the selected dated model (or disclose its measured threshold gap).
+Then begin M8 observability, security and clean-release hardening. Preserve all
+M3–M7 authority and evidence boundaries.
 
-## What remains after M5
+## What remains after the M6–M7 implementation
 
-- M6: bounded AI analyst, redacted inputs, deterministic fallback and agent
-  golden/adversarial evaluations.
-- M7: merchant UI and complete browser story.
+- M6 external evidence: key-backed three-model report and selected-model freeze
+  (or honest measured threshold-gap disclosure).
 - M8: observability, security and final release hardening.
 - M9: public repository, tag, video, signed-out link checks and submission.

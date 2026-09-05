@@ -8,6 +8,8 @@ const queryClient = new QueryClient({
   defaultOptions: {
     queries: {
       refetchOnWindowFocus: false,
+      retry: 1,
+      staleTime: 10_000,
     },
   },
 });
@@ -21,4 +23,3 @@ export default function AppRoot(): React.JSX.Element {
     </BladeProvider>
   );
 }
-

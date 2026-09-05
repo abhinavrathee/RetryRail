@@ -145,6 +145,33 @@ def test_protected_replay_is_repeat_safe_and_metrics_are_redacted(
     assert "event_synthetic_" not in metrics.text
 
 
+def test_bounded_demo_run_projects_then_refreshes_the_detector(
+    client: TestClient,
+) -> None:
+    request = {"mode": "required_cases", "limit": 10}
+    headers = {"X-RetryRail-Replay-Token": "unit-test-replay-token"}
+
+    first = client.post("/v1/demo/run", json=request, headers=headers)
+    replayed = client.post("/v1/demo/run", json=request, headers=headers)
+
+    assert first.status_code == replayed.status_code == 200
+    body = first.json()
+    assert body["synthetic"] is True
+    assert body["replay"]["selected_deliveries"] == 10
+    assert body["replay"]["expectation_mismatches"] == 0
+    assert body["projected"] == body["replay"]["accepted"]
+    assert body["retried"] == body["dead_lettered"] == 0
+    assert body["detector_run_id"] is not None
+    assert body["source_events"] == body["replay"]["accepted"]
+    assert body["attempts"] >= 0
+    assert body["at_risk_gmv_subunits"] >= 0
+
+    replayed_body = replayed.json()
+    assert replayed_body["replay"]["accepted"] == 0
+    assert replayed_body["projected"] == 0
+    assert replayed_body["detector_reused"] is True
+
+
 def test_required_replay_reconciles_every_projection(settings: Settings) -> None:
     async def exercise() -> None:
         database = Database(settings.database_dsn())

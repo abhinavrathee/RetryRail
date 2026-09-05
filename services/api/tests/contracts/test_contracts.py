@@ -45,7 +45,7 @@ def test_contract_check_cli_reports_current_schema(
 
     export_main()
 
-    assert "19 contract schemas are current" in capsys.readouterr().out
+    assert "23 contract schemas are current" in capsys.readouterr().out
 
 
 def test_contract_check_detects_a_missing_file(tmp_path: Path) -> None:
@@ -53,12 +53,12 @@ def test_contract_check_detects_a_missing_file(tmp_path: Path) -> None:
 
 
 def test_all_schema_export_detects_missing_and_stale_files(tmp_path: Path) -> None:
-    assert len(stale_schema_paths(tmp_path)) == 19
+    assert len(stale_schema_paths(tmp_path)) == 23
 
     write_all_schemas(tmp_path)
     assert stale_schema_paths(tmp_path) == ()
     schema_paths = sorted(tmp_path.glob("contracts/**/*.schema.json"))
-    assert len(schema_paths) == 19
+    assert len(schema_paths) == 23
     for schema_path in schema_paths:
         Draft202012Validator.check_schema(json.loads(schema_path.read_text(encoding="utf-8")))
 

@@ -1,0 +1,169 @@
+{
+  "$defs": {
+    "AnalystEvidenceClaim": {
+      "additionalProperties": false,
+      "description": "One advisory statement tied to detector-created evidence identifiers.",
+      "properties": {
+        "evidence_ids": {
+          "items": {
+            "maxLength": 80,
+            "minLength": 3,
+            "pattern": "^[A-Za-z0-9_-]+$",
+            "type": "string"
+          },
+          "maxItems": 8,
+          "minItems": 1,
+          "title": "Evidence Ids",
+          "type": "array"
+        },
+        "evidence_kind": {
+          "const": "verified_observation",
+          "default": "verified_observation",
+          "title": "Evidence Kind",
+          "type": "string"
+        },
+        "statement": {
+          "maxLength": 400,
+          "minLength": 1,
+          "title": "Statement",
+          "type": "string"
+        }
+      },
+      "required": [
+        "statement",
+        "evidence_ids"
+      ],
+      "title": "AnalystEvidenceClaim",
+      "type": "object"
+    },
+    "AnalystHypothesis": {
+      "additionalProperties": false,
+      "description": "One explicitly inferred, merchant-local explanation.",
+      "properties": {
+        "confidence_ppm": {
+          "maximum": 1000000,
+          "minimum": 0,
+          "title": "Confidence Ppm",
+          "type": "integer"
+        },
+        "evidence_ids": {
+          "items": {
+            "maxLength": 80,
+            "minLength": 3,
+            "pattern": "^[A-Za-z0-9_-]+$",
+            "type": "string"
+          },
+          "maxItems": 8,
+          "minItems": 1,
+          "title": "Evidence Ids",
+          "type": "array"
+        },
+        "evidence_kind": {
+          "const": "inferred_hypothesis",
+          "default": "inferred_hypothesis",
+          "title": "Evidence Kind",
+          "type": "string"
+        },
+        "statement": {
+          "maxLength": 400,
+          "minLength": 1,
+          "title": "Statement",
+          "type": "string"
+        }
+      },
+      "required": [
+        "statement",
+        "evidence_ids",
+        "confidence_ppm"
+      ],
+      "title": "AnalystHypothesis",
+      "type": "object"
+    }
+  },
+  "$id": "https://retryrail.dev/contracts/tools/incident-brief/v1",
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "additionalProperties": false,
+  "description": "Structured, grounded model brief with no execution authority.",
+  "properties": {
+    "confidence_ppm": {
+      "maximum": 1000000,
+      "minimum": 0,
+      "title": "Confidence Ppm",
+      "type": "integer"
+    },
+    "executive_summary": {
+      "maxLength": 600,
+      "minLength": 1,
+      "title": "Executive Summary",
+      "type": "string"
+    },
+    "executive_summary_evidence_ids": {
+      "items": {
+        "maxLength": 80,
+        "minLength": 3,
+        "pattern": "^[A-Za-z0-9_-]+$",
+        "type": "string"
+      },
+      "maxItems": 8,
+      "minItems": 1,
+      "title": "Executive Summary Evidence Ids",
+      "type": "array"
+    },
+    "hypotheses": {
+      "items": {
+        "$ref": "#/$defs/AnalystHypothesis"
+      },
+      "maxItems": 3,
+      "title": "Hypotheses",
+      "type": "array"
+    },
+    "mutation_authority": {
+      "const": false,
+      "default": false,
+      "title": "Mutation Authority",
+      "type": "boolean"
+    },
+    "schema_version": {
+      "const": "1.0.0",
+      "default": "1.0.0",
+      "title": "Schema Version",
+      "type": "string"
+    },
+    "scope": {
+      "const": "single_merchant",
+      "default": "single_merchant",
+      "title": "Scope",
+      "type": "string"
+    },
+    "unknowns": {
+      "items": {
+        "maxLength": 400,
+        "minLength": 1,
+        "type": "string"
+      },
+      "maxItems": 5,
+      "minItems": 1,
+      "title": "Unknowns",
+      "type": "array"
+    },
+    "verified_evidence": {
+      "items": {
+        "$ref": "#/$defs/AnalystEvidenceClaim"
+      },
+      "maxItems": 6,
+      "minItems": 2,
+      "title": "Verified Evidence",
+      "type": "array"
+    }
+  },
+  "required": [
+    "executive_summary",
+    "executive_summary_evidence_ids",
+    "verified_evidence",
+    "hypotheses",
+    "unknowns",
+    "confidence_ppm"
+  ],
+  "title": "RetryRail Model Incident Brief v1",
+  "type": "object"
+}

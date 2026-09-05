@@ -1,4 +1,4 @@
-# M4–M5 deterministic recovery workflow
+# M4–M7 bounded recovery workflow
 
 ## Implemented boundary
 
@@ -159,6 +159,30 @@ The fallback recommends only the standard Payment Link template, requires
 external merchant approval and reports plan availability through the same exact
 detector-activation gate used by preview and execution.
 
+## Optional bounded model analysis
+
+M6 wraps the rules path without replacing it. The API first persists the
+content-addressed rules brief, validates all incident citations, and builds a
+PII-free aggregate `IncidentSnapshot`. If the external analyst is enabled, its
+strict structured output is accepted only after deterministic citation, scope,
+amount, currency, template, stopping-control and authority checks. Successful
+output is append-only and records dated model/prompt/schema/evaluator provenance
+plus bounded latency, token and estimated-cost telemetry.
+
+No model output is used as a detector decision, policy fact, approval or
+execution command. Timeout, refusal, provider error, malformed schema or failed
+grounding returns the existing rules brief and plan fallback. Runtime defaults
+to that rules-only path. See `docs/INCIDENT_ANALYST.md` and ADR-0012.
+
+## Merchant control room
+
+M7 exposes merchant-scoped reads for cited recovery candidates and complete
+action audit, plus a local-only bounded replay/detection demo. The browser
+validates API responses, retains merchant/approval secrets only in memory and
+shows all 13 preview-policy results before an explicit approve/reject decision.
+It has no direct provider client. Ambiguous outcomes present only the existing
+lookup reconciliation route. See `docs/MERCHANT_UI.md` and ADR-0013.
+
 ## Durable evidence and audit completeness
 
 Migration `0003_m4_preview_approval` creates recovery controls, plans, preview
@@ -203,7 +227,7 @@ The complete release-gate command results are recorded in
 `docs/PROJECT_STATUS.md`; commands are listed only as passing when they were
 actually run.
 
-## Deliberate limits after M5 implementation
+## Deliberate limits after M7 implementation
 
 - The API is a single-merchant demo boundary using a shared authorization
   secret; per-user IAM, roles, revocation, rate limiting and database row-level
@@ -215,4 +239,7 @@ actually run.
   is evidence of live money or production recovery performance.
 - The committed impact report uses deterministic synthetic outcomes and must not
   be generalized to live merchant performance.
-- The reviewer-facing incident, approval and audit UI begins in M7.
+- Model evaluation is synthetic and does not establish production explanation
+  quality or data-governance approval for a live merchant population.
+- Browser authentication remains a local shared-secret demo boundary, not
+  production IAM, RBAC or revocation.

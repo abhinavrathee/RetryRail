@@ -1021,3 +1021,73 @@ class RulesBasedIncidentBriefRecord(Base):
     model_status: Mapped[str] = mapped_column(String(16), nullable=False)
     fallback_used: Mapped[bool] = mapped_column(Boolean, nullable=False)
     created_at: Mapped[datetime] = mapped_column(UTCDateTime(), nullable=False)
+
+
+class ModelIncidentAnalysisRecord(Base):
+    """Immutable successful model analysis bound to one redacted snapshot."""
+
+    __tablename__ = "model_incident_analyses"
+    __table_args__ = (
+        ForeignKeyConstraint(
+            ("incident_id", "merchant_id"),
+            ("incidents.incident_id", "incidents.merchant_id"),
+            name="fk_model_analyses_incident_merchant",
+            ondelete="RESTRICT",
+        ),
+        UniqueConstraint(
+            "incident_id",
+            "source_snapshot_sha256",
+            "model",
+            "prompt_version",
+            "evaluator_version",
+            name="uq_model_analyses_incident_snapshot_model_prompt_eval",
+        ),
+        CheckConstraint(
+            "length(source_snapshot_sha256) = 64 AND length(analysis_sha256) = 64",
+            name="ck_model_analyses_sha256",
+        ),
+        CheckConstraint(
+            "provider = 'openai' AND model_status = 'succeeded' "
+            "AND fallback_used = false AND provider_storage_enabled = false",
+            name="ck_model_analyses_bounded_mode",
+        ),
+        CheckConstraint(
+            "latency_ms >= 0 AND input_tokens >= 0 AND output_tokens >= 0 "
+            "AND total_tokens = input_tokens + output_tokens "
+            "AND (estimated_cost_microusd IS NULL OR estimated_cost_microusd >= 0) "
+            "AND schema_repair_attempts >= 0 AND schema_repair_attempts <= 1",
+            name="ck_model_analyses_telemetry",
+        ),
+        CheckConstraint(
+            "(pricing_version = 'unavailable_for_model' "
+            "AND estimated_cost_microusd IS NULL) OR "
+            "(pricing_version = 'openai_public_pricing_2026_09_05' "
+            "AND estimated_cost_microusd IS NOT NULL)",
+            name="ck_model_analyses_pricing",
+        ),
+        Index("ix_model_analyses_merchant_created", "merchant_id", "created_at"),
+    )
+
+    analysis_id: Mapped[str] = mapped_column(String(80), primary_key=True)
+    incident_id: Mapped[str] = mapped_column(String(80), nullable=False)
+    merchant_id: Mapped[str] = mapped_column(String(80), nullable=False)
+    snapshot_id: Mapped[str] = mapped_column(String(80), nullable=False)
+    source_snapshot_sha256: Mapped[str] = mapped_column(String(64), nullable=False)
+    analysis_sha256: Mapped[str] = mapped_column(String(64), nullable=False)
+    analysis_document: Mapped[dict[str, Any]] = mapped_column(JSON_DOCUMENT, nullable=False)
+    provider: Mapped[str] = mapped_column(String(16), nullable=False)
+    model: Mapped[str] = mapped_column(String(80), nullable=False)
+    prompt_version: Mapped[str] = mapped_column(String(80), nullable=False)
+    output_schema_version: Mapped[str] = mapped_column(String(16), nullable=False)
+    evaluator_version: Mapped[str] = mapped_column(String(80), nullable=False)
+    model_status: Mapped[str] = mapped_column(String(24), nullable=False)
+    fallback_used: Mapped[bool] = mapped_column(Boolean, nullable=False)
+    latency_ms: Mapped[int] = mapped_column(Integer, nullable=False)
+    input_tokens: Mapped[int] = mapped_column(Integer, nullable=False)
+    output_tokens: Mapped[int] = mapped_column(Integer, nullable=False)
+    total_tokens: Mapped[int] = mapped_column(Integer, nullable=False)
+    estimated_cost_microusd: Mapped[int | None] = mapped_column(Integer, nullable=True)
+    pricing_version: Mapped[str] = mapped_column(String(48), nullable=False)
+    schema_repair_attempts: Mapped[int] = mapped_column(Integer, nullable=False)
+    provider_storage_enabled: Mapped[bool] = mapped_column(Boolean, nullable=False)
+    created_at: Mapped[datetime] = mapped_column(UTCDateTime(), nullable=False)

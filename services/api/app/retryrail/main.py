@@ -28,8 +28,14 @@ from retryrail.recovery.adapter import (
     RecoveryProvider,
 )
 from retryrail.recovery.analysis import RulesBasedIncidentAnalyst
+from retryrail.recovery.analyst_evaluation import check_report as check_analyst_report
 from retryrail.recovery.audit import RecoveryAuditVerifier
 from retryrail.recovery.execution import RecoveryExecutionService
+from retryrail.recovery.incident_analyst import IncidentAnalyst
+from retryrail.recovery.openai_analyst import (
+    IncidentAnalystProvider,
+    OpenAIIncidentAnalystProvider,
+)
 from retryrail.recovery.workflow import RecoveryWorkflowService
 
 RequestHandler = Callable[[Request], Awaitable[Response]]
@@ -41,6 +47,7 @@ def create_app(
     database: Database | None = None,
     metrics: PipelineMetrics | None = None,
     recovery_provider: RecoveryProvider | None = None,
+    incident_analyst_provider: IncidentAnalystProvider | None = None,
 ) -> FastAPI:
     """Create the API with validated settings and security response headers."""
 
@@ -49,7 +56,6 @@ def create_app(
     resolved_database = database or Database(resolved_settings.database_dsn())
     resolved_metrics = metrics or PipelineMetrics()
     owns_database = database is None
-    expose_docs = resolved_settings.environment != "production"
 
     @asynccontextmanager
     async def lifespan(application: FastAPI) -> AsyncIterator[None]:
@@ -83,11 +89,12 @@ def create_app(
             provider,
         )
         application.state.recovery_execution_service = execution
-        application.state.incident_analyst_provider = None
-        application.state.rules_based_incident_analyst = RulesBasedIncidentAnalyst(
+        analyst_provider = _install_incident_analyst(
+            application,
             resolved_database,
             resolved_settings,
             resolved_metrics,
+            incident_analyst_provider,
         )
         application.state.recovery_audit_verifier = RecoveryAuditVerifier(
             resolved_database,
@@ -96,9 +103,7 @@ def create_app(
         )
         experiment_service = ExperimentReportService()
         application.state.experiment_report_service = experiment_service
-        resolved_metrics.experiment_eligible_payments.set(
-            experiment_service.report.eligible_count
-        )
+        resolved_metrics.experiment_eligible_payments.set(experiment_service.report.eligible_count)
         resolved_metrics.experiment_incremental_recovered_gmv.set(
             experiment_service.report.value.incremental_recovered_gmv_subunits
         )
@@ -110,6 +115,10 @@ def create_app(
         finally:
             if recovery_provider is None and isinstance(provider, RazorpayTestModeAdapter):
                 await provider.aclose()
+            if incident_analyst_provider is None and isinstance(
+                analyst_provider, OpenAIIncidentAnalystProvider
+            ):
+                await analyst_provider.aclose()
             if owns_database:
                 await resolved_database.dispose()
 
@@ -117,9 +126,9 @@ def create_app(
         title="RetryRail API",
         summary="Payment reliability and bounded revenue recovery",
         version=__version__,
-        docs_url="/docs" if expose_docs else None,
+        docs_url="/docs" if resolved_settings.environment != "production" else None,
         redoc_url=None,
-        openapi_url="/openapi.json" if expose_docs else None,
+        openapi_url=("/openapi.json" if resolved_settings.environment != "production" else None),
         lifespan=lifespan,
     )
 
@@ -174,6 +183,54 @@ def _configured_recovery_provider(settings: Settings) -> RecoveryProvider:
         connect_timeout_seconds=settings.razorpay_connect_timeout_seconds,
         read_timeout_seconds=settings.razorpay_read_timeout_seconds,
     )
+
+
+def _configured_incident_analyst_provider(
+    settings: Settings,
+) -> IncidentAnalystProvider | None:
+    """Construct the single external analyst only after settings validation."""
+
+    if settings.incident_analyst_target == "deterministic_rules":
+        return None
+    if settings.openai_api_key is None:
+        msg = "validated OpenAI incident-analysis settings are incomplete"
+        raise RuntimeError(msg)
+    report = check_analyst_report()
+    if report.status != "passed" or report.selected_model != settings.openai_incident_model:
+        msg = "OpenAI incident analyst must match the passing frozen M6 selection"
+        raise RuntimeError(msg)
+    return OpenAIIncidentAnalystProvider(
+        api_key=settings.openai_api_key,
+        model=settings.openai_incident_model,
+        prompt_version=settings.incident_analyst_prompt_version,
+        evaluator_version=settings.incident_analyst_evaluator_version,
+        timeout_seconds=settings.openai_timeout_seconds,
+        max_output_tokens=settings.openai_max_output_tokens,
+        max_schema_repairs=settings.openai_max_schema_repairs,
+    )
+
+
+def _install_incident_analyst(
+    application: FastAPI,
+    database: Database,
+    settings: Settings,
+    metrics: PipelineMetrics,
+    provider_override: IncidentAnalystProvider | None,
+) -> IncidentAnalystProvider | None:
+    """Install one advisory analyst and its always-available rules fallback."""
+
+    provider = provider_override or _configured_incident_analyst_provider(settings)
+    fallback = RulesBasedIncidentAnalyst(database, settings, metrics)
+    application.state.incident_analyst_provider = provider
+    application.state.rules_based_incident_analyst = fallback
+    application.state.incident_analyst = IncidentAnalyst(
+        database,
+        settings,
+        metrics,
+        fallback,
+        provider,
+    )
+    return provider
 
 
 def run() -> None:

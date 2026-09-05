@@ -1,0 +1,455 @@
+{
+  "$defs": {
+    "AnalystEvidenceClaim": {
+      "additionalProperties": false,
+      "description": "One advisory statement tied to detector-created evidence identifiers.",
+      "properties": {
+        "evidence_ids": {
+          "items": {
+            "maxLength": 80,
+            "minLength": 3,
+            "pattern": "^[A-Za-z0-9_-]+$",
+            "type": "string"
+          },
+          "maxItems": 8,
+          "minItems": 1,
+          "title": "Evidence Ids",
+          "type": "array"
+        },
+        "evidence_kind": {
+          "const": "verified_observation",
+          "default": "verified_observation",
+          "title": "Evidence Kind",
+          "type": "string"
+        },
+        "statement": {
+          "maxLength": 400,
+          "minLength": 1,
+          "title": "Statement",
+          "type": "string"
+        }
+      },
+      "required": [
+        "statement",
+        "evidence_ids"
+      ],
+      "title": "AnalystEvidenceClaim",
+      "type": "object"
+    },
+    "AnalystHypothesis": {
+      "additionalProperties": false,
+      "description": "One explicitly inferred, merchant-local explanation.",
+      "properties": {
+        "confidence_ppm": {
+          "maximum": 1000000,
+          "minimum": 0,
+          "title": "Confidence Ppm",
+          "type": "integer"
+        },
+        "evidence_ids": {
+          "items": {
+            "maxLength": 80,
+            "minLength": 3,
+            "pattern": "^[A-Za-z0-9_-]+$",
+            "type": "string"
+          },
+          "maxItems": 8,
+          "minItems": 1,
+          "title": "Evidence Ids",
+          "type": "array"
+        },
+        "evidence_kind": {
+          "const": "inferred_hypothesis",
+          "default": "inferred_hypothesis",
+          "title": "Evidence Kind",
+          "type": "string"
+        },
+        "statement": {
+          "maxLength": 400,
+          "minLength": 1,
+          "title": "Statement",
+          "type": "string"
+        }
+      },
+      "required": [
+        "statement",
+        "evidence_ids",
+        "confidence_ppm"
+      ],
+      "title": "AnalystHypothesis",
+      "type": "object"
+    },
+    "AnalystProvenance": {
+      "additionalProperties": false,
+      "description": "Versioned, cost-observable provenance safe for audit and UI.",
+      "properties": {
+        "estimated_cost_microusd": {
+          "anyOf": [
+            {
+              "minimum": 0,
+              "type": "integer"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Estimated Cost Microusd"
+        },
+        "evaluator_version": {
+          "maxLength": 80,
+          "minLength": 3,
+          "pattern": "^[A-Za-z0-9_-]+$",
+          "title": "Evaluator Version",
+          "type": "string"
+        },
+        "input_tokens": {
+          "minimum": 0,
+          "title": "Input Tokens",
+          "type": "integer"
+        },
+        "latency_ms": {
+          "minimum": 0,
+          "title": "Latency Ms",
+          "type": "integer"
+        },
+        "model": {
+          "maxLength": 80,
+          "minLength": 1,
+          "pattern": "^[A-Za-z0-9_.:-]+$",
+          "title": "Model",
+          "type": "string"
+        },
+        "output_schema_version": {
+          "const": "1.0.0",
+          "default": "1.0.0",
+          "title": "Output Schema Version",
+          "type": "string"
+        },
+        "output_tokens": {
+          "minimum": 0,
+          "title": "Output Tokens",
+          "type": "integer"
+        },
+        "pricing_version": {
+          "enum": [
+            "openai_public_pricing_2026_09_05",
+            "unavailable_for_model"
+          ],
+          "title": "Pricing Version",
+          "type": "string"
+        },
+        "prompt_version": {
+          "maxLength": 80,
+          "minLength": 3,
+          "pattern": "^[A-Za-z0-9_-]+$",
+          "title": "Prompt Version",
+          "type": "string"
+        },
+        "provider": {
+          "const": "openai",
+          "default": "openai",
+          "title": "Provider",
+          "type": "string"
+        },
+        "response_stored_by_provider": {
+          "const": false,
+          "default": false,
+          "title": "Response Stored By Provider",
+          "type": "boolean"
+        },
+        "schema_repair_attempts": {
+          "maximum": 1,
+          "minimum": 0,
+          "title": "Schema Repair Attempts",
+          "type": "integer"
+        },
+        "total_tokens": {
+          "minimum": 0,
+          "title": "Total Tokens",
+          "type": "integer"
+        }
+      },
+      "required": [
+        "model",
+        "prompt_version",
+        "evaluator_version",
+        "latency_ms",
+        "input_tokens",
+        "output_tokens",
+        "total_tokens",
+        "pricing_version",
+        "schema_repair_attempts"
+      ],
+      "title": "AnalystProvenance",
+      "type": "object"
+    },
+    "ModelIncidentBrief": {
+      "additionalProperties": false,
+      "description": "Structured, grounded model brief with no execution authority.",
+      "properties": {
+        "confidence_ppm": {
+          "maximum": 1000000,
+          "minimum": 0,
+          "title": "Confidence Ppm",
+          "type": "integer"
+        },
+        "executive_summary": {
+          "maxLength": 600,
+          "minLength": 1,
+          "title": "Executive Summary",
+          "type": "string"
+        },
+        "executive_summary_evidence_ids": {
+          "items": {
+            "maxLength": 80,
+            "minLength": 3,
+            "pattern": "^[A-Za-z0-9_-]+$",
+            "type": "string"
+          },
+          "maxItems": 8,
+          "minItems": 1,
+          "title": "Executive Summary Evidence Ids",
+          "type": "array"
+        },
+        "hypotheses": {
+          "items": {
+            "$ref": "#/$defs/AnalystHypothesis"
+          },
+          "maxItems": 3,
+          "title": "Hypotheses",
+          "type": "array"
+        },
+        "mutation_authority": {
+          "const": false,
+          "default": false,
+          "title": "Mutation Authority",
+          "type": "boolean"
+        },
+        "schema_version": {
+          "const": "1.0.0",
+          "default": "1.0.0",
+          "title": "Schema Version",
+          "type": "string"
+        },
+        "scope": {
+          "const": "single_merchant",
+          "default": "single_merchant",
+          "title": "Scope",
+          "type": "string"
+        },
+        "unknowns": {
+          "items": {
+            "maxLength": 400,
+            "minLength": 1,
+            "type": "string"
+          },
+          "maxItems": 5,
+          "minItems": 1,
+          "title": "Unknowns",
+          "type": "array"
+        },
+        "verified_evidence": {
+          "items": {
+            "$ref": "#/$defs/AnalystEvidenceClaim"
+          },
+          "maxItems": 6,
+          "minItems": 2,
+          "title": "Verified Evidence",
+          "type": "array"
+        }
+      },
+      "required": [
+        "executive_summary",
+        "executive_summary_evidence_ids",
+        "verified_evidence",
+        "hypotheses",
+        "unknowns",
+        "confidence_ppm"
+      ],
+      "title": "ModelIncidentBrief",
+      "type": "object"
+    },
+    "ModelRecoveryProposal": {
+      "additionalProperties": false,
+      "description": "Advisory proposal restricted to one server-owned template identifier.",
+      "properties": {
+        "currency": {
+          "maxLength": 3,
+          "minLength": 3,
+          "pattern": "^[A-Z]{3}$",
+          "title": "Currency",
+          "type": "string"
+        },
+        "customer_risk": {
+          "const": "No customer message is sent; any action still requires merchant approval.",
+          "default": "No customer message is sent; any action still requires merchant approval.",
+          "title": "Customer Risk",
+          "type": "string"
+        },
+        "evidence_ids": {
+          "items": {
+            "maxLength": 80,
+            "minLength": 3,
+            "pattern": "^[A-Za-z0-9_-]+$",
+            "type": "string"
+          },
+          "maxItems": 8,
+          "minItems": 1,
+          "title": "Evidence Ids",
+          "type": "array"
+        },
+        "executable": {
+          "const": false,
+          "default": false,
+          "title": "Executable",
+          "type": "boolean"
+        },
+        "expected_benefit": {
+          "const": "not_estimated_without_outcome_evidence",
+          "default": "not_estimated_without_outcome_evidence",
+          "title": "Expected Benefit",
+          "type": "string"
+        },
+        "external_notifications_enabled": {
+          "const": false,
+          "default": false,
+          "title": "External Notifications Enabled",
+          "type": "boolean"
+        },
+        "opportunity_gmv_subunits": {
+          "minimum": 0,
+          "title": "Opportunity Gmv Subunits",
+          "type": "integer"
+        },
+        "opportunity_interpretation": {
+          "const": "at_risk_opportunity_not_forecast",
+          "default": "at_risk_opportunity_not_forecast",
+          "title": "Opportunity Interpretation",
+          "type": "string"
+        },
+        "rationale": {
+          "maxLength": 500,
+          "minLength": 1,
+          "title": "Rationale",
+          "type": "string"
+        },
+        "recommended_template": {
+          "const": "standard_payment_link",
+          "default": "standard_payment_link",
+          "title": "Recommended Template",
+          "type": "string"
+        },
+        "requires_external_approval": {
+          "const": true,
+          "default": true,
+          "title": "Requires External Approval",
+          "type": "boolean"
+        },
+        "schema_version": {
+          "const": "1.0.0",
+          "default": "1.0.0",
+          "title": "Schema Version",
+          "type": "string"
+        },
+        "stop_conditions": {
+          "items": {
+            "enum": [
+              "POLICY_INCIDENT_NOT_ACTION_ELIGIBLE",
+              "POLICY_OPERATING_MODE_ANALYZE_ONLY",
+              "POLICY_CUSTOMER_OPTED_OUT",
+              "POLICY_ATTEMPT_CAP_REACHED",
+              "POLICY_COOLDOWN_ACTIVE",
+              "POLICY_PLAN_EXPIRED",
+              "POLICY_KILL_SWITCH_ON",
+              "POLICY_PAYMENT_ALREADY_RECOVERED"
+            ],
+            "type": "string"
+          },
+          "maxItems": 8,
+          "minItems": 8,
+          "title": "Stop Conditions",
+          "type": "array"
+        }
+      },
+      "required": [
+        "rationale",
+        "evidence_ids",
+        "opportunity_gmv_subunits",
+        "currency",
+        "stop_conditions"
+      ],
+      "title": "ModelRecoveryProposal",
+      "type": "object"
+    }
+  },
+  "$id": "https://retryrail.dev/contracts/tools/incident-analysis/v1",
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "additionalProperties": false,
+  "description": "Durable advisory document bound to one redacted source snapshot.",
+  "properties": {
+    "analysis_id": {
+      "maxLength": 80,
+      "minLength": 3,
+      "pattern": "^[A-Za-z0-9_-]+$",
+      "title": "Analysis Id",
+      "type": "string"
+    },
+    "brief": {
+      "$ref": "#/$defs/ModelIncidentBrief"
+    },
+    "fallback_used": {
+      "const": false,
+      "default": false,
+      "title": "Fallback Used",
+      "type": "boolean"
+    },
+    "incident_id": {
+      "maxLength": 80,
+      "minLength": 3,
+      "pattern": "^[A-Za-z0-9_-]+$",
+      "title": "Incident Id",
+      "type": "string"
+    },
+    "model_status": {
+      "const": "succeeded",
+      "default": "succeeded",
+      "title": "Model Status",
+      "type": "string"
+    },
+    "proposal": {
+      "$ref": "#/$defs/ModelRecoveryProposal"
+    },
+    "provenance": {
+      "$ref": "#/$defs/AnalystProvenance"
+    },
+    "schema_version": {
+      "const": "1.0.0",
+      "default": "1.0.0",
+      "title": "Schema Version",
+      "type": "string"
+    },
+    "snapshot_id": {
+      "maxLength": 80,
+      "minLength": 3,
+      "pattern": "^[A-Za-z0-9_-]+$",
+      "title": "Snapshot Id",
+      "type": "string"
+    },
+    "synthetic": {
+      "title": "Synthetic",
+      "type": "boolean"
+    }
+  },
+  "required": [
+    "analysis_id",
+    "incident_id",
+    "snapshot_id",
+    "brief",
+    "proposal",
+    "provenance",
+    "synthetic"
+  ],
+  "title": "RetryRail Model Incident Analysis v1",
+  "type": "object"
+}
