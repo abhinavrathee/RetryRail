@@ -47,11 +47,18 @@ and `render.yaml` topology were rehearsed locally against PostgreSQL 16:
 | Browser caching/security | Fingerprinted assets emitted immutable caching; CSP and HSTS were present |
 | Initial data hook | 2,722 synthetic inputs selected; 2,717 accepted, 3 deduplicated, 2 rejected as designed and 0 expectation mismatches |
 | Worker convergence | The dedicated worker projected the batch through `2026-09-01T23:59:59Z` and reproduced 2 resolved synthetic incidents |
-| Focused regression | 30 configuration, health, SPA-hosting and security-header tests passed; Ruff and strict mypy passed |
+| Reviewer story | With API and worker running concurrently, 400 deliveries settled at a healthy zero-incident baseline; extension to 700 completed in 6.12 s and opened exactly 1 active incident with INR 949,600 subunits at risk |
+| Focused regression | 32 configuration, health, SPA-hosting, security-header, staged reviewer-story and lease-timeout tests passed; Ruff and strict mypy passed |
 
 This is pre-deployment evidence for the current working tree, not proof that a
 public Render hostname exists. The public URL, Render health state, UptimeRobot
 monitor and signed-out browser pass remain operator-owned M9 evidence.
+
+The staged reviewer call accepted 300 new deliveries, recognized 398 safe
+duplicates, rejected 2 invalid signatures and recorded 0 expectation
+mismatches. Its in-request worker projected 78 records while the resident
+worker projected the balance; the response waited for both before reporting the
+incident. This directly exercises the concurrency shape used by Render.
 
 The authoritative narrative is
 `docs/PROJECT_STATUS.md#verified-m8-completion-snapshot`. Historical sections in
@@ -69,9 +76,10 @@ pnpm --filter @retryrail/web exec vitest list
 pnpm --filter @retryrail/web exec playwright test --list
 ```
 
-At the latest collection point, pytest produces 514 nodes. Parameterized tests
-produce more nodes than function definitions; the per-file counts below are
-collected nodes, not a manual function count.
+The current M9 deployment candidate collects 525 nodes: the 514-node verified
+M8 release plus nine hosted-runtime tests and two staged reviewer-path tests.
+Parameterized tests produce more nodes than function definitions; the per-file
+counts below are collected nodes, not a manual function count.
 
 ## Verification layers
 
@@ -87,7 +95,7 @@ collected nodes, not a manual function count.
 | Security/release | Can the exact checkout build, scan, migrate, start and remain free of unexplained High/Critical findings? |
 | External evidence | Did the real Razorpay Test Mode boundary behave as claimed without exposing a credential? |
 
-## Backend inventory — all 514 collected pytest nodes
+## Backend inventory — all 525 collected pytest nodes
 
 ### Contracts and deterministic data — 69
 
@@ -128,13 +136,13 @@ collected nodes, not a manual function count.
 | 2 | `experiments/test_api.py` | Merchant authentication and exact packaged-report digest validation |
 | 6 | `experiments/test_evaluation.py` | Eligibility, frozen allocation, same-payment attribution, value arithmetic and bootstrap integrity |
 
-### Cross-component integration — 23
+### Cross-component integration — 25
 
 | Nodes | Test file | Primary coverage |
 | ---: | --- | --- |
 | 3 | `integration/test_detection_service.py` | Projection-to-aggregate-to-incident lifecycle and evidence persistence |
 | 6 | `integration/test_outbox_projection.py` | Worker leases, crash recovery, poison handling and out-of-order monotonic state |
-| 6 | `integration/test_replay_and_migrations.py` | Protected replay, bounded demo, schema equivalence, migration round trips and M8 backfill |
+| 8 | `integration/test_replay_and_migrations.py` | Protected replay, healthy-to-incident reviewer story, concurrent-worker timeout, bounded demo, schema equivalence, migration round trips and M8 backfill |
 | 8 | `integration/test_webhook_ingestion.py` | Raw-body authentication, malformed input, triple delivery, identity conflict and atomic outbox |
 
 ### Observability — 5
@@ -185,13 +193,13 @@ Critical individual recovery cases include:
 | 6 | `security/test_pre_push.py` | Authenticated history scan, hook installation and bounded failure modes |
 | 8 | `security/test_repository_scan.py` | Credential/PII patterns, narrow reviewed exclusions and immutable image policy |
 
-### API, configuration and operational foundation — 62
+### API, configuration and operational foundation — 71
 
 | Nodes | Test file | Primary coverage |
 | ---: | --- | --- |
-| 15 | `test_config.py` | Environment parsing, secret masking, Test-vs-Live rejection and production fail-closed rules |
+| 21 | `test_config.py` | Environment parsing, hosted secret boundaries, Render PostgreSQL normalization, Test-vs-Live rejection and review/production fail-closed rules |
 | 7 | `test_event_contract.py` | Normalized event parsing, allowlist and cross-field invariants |
-| 6 | `test_health.py` | Live/readiness state, migration head, W3C/security headers and resource disposal |
+| 9 | `test_health.py` | Live/readiness state, migration head, W3C/security headers, fail-closed compiled SPA hosting and resource disposal |
 | 21 | `test_operational_clis.py` | Seed/replay/detect/worker entry points, bounded error text and exit codes |
 | 11 | `test_webhook_signatures.py` | Exact-byte HMAC, malformed headers, modified bodies and constant-time validation |
 | 2 | `test_worker.py` | Worker configuration, redacted metrics and graceful shutdown |
@@ -265,7 +273,7 @@ selection is in the `failure-matrix` Make target.
 | M6 analyst bakeoff | 24 cases × 3 models = 72 evaluations | Grounding, abstention, privacy, injection, scope, trajectory and schema |
 
 These artifacts are checked for source identity, arithmetic, schema and
-selection-rule integrity by `make eval`. They are not multiplied into the 514
+selection-rule integrity by `make eval`. They are not multiplied into the 525
 pytest count.
 
 ## Real external evidence is not a test-count multiplier

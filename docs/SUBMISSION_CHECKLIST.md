@@ -155,6 +155,8 @@ relevant tests, ADRs or evaluation report in the public README.
   exact Alembic head.
 - [x] Synthetic tuning data is seeded through authenticated ingestion rather
   than inserted around the application boundary.
+- [x] The judge seed ends at a verified healthy baseline; the protected demo
+  advances the same stream to a tested active-incident boundary.
 - [x] The deployment and UptimeRobot procedure is documented in
   `docs/DEPLOYMENT.md`.
 - [x] The exact deployment image, empty-database migration, API/UI/worker

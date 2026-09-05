@@ -533,7 +533,7 @@ export const retryRailApi = {
     request('/v1/demo/run', demoRunSchema, {
       method: 'POST',
       replayToken,
-      body: { mode: 'tuning' },
+      body: { mode: 'tuning', limit: 700 },
     }),
 };
 

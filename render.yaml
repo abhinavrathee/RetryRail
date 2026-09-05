@@ -9,7 +9,10 @@ services:
     dockerContext: .
     dockerfilePath: ./infra/render/Dockerfile
     preDeployCommand: retryrail-db upgrade
-    initialDeployHook: retryrail-replay --mode tuning
+    # Seed only the healthy prefix. The protected reviewer control extends the
+    # same deterministic stream to delivery 700, where the detector opens the
+    # first incident.
+    initialDeployHook: retryrail-replay --mode tuning --limit 400
     healthCheckPath: /health/ready
     autoDeployTrigger: checksPass
     maxShutdownDelaySeconds: 30

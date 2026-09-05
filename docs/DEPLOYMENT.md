@@ -83,11 +83,16 @@ the sandbox as a production deployment or its metrics as live merchant results.
    - create PostgreSQL 16 with external ingress disabled;
    - run the Alembic migration before replacing the web service;
    - start the dedicated worker;
-   - seed the tuning partition once through authenticated ingestion; and
+   - seed the first 400 deliveries of the tuning partition as a healthy
+     baseline through authenticated ingestion; and
    - wait for `/health/ready` before considering the web rollout healthy.
 6. Wait for both service deploys to become **Live**. The initial synthetic
-   projection may take another short interval; refresh the overview until the
-   seeded incident appears.
+   projection may take another short interval; refresh until the overview is
+   healthy with zero incidents. In the protected Demo view, the reviewer action
+   extends that same deterministic stream through delivery 700, opening one
+   evidence-backed incident without changing detector logic. The API waits for
+   both its bounded worker and the resident worker to settle every projection
+   before returning detector evidence; a lease-bound timeout fails closed.
 
 No Razorpay CSV and no OpenAI key should be uploaded to Render for this public
 reviewer environment.
@@ -113,6 +118,8 @@ Then complete all of these checks:
 - open `/` in a private/signed-out browser;
 - confirm the page says **Synthetic evidence** and **Test Mode actions only**;
 - confirm the API badge says `API ready · v0.1.0`;
+- unlock the isolated demo with the generated replay token, run it once and
+  confirm the receipt reports one active synthetic incident;
 - open an incident directly and refresh that nested URL to prove SPA fallback;
 - open `/impact` and verify that the merchant session starts locked;
 - confirm `/docs`, `/openapi.json` and `/.env` return 404;
@@ -120,6 +127,11 @@ Then complete all of these checks:
 - confirm a missing hashed asset returns 404 rather than the application shell;
 - capture final screenshots only from this deployed URL; and
 - add the verified URL to the README and submission checklist.
+
+Run the protected demo once before sharing the URL. That leaves the single
+synthetic incident available for signed-out evidence inspection while approval
+and execution controls remain locked. Lock the browser session afterward; do
+not publish either generated access value.
 
 For the private recording session, copy the generated
 `RETRYRAIL_MERCHANT_APPROVAL_SECRET` and `RETRYRAIL_REPLAY_TOKEN` from the Render

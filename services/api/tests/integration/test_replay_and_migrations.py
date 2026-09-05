@@ -3,12 +3,15 @@
 import asyncio
 from datetime import UTC, datetime, timedelta
 from pathlib import Path
+from typing import cast
 
 import pytest
+from fastapi import HTTPException
 from fastapi.testclient import TestClient
 from sqlalchemy import func, inspect, select, text
 from sqlalchemy.exc import SQLAlchemyError
 
+from retryrail.api import replay as replay_api
 from retryrail.config import Environment, Settings
 from retryrail.db.migrate import (
     check_database_schema,
@@ -25,7 +28,7 @@ from retryrail.db.tables import (
 )
 from retryrail.events.ingestion import EventIngestionService
 from retryrail.events.models import NormalizedPaymentEvent
-from retryrail.events.outbox import OutboxWorker
+from retryrail.events.outbox import OutboxWorker, WorkerCycle
 from retryrail.main import create_app
 from retryrail.observability.metrics import PipelineMetrics
 from retryrail.replay import ReplayMode, ReplayRunner
@@ -262,6 +265,81 @@ def test_bounded_demo_run_projects_then_refreshes_the_detector(
     assert replayed_body["replay"]["accepted"] == 0
     assert replayed_body["projected"] == 0
     assert replayed_body["detector_reused"] is True
+
+
+def test_reviewer_seed_starts_healthy_then_demo_opens_a_detector_incident(
+    client: TestClient,
+) -> None:
+    headers = {"X-RetryRail-Replay-Token": "unit-test-replay-token"}
+
+    baseline = client.post(
+        "/v1/demo/run",
+        json={"mode": "tuning", "limit": 400},
+        headers=headers,
+    )
+    degradation = client.post(
+        "/v1/demo/run",
+        json={"mode": "tuning", "limit": 700},
+        headers=headers,
+    )
+
+    assert baseline.status_code == degradation.status_code == 200
+    baseline_body = baseline.json()
+    assert baseline_body["replay"]["selected_deliveries"] == 400
+    assert baseline_body["replay"]["expectation_mismatches"] == 0
+    assert baseline_body["incidents"] == baseline_body["active_incidents"] == 0
+    assert baseline_body["at_risk_gmv_subunits"] == 0
+
+    degradation_body = degradation.json()
+    assert degradation_body["replay"]["selected_deliveries"] == 700
+    assert degradation_body["replay"]["accepted"] > 0
+    assert degradation_body["replay"]["duplicates"] > 0
+    assert degradation_body["replay"]["expectation_mismatches"] == 0
+    assert degradation_body["incidents"] == degradation_body["active_incidents"] == 1
+    assert degradation_body["at_risk_gmv_subunits"] > 0
+
+
+def test_reviewer_demo_fails_closed_when_concurrent_projections_do_not_settle(
+    settings: Settings,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    class IdleWorker:
+        async def run_once(self) -> WorkerCycle:
+            return WorkerCycle(claimed=0, completed=0, retried=0, dead_lettered=0)
+
+    class LeaseBoundaryClock:
+        def __init__(self) -> None:
+            self.calls = 0
+
+        def time(self) -> float:
+            self.calls += 1
+            return 0.0 if self.calls == 1 else settings.worker_lease_seconds + 6.0
+
+    async def unsettled(_database: Database, _merchant_id: str) -> int:
+        return 1
+
+    async def exercise() -> None:
+        clock = LeaseBoundaryClock()
+        with monkeypatch.context() as patch:
+            patch.setattr(
+                replay_api.asyncio,  # type: ignore[attr-defined]
+                "get_running_loop",
+                lambda: clock,
+            )
+            patch.setattr(replay_api, "_count_unsettled_outbox", unsettled)
+            with pytest.raises(HTTPException) as caught:
+                await replay_api._settle_demo_projections(  # noqa: SLF001
+                    worker=cast("OutboxWorker", IdleWorker()),
+                    database=cast("Database", object()),
+                    settings=settings,
+                )
+
+        assert caught.value.status_code == 503
+        assert cast("dict[str, str]", caught.value.detail) == {
+            "reason_code": "DEMO_PROJECTION_NOT_SETTLED"
+        }
+
+    asyncio.run(exercise())
 
 
 def test_required_replay_reconciles_every_projection(settings: Settings) -> None:

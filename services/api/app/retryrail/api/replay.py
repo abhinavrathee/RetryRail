@@ -1,5 +1,6 @@
 """Protected synthetic replay HTTP boundary for the local reviewer demo."""
 
+import asyncio
 import hmac
 import uuid
 from dataclasses import asdict
@@ -7,9 +8,12 @@ from typing import Annotated, Literal
 
 from fastapi import APIRouter, Header, HTTPException, Request, status
 from pydantic import BaseModel, ConfigDict, Field
+from sqlalchemy import func, select
+from sqlalchemy.exc import SQLAlchemyError
 
 from retryrail.config import Environment, Settings
 from retryrail.db.session import Database
+from retryrail.db.tables import OutboxMessageRecord
 from retryrail.detection.service import DetectionRefreshResult, DetectionService
 from retryrail.events.ingestion import (
     EventIdentityConflictError,
@@ -21,6 +25,8 @@ from retryrail.observability.metrics import PipelineMetrics
 from retryrail.replay import ReplayMode, ReplayRunner
 
 router = APIRouter(prefix="/v1/demo", tags=["demo"])
+
+_OUTBOX_TERMINAL_STATES = ("completed", "dead_letter")
 
 
 class ReplayRequest(BaseModel):
@@ -113,17 +119,11 @@ async def run_demo(
         lease_seconds=settings.worker_lease_seconds,
         retry_base_seconds=settings.worker_retry_base_seconds,
     )
-    projected = 0
-    retried = 0
-    dead_lettered = 0
-    maximum_cycles = 1 + (replay_report.selected_deliveries // settings.worker_batch_size)
-    for _cycle_index in range(maximum_cycles + 1):
-        cycle = await worker.run_once()
-        projected += cycle.completed
-        retried += cycle.retried
-        dead_lettered += cycle.dead_lettered
-        if cycle.claimed == 0:
-            break
+    projected, retried, dead_lettered = await _settle_demo_projections(
+        worker=worker,
+        database=database,
+        settings=settings,
+    )
     detection = await detector.refresh(settings.merchant_id)
     return _demo_response(
         replay_report=replay_report,
@@ -193,6 +193,55 @@ async def _run_replay(
             detail={"reason_code": error.reason_code},
         ) from error
     return ReplayResponse(synthetic=True, **asdict(report))
+
+
+async def _settle_demo_projections(
+    *,
+    worker: OutboxWorker,
+    database: Database,
+    settings: Settings,
+) -> tuple[int, int, int]:
+    """Drain or await every projection before returning detector evidence."""
+
+    projected = 0
+    retried = 0
+    dead_lettered = 0
+    loop = asyncio.get_running_loop()
+    deadline = loop.time() + settings.worker_lease_seconds + 5
+    while True:
+        try:
+            cycle = await worker.run_once()
+            unsettled = await _count_unsettled_outbox(database, settings.merchant_id)
+        except SQLAlchemyError as error:
+            raise HTTPException(
+                status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
+                detail={"reason_code": "DEMO_PROJECTION_UNAVAILABLE"},
+            ) from error
+        projected += cycle.completed
+        retried += cycle.retried
+        dead_lettered += cycle.dead_lettered
+        if unsettled == 0:
+            return projected, retried, dead_lettered
+        if loop.time() >= deadline:
+            raise HTTPException(
+                status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
+                detail={"reason_code": "DEMO_PROJECTION_NOT_SETTLED"},
+            )
+        if cycle.claimed == 0:
+            await asyncio.sleep(min(settings.worker_poll_interval_seconds, 0.25))
+
+
+async def _count_unsettled_outbox(database: Database, merchant_id: str) -> int:
+    async with database.sessions() as session:
+        count = await session.scalar(
+            select(func.count())
+            .select_from(OutboxMessageRecord)
+            .where(
+                OutboxMessageRecord.merchant_id == merchant_id,
+                OutboxMessageRecord.status.not_in(_OUTBOX_TERMINAL_STATES),
+            )
+        )
+    return int(count or 0)
 
 
 def _demo_response(

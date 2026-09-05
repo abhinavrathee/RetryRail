@@ -363,7 +363,19 @@ are ready.
   accepted, 3 were deduplicated, 2 were rejected as designed and there were
   zero expectation mismatches. The worker converged at the final dataset
   timestamp and reproduced both resolved synthetic incidents.
-- Thirty focused deployment/configuration tests, Ruff and strict mypy passed.
+- The judge-facing seed is intentionally narrower than that full stress
+  rehearsal. Its first 400 deliveries produce a healthy zero-incident
+  baseline; the protected demo extends the same stream through delivery 700
+  and opens exactly one active incident with non-zero measured GMV at risk.
+  This two-stage path has a dedicated integration test. In an exact-image
+  rehearsal with the resident worker running concurrently, it completed in
+  6.12 seconds with 300 newly accepted deliveries, 398 safe duplicates, 2
+  rejected signatures, zero mismatches and INR 949,600 subunits at risk.
+- The demo endpoint now waits for all outbox projections—including records
+  leased by the resident worker—before refreshing detection. It fails with a
+  typed 503 at the lease boundary instead of returning partial evidence.
+- Thirty-two focused deployment/configuration tests, Ruff and strict mypy
+  passed.
   `docs/DEPLOYMENT.md` contains the exact Blueprint, billing, UptimeRobot,
   signed-out verification and rollback procedure.
 
