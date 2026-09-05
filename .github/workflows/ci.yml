@@ -183,3 +183,5 @@ jobs:
           docker compose --profile observability config --quiet
           docker compose build api worker web
           docker compose --profile observability pull prometheus grafana
+      - name: Build Render reviewer image
+        run: docker build --file infra/render/Dockerfile --tag retryrail:render-review .

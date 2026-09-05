@@ -40,7 +40,7 @@ and `render.yaml` topology were rehearsed locally against PostgreSQL 16:
 | Check | Observed result |
 | --- | --- |
 | Blueprint contract | `render.yaml` validates against Render's published Blueprint JSON Schema |
-| Immutable build | Locked Node and Python stages completed and produced the combined API/UI image |
+| Immutable build | Locked Node and Python stages completed and produced the combined API/UI image; the CI container lane rebuilds it |
 | Database lifecycle | Alembic upgraded an empty PostgreSQL database through `0008_m8_trace_lineage` |
 | Public surface | `/health/ready`, `/`, a nested incident route and a fingerprinted asset returned HTTP 200 |
 | Fail-closed surface | `/docs`, `/openapi.json`, `/.env` and a missing asset returned HTTP 404 in `review` mode |

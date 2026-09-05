@@ -160,6 +160,8 @@ relevant tests, ADRs or evaluation report in the public README.
 - [x] The exact deployment image, empty-database migration, API/UI/worker
   startup, review-mode security surface and full synthetic initial hook were
   rehearsed locally with zero replay expectation mismatches.
+- [x] The remote container gate rebuilds the Render reviewer image from the
+  committed Dockerfile on every main-branch release run.
 - [ ] Render shows the web service, worker and database as healthy.
 - [ ] `GET /health/ready` returns HTTP 200 from the assigned public hostname.
 - [ ] UptimeRobot monitors `/health/ready` and has a working alert contact.
