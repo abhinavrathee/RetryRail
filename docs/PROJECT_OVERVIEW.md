@@ -808,19 +808,19 @@ sequenceDiagram
 
     Merchant->>UI: Review exact plan, amount, currency, expiry, and policy
     UI->>API: Create/read preview with payment identity + idempotency key
-    API->>DB: Lock incident/payment/controls; rebuild authoritative facts
-    API->>DB: Append plan + all 13 preview policy outcomes
+    API->>DB: Lock incident, payment, and controls, then rebuild authoritative facts
+    API->>DB: Append plan with all 13 preview policy outcomes
     DB-->>API: Persisted preview
     API-->>UI: Preview and one-time approval bearer if allowed
     Merchant->>UI: Approve exact plan
     UI->>API: Approve plan (merchant auth)
-    API->>DB: Append approval decision; store bearer digest only
+    API->>DB: Append approval decision and store bearer digest only
     API-->>UI: Approval outcome
     UI->>API: Execute with idempotency key + approval bearer
     API->>DB: Lock records and re-evaluate mutable policy facts
     alt Denied or expired
         API->>DB: Append complete execution denial/terminal receipt
-        API-->>UI: Typed blocked outcome; no provider request
+        API-->>UI: Typed blocked outcome with no provider request
     else Allowed
         API->>DB: Atomically consume approval, create action, commit dispatch
         DB-->>API: Durable executing action
